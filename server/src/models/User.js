@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema(
     // Off means the app stores no learned taste and ignores what it had.
     memoryEnabled: { type: Boolean, default: true },
     onboarded: { type: Boolean, default: false },
+    // Created by "Skip login (testing only)"; never available in production.
+    isGuest: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

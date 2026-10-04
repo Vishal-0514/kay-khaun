@@ -1,6 +1,7 @@
 import { api, refreshSession } from './api';
 import { readSession } from './tokenStorage';
 import { useAuthStore } from '../store/useAuthStore';
+import { useChatStore } from '../store/useChatStore';
 
 // On launch: load the saved tokens and fetch the profile. An expired access
 // token is refreshed by the API client; if that fails too, the user starts signed out.
@@ -24,6 +25,7 @@ export async function restoreSession() {
 export async function signOut() {
   const { refreshToken, clear } = useAuthStore.getState();
   clear();
+  useChatStore.getState().clear();
   if (refreshToken) api.post('/auth/logout', { refreshToken }).catch(() => {});
 }
 

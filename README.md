@@ -14,6 +14,15 @@ kya-khaun-app/
 - **Server:** phone OTP, email OTP and Google sign-in; short-lived access tokens with rotating refresh tokens; profile and taste preferences API.
 - **App:** design system in code (colours, Baloo 2 + Figtree, maroon jaali header, plate ring), plus the Welcome, Sign in, Enter code, Your taste and a simple Home screen.
 
+## What's built (Phase 2)
+
+- **Home:** order slip (Craving · Budget · Time), "Tap to talk", mood circles (one tap = 5 picks), Chatora's pick with a match ring.
+- **Chat with Chatora:** understands English, Hindi and Hinglish ("kuch teekha, 400 ke andar, jaldi"), fills the order slip, asks only what's missing (order in or cook at home), then returns the top 5.
+- **Top 5 and dish detail:** match %, price, delivery time, rating, and plain reasons ("₹20 under your budget", "You love Biryani").
+- **How it decides:** the AI only reads the message (`server/src/services/intent.js`). Dishes, prices and times come from the sample Mumbai menu (`server/src/data/mumbaiMenu.js`, 70 dishes, fictional restaurants), and `ranking.js` filters and scores them. Nothing is invented.
+- **Without an API key:** a built-in keyword parser handles messages, so the app works today. Add `ANTHROPIC_API_KEY` to `server/.env` to switch to Claude (`AI_MODEL`, default `claude-opus-5-5` at low effort; server-side refusal fallback is enabled).
+- **Skip login (testing only):** shown in development builds when the server has `ALLOW_GUEST_LOGIN=true`. It creates a throwaway account and is always off in production.
+
 ## First-time setup
 
 ### 1. Database (MongoDB Atlas, free)
@@ -75,5 +84,10 @@ The server refuses to start in production while either provider is still `consol
 | POST | `/api/auth/logout` | `{ refreshToken }` |
 | GET | `/api/profile` | (Bearer access token) |
 | PATCH | `/api/profile` | `{ name?, preferences?, memoryEnabled?, onboarded? }` |
+| POST | `/api/auth/guest` | (testing only; needs `ALLOW_GUEST_LOGIN=true`) |
+| POST | `/api/chat/messages` | `{ conversationId?, text }` → `{ conversation, picks }` |
+| GET | `/api/chat` | your recent chats |
+| GET | `/api/chat/:id` | one chat, with its picks re-ranked |
+| POST | `/api/chat/quick-picks` | `{ mood? }` → 5 picks from your taste profile |
 
 Sign-in responses return `{ accessToken, refreshToken, isNew, user }`. Access tokens last 15 minutes; the app renews them automatically with the refresh token (valid 30 days, replaced on every use).

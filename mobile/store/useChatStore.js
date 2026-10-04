@@ -1,0 +1,50 @@
+import { create } from 'zustand';
+import { api } from '../lib/api';
+
+// The current chat with Chatora plus the last set of picks, which the
+// Results and Dish screens read.
+export const useChatStore = create((set, get) => ({
+  conversation: null, // { id, title, slip, messages[] }
+  picks: [],
+  picksSource: null, // { kind: 'chat' | 'mood' | 'pick', label }
+  sending: false,
+
+  async send(text) {
+    const { conversation } = get();
+    const optimistic = { id: `local-${Date.now()}`, role: 'user', text, pending: true };
+    set((s) => ({
+      sending: true,
+      conversation: s.conversation
+        ? { ...s.conversation, messages: [...s.conversation.messages, optimistic] }
+        : { id: null, title: 'New chat', slip: null, messages: [optimistic] },
+    }));
+    try {
+      const { data } = await api.post('/chat/messages', { conversationId: conversation?.id ?? undefined, text });
+      set({
+        conversation: data.conversation,
+        ...(data.picks.length ? { picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } } : null),
+      });
+      return data;
+    } catch (err) {
+      // Put the chat back as it was so the user can retry.
+      set({ conversation });
+      throw err;
+    } finally {
+      set({ sending: false });
+    }
+  },
+
+  async open(id) {
+    const { data } = await api.get(`/chat/${id}`);
+    set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } });
+  },
+
+  async quickPicks(mood) {
+    const { data } = await api.post('/chat/quick-picks', mood ? { mood } : {});
+    set({ picks: data.picks, picksSource: { kind: mood ? 'mood' : 'pick', label: mood ?? null } });
+    return data.picks;
+  },
+
+  newChat: () => set({ conversation: null }),
+  clear: () => set({ conversation: null, picks: [], picksSource: null }),
+}));

@@ -16,6 +16,7 @@ import {
   googleSignIn,
   refresh,
   logout,
+  guestSignIn,
 } from '../controllers/authController.js';
 
 const router = Router();
@@ -25,6 +26,7 @@ router.post('/phone/verify-otp', validateBody(verifyPhoneOtpSchema), verifyPhone
 router.post('/email/send-otp', validateBody(sendEmailOtpSchema), sendEmailOtp);
 router.post('/email/verify-otp', validateBody(verifyEmailOtpSchema), verifyEmailOtp);
 router.post('/google', validateBody(googleSchema), googleSignIn);
+router.post('/guest', guestSignIn);
 router.post('/refresh', validateBody(refreshSchema), refresh);
 router.post('/logout', validateBody(refreshSchema), logout);
 

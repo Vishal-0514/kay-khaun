@@ -15,6 +15,7 @@ export function toSafeUser(user) {
     preferences: user.preferences ?? {},
     memoryEnabled: user.memoryEnabled,
     onboarded: user.onboarded,
+    isGuest: user.isGuest,
   };
 }
 
@@ -77,6 +78,15 @@ export async function googleSignIn(req, res) {
     await user.save();
   }
   await signedIn(res, user, isNew);
+}
+
+// Testing only: a throwaway account so the app can be tried without an OTP.
+export const guestLoginEnabled = process.env.ALLOW_GUEST_LOGIN === 'true' && process.env.NODE_ENV !== 'production';
+
+export async function guestSignIn(req, res) {
+  if (!guestLoginEnabled) return res.status(404).json({ success: false, error: 'Not available' });
+  const user = await User.create({ isGuest: true });
+  await signedIn(res, user, true);
 }
 
 export async function refresh(req, res) {

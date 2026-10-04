@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -9,15 +9,11 @@ import Icon from '../components/Icon';
 import { api, errorMessage } from '../lib/api';
 import { googleUnavailableReason, getGoogleIdToken } from '../lib/googleSignIn';
 import { homeRouteFor } from '../lib/session';
+import { notify } from '../lib/notify';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, type, space, radius } from '../lib/theme';
 
 const SHEET_HEIGHT = 400;
-
-function notify(title, message) {
-  if (Platform.OS === 'web') window.alert(`${title}\n\n${message}`);
-  else Alert.alert(title, message);
-}
 
 function GoogleG() {
   return (
@@ -36,6 +32,7 @@ export default function Welcome() {
   const { width, height } = useWindowDimensions();
   const setSession = useAuthStore((s) => s.setSession);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [guestBusy, setGuestBusy] = useState(false);
 
   const sceneHeight = Math.max(360, height - SHEET_HEIGHT + 40);
 
@@ -53,6 +50,20 @@ export default function Welcome() {
       notify("Couldn't sign in with Google", errorMessage(err));
     } finally {
       setGoogleBusy(false);
+    }
+  }
+
+  // Testing only: the server makes a throwaway account (ALLOW_GUEST_LOGIN=true).
+  async function skipLogin() {
+    setGuestBusy(true);
+    try {
+      const { data } = await api.post('/auth/guest');
+      setSession(data);
+      router.replace(homeRouteFor(data.user));
+    } catch (err) {
+      notify('Skip login', err.response?.status === 404 ? 'Skipping login is turned off on the server (ALLOW_GUEST_LOGIN).' : errorMessage(err));
+    } finally {
+      setGuestBusy(false);
     }
   }
 
@@ -102,6 +113,7 @@ export default function Welcome() {
         <View style={styles.footer}>
           <Button variant="link" title="Use email instead" onPress={() => router.push({ pathname: '/sign-in', params: { method: 'email' } })} />
           <Text style={styles.legal}>By continuing you agree to our Terms and Privacy Policy.</Text>
+          {__DEV__ ? <Button variant="link" title="Skip login (testing only)" loading={guestBusy} onPress={skipLogin} /> : null}
         </View>
       </View>
     </View>
