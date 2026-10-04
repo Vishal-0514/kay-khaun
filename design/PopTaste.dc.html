@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun Pop — Taste</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&amp;family=Shrikhand&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+a{color:#141414}a:hover{color:#E63B2E}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFF3D6; font-family: 'Bricolage Grotesque', sans-serif; color: #141414; padding: 20px 22px 0; box-sizing: border-box">
+
+  <div style="display: flex; align-items: center; gap: 12px; height: 46px">
+    <a href="PopLogin.dc.html" aria-label="Back" style="width: 46px; height: 46px; flex-shrink: 0; border-radius: 14px; background: #FFFFFF; border: 3px solid #141414; box-shadow: 3px 3px 0 #141414; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div style="flex: 1; height: 16px; border-radius: 8px; border: 3px solid #141414; background: #FFFFFF; overflow: hidden; display: flex" aria-label="Step 2 of 4">
+      <div style="width: 50%; background: #1FA855; border-right: 3px solid #141414"></div>
+    </div>
+    <a href="PopHome.dc.html" style="font-size: 16px; font-weight: 800; color: #141414; padding: 12px 2px">Skip</a>
+  </div>
+
+  <h1 style="margin: 18px 0 0; font-family: 'Shrikhand', serif; font-weight: 400; font-size: 42px; line-height: 1">Swaad batao</h1>
+
+  <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+    <button onClick="{{ pickVeg }}" aria-pressed="{{ vegSel }}" style="{{ vegStyle }}">
+      <img src="/_blob/fe38516ff6849cc5816223a2ccb71918" alt="" style="width: 64px; height: 64px">
+      <span style="font-size: 17px; font-weight: 800">Veg</span>
+    </button>
+    <button onClick="{{ pickNonveg }}" aria-pressed="{{ nonvegSel }}" style="{{ nonvegStyle }}">
+      <img src="/_blob/68ba0e0cfda4b2f34fec8a8d7715afd1" alt="" style="width: 64px; height: 64px">
+      <span style="font-size: 17px; font-weight: 800">Non-veg</span>
+    </button>
+    <button onClick="{{ pickEgg }}" aria-pressed="{{ eggSel }}" style="{{ eggStyle }}">
+      <svg width="64" height="64" viewBox="0 0 120 120" aria-hidden="true"><path d="M30 64c-8-22 10-40 30-36 14-12 40-2 38 20 12 14 2 40-22 40-14 10-40 6-46-24z" fill="#FFFFFF" stroke="#141414" stroke-width="4" stroke-linejoin="round"/><circle cx="62" cy="62" r="16" fill="#FFB020" stroke="#141414" stroke-width="4"/><circle cx="56" cy="56" r="4" fill="#FFE29A"/></svg>
+      <span style="font-size: 17px; font-weight: 800">Egg</span>
+    </button>
+  </div>
+
+  <div style="margin-top: 22px; background: #FFFFFF; border: 3px solid #141414; box-shadow: 4px 4px 0 #141414; border-radius: 22px; padding: 12px 14px 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 15px; font-weight: 800">Mirchi meter</span>
+      <span style="height: 28px; padding: 0 10px; border-radius: 999px; background: #E63B2E; border: 2.5px solid #141414; font-size: 13px; font-weight: 800; display: inline-flex; align-items: center">{{ spiceLabel }}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 6px">
+      <sc-for list="{{ chilies }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.pick }}" aria-label="{{ c.label }}" style="width: 58px; height: 58px; border: none; background: transparent; padding: 0">
+          <img src="/_blob/a41267d2a84e11df1ae4b5a9ba648ff7" alt="" style="{{ c.style }}">
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin-top: 22px; font-size: 15px; font-weight: 800">Ek meal ka budget</div>
+  <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+    <sc-for list="{{ budgets }}" as="b" hint-placeholder-count="3">
+      <button onClick="{{ b.pick }}" aria-pressed="{{ b.sel }}" style="{{ b.style }}">{{ b.label }}</button>
+    </sc-for>
+  </div>
+
+  <div style="margin-top: 22px; font-size: 15px; font-weight: 800">Yeh nahi chahiye</div>
+  <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px">
+    <span style="height: 38px; padding: 0 14px; border-radius: 999px; background: #141414; color: #FFF3D6; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; text-decoration: line-through; text-decoration-color: #E63B2E; text-decoration-thickness: 3px">Mushroom</span>
+    <span style="height: 38px; padding: 0 14px; border-radius: 999px; background: #141414; color: #FFF3D6; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; text-decoration: line-through; text-decoration-color: #E63B2E; text-decoration-thickness: 3px">Karela</span>
+    <button style="height: 38px; padding: 0 14px; border-radius: 999px; background: #FFFFFF; border: 2.5px dashed #141414; font-size: 15px; font-weight: 800">+ Add</button>
+  </div>
+
+  <a href="PopHome.dc.html" style="position: absolute; left: 22px; right: 22px; bottom: 26px; height: 62px; border-radius: 20px; background: #141414; color: #FFD23F; border: 3px solid #141414; box-shadow: 4px 4px 0 #E63B2E; font-size: 18px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box">
+    Chalo, shuru!
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { diet: 'nonveg', spice: 3, budget: 'mid' };
+  }
+  tile(id, bg, tilt) {
+    var on = this.state.diet === id;
+    return 'height: 124px; border-radius: 22px; border: 3px solid #141414; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #141414; background: ' + bg + '; ' +
+      (on ? 'box-shadow: 5px 5px 0 #141414; transform: rotate(' + tilt + 'deg) translate(-2px, -2px);' : 'box-shadow: 0 0 0 #141414; opacity: 0.55;');
+  }
+  renderVals() {
+    var self = this;
+    var labels = ['Phika', 'Halka', 'Medium', 'Teekha', 'AAG!'];
+    var budgetDefs = [{ id: 'low', label: '₹150–300' }, { id: 'mid', label: '₹300–500' }, { id: 'high', label: '₹500+' }];
+    return {
+      vegStyle: this.tile('veg', '#1FA855', -3), nonvegStyle: this.tile('nonveg', '#E63B2E', 2), eggStyle: this.tile('egg', '#FFD23F', -2),
+      vegSel: this.state.diet === 'veg', nonvegSel: this.state.diet === 'nonveg', eggSel: this.state.diet === 'egg',
+      pickVeg: function () { self.setState({ diet: 'veg' }); },
+      pickNonveg: function () { self.setState({ diet: 'nonveg' }); },
+      pickEgg: function () { self.setState({ diet: 'egg' }); },
+      spiceLabel: labels[this.state.spice - 1],
+      chilies: [1, 2, 3, 4, 5].map(function (n) {
+        var on = n <= self.state.spice;
+        return {
+          label: 'Spice level ' + n,
+          pick: function () { self.setState({ spice: n }); },
+          style: 'width: 52px; height: 52px; ' + (on ? 'transform: rotate(' + (n * 7 - 14) + 'deg);' : 'filter: grayscale(1); opacity: 0.35;')
+        };
+      }),
+      budgets: budgetDefs.map(function (b) {
+        var on = self.state.budget === b.id;
+        return {
+          label: b.label, sel: on,
+          pick: function () { self.setState({ budget: b.id }); },
+          style: 'height: 52px; border-radius: 16px; border: 3px solid #141414; font-size: 15px; font-weight: 800; color: #141414; ' + (on ? 'background: #FF7AB6; box-shadow: 4px 4px 0 #141414;' : 'background: #FFFFFF;')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

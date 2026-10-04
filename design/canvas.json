@@ -1,0 +1,713 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Chat.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "04 · Chat — voice + one question",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Detail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "06 · Why I picked this",
+      "w": 390,
+      "x": 0,
+      "y": 1224
+    },
+    "Fridge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "07 · Fridge scan (Cook)",
+      "w": 390,
+      "x": 470,
+      "y": 1224
+    },
+    "Home.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "03 · Home — mood thali",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "01 · Login",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "Memory.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "10 · Meri Pasand — memory",
+      "w": 390,
+      "x": 1880,
+      "y": 1224
+    },
+    "Onboarding.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "02 · Taste profile",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "Plan.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "09 · Plan My Day — dabba",
+      "w": 390,
+      "x": 1410,
+      "y": 1224
+    },
+    "PopChat.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "04 · Chat",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "PopCook.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "08 · Cook mode",
+      "w": 390,
+      "x": 940,
+      "y": 1224
+    },
+    "PopDabba.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "09 · Aaj ka dabba",
+      "w": 390,
+      "x": 1410,
+      "y": 1224
+    },
+    "PopFridge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "07 · Fridge scan",
+      "w": 390,
+      "x": 470,
+      "y": 1224
+    },
+    "PopHome.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "03 · Home — mood stickers",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "PopLogin.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "01 · Login",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "PopMe.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "10 · Meri pasand",
+      "w": 390,
+      "x": 1880,
+      "y": 1224
+    },
+    "PopPicks.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "05 · Top 5",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "PopTaste.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "02 · Swaad batao",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "PopWhy.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "pop",
+      "radius": 44,
+      "title": "06 · Kyun yeh pick?",
+      "w": 390,
+      "x": 0,
+      "y": 1224
+    },
+    "Recipe.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "08 · Make This — cook mode",
+      "w": 390,
+      "x": 940,
+      "y": 1224
+    },
+    "Results.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "classic",
+      "radius": 44,
+      "title": "05 · Top 5 picks (Order)",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "V3Chat.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "04 · Chat with Chatora",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "V3Cook.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "09 · Cook mode",
+      "w": 390,
+      "x": 940,
+      "y": 1224
+    },
+    "V3Detail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "06 · Why this pick",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "V3Fridge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "07 · Scan your fridge",
+      "w": 390,
+      "x": 0,
+      "y": 1224
+    },
+    "V3Home.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "03 · Home",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "V3Login.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "01 · Welcome & login",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "V3Plan.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "10 · Plan my day",
+      "w": 390,
+      "x": 1410,
+      "y": 1224
+    },
+    "V3Profile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "11 · Food profile & memory",
+      "w": 390,
+      "x": 1880,
+      "y": 1224
+    },
+    "V3Recipes.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "08 · Recipes for you",
+      "w": 390,
+      "x": 470,
+      "y": 1224
+    },
+    "V3Results.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "05 · Top picks (order in)",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "V3Taste.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v3",
+      "radius": 44,
+      "title": "02 · Your taste",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "V4Chat.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "04 · Chat — order slip",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "V4Cook.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "09 · Cook mode",
+      "w": 390,
+      "x": 940,
+      "y": 1224
+    },
+    "V4Detail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "06 · Why this pick",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "V4Fridge.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "07 · Scan your fridge",
+      "w": 390,
+      "x": 0,
+      "y": 1224
+    },
+    "V4Home.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "03 · Home",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "V4Plan.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "10 · My day",
+      "w": 390,
+      "x": 1410,
+      "y": 1224
+    },
+    "V4Profile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "11 · Profile & memory",
+      "w": 390,
+      "x": 1880,
+      "y": 1224
+    },
+    "V4Recipes.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "08 · Cook at home",
+      "w": 390,
+      "x": 470,
+      "y": 1224
+    },
+    "V4Results.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "05 · Top 5",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "V4Taste.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "02 · Your taste",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "V4Welcome.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "v4",
+      "radius": 44,
+      "title": "01 · Welcome",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "V5Welcome.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "01 · Welcome",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Taste.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "02 · Your taste",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Home.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "03 · Home",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Chat.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "04 · Chat — order slip",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Results.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "05 · Top 5",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Detail.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "06 · Why this pick",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Fridge.dc.html": {
+      "x": 0,
+      "y": 1224,
+      "w": 390,
+      "h": 844,
+      "title": "07 · Scan your fridge",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Recipes.dc.html": {
+      "x": 470,
+      "y": 1224,
+      "w": 390,
+      "h": 844,
+      "title": "08 · Cook at home",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Cook.dc.html": {
+      "x": 940,
+      "y": 1224,
+      "w": 390,
+      "h": 844,
+      "title": "09 · Cook mode (dark)",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Plan.dc.html": {
+      "x": 1410,
+      "y": 1224,
+      "w": 390,
+      "h": 844,
+      "title": "10 · My day",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    },
+    "V5Profile.dc.html": {
+      "x": 1880,
+      "y": 1224,
+      "w": 390,
+      "h": 844,
+      "title": "11 · Profile & memory",
+      "is_interactive": true,
+      "radius": 44,
+      "page": "v5"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-04T17:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas",
+    "page": "v5"
+  },
+  "notes": {
+    "pop1": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "pop",
+      "text": "Bhook lagi? → Bol do → Top 5",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "pop2": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "pop",
+      "text": "Kyun · Fridge · Cook · Dabba · Memory",
+      "w": 240,
+      "x": 0,
+      "y": 964
+    },
+    "row1": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "classic",
+      "text": "Sign in → tell Chatora → get 5 picks",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "classic",
+      "text": "Order · Cook · Plan the day · Memory",
+      "w": 240,
+      "x": 0,
+      "y": 964
+    },
+    "v3a": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "v3",
+      "text": "Sign in → tell Chatora → top picks",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "v3b": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "v3",
+      "text": "Why · Fridge · Recipes · Cook · Plan · Profile",
+      "w": 240,
+      "x": 0,
+      "y": 964
+    },
+    "v4a": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "v4",
+      "text": "Sign in → ask Chatora → top 5",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "v4b": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "v4",
+      "text": "Fridge · Recipes · Cook · My day · Profile",
+      "w": 240,
+      "x": 0,
+      "y": 964
+    },
+    "v5a": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "v5",
+      "text": "Sign in → ask Chatora → top 5",
+      "x": 0,
+      "y": -260
+    },
+    "v5b": {
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "v5",
+      "text": "Fridge · Recipes · Cook · My day · Profile",
+      "x": 0,
+      "y": 964
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Onboarding.dc.html",
+    "Home.dc.html",
+    "Chat.dc.html",
+    "Results.dc.html",
+    "Detail.dc.html",
+    "Fridge.dc.html",
+    "Recipe.dc.html",
+    "Plan.dc.html",
+    "Memory.dc.html",
+    "PopLogin.dc.html",
+    "PopTaste.dc.html",
+    "PopHome.dc.html",
+    "PopChat.dc.html",
+    "PopPicks.dc.html",
+    "PopWhy.dc.html",
+    "PopFridge.dc.html",
+    "PopCook.dc.html",
+    "PopDabba.dc.html",
+    "PopMe.dc.html",
+    "V3Login.dc.html",
+    "V3Taste.dc.html",
+    "V3Home.dc.html",
+    "V3Chat.dc.html",
+    "V3Results.dc.html",
+    "V3Detail.dc.html",
+    "V3Fridge.dc.html",
+    "V3Recipes.dc.html",
+    "V3Cook.dc.html",
+    "V3Plan.dc.html",
+    "V3Profile.dc.html",
+    "V4Welcome.dc.html",
+    "V4Taste.dc.html",
+    "V4Home.dc.html",
+    "V4Chat.dc.html",
+    "V4Results.dc.html",
+    "V4Detail.dc.html",
+    "V4Fridge.dc.html",
+    "V4Recipes.dc.html",
+    "V4Cook.dc.html",
+    "V4Plan.dc.html",
+    "V4Profile.dc.html",
+    "V5Welcome.dc.html",
+    "V5Taste.dc.html",
+    "V5Home.dc.html",
+    "V5Chat.dc.html",
+    "V5Results.dc.html",
+    "V5Detail.dc.html",
+    "V5Fridge.dc.html",
+    "V5Recipes.dc.html",
+    "V5Cook.dc.html",
+    "V5Plan.dc.html",
+    "V5Profile.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "v5",
+      "name": "v5 · Rich classic"
+    },
+    {
+      "id": "v4",
+      "name": "v4 · Classic, new layout"
+    },
+    {
+      "id": "v3",
+      "name": "v3 · Illustrated"
+    },
+    {
+      "id": "pop",
+      "name": "v2 · Street Pop"
+    },
+    {
+      "id": "classic",
+      "name": "v1 · Classic"
+    }
+  ],
+  "title": "Kya Khaun App Design"
+}

@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Kya Khaun?",
+    "slug": "kya-khaun",
+    "scheme": "kyakhaun",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFBF4",
+    "android": {
+      "package": "app.kyakhaun"
+    },
+    "ios": {
+      "bundleIdentifier": "app.kyakhaun",
+      "supportsTablet": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-font",
+      "@react-native-google-signin/google-signin"
+    ]
+  }
+}

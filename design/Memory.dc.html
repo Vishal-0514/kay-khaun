@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun — Meri pasand</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+a{color:#8E0E14}a:hover{color:#C8161D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFF6E5; font-family: 'Figtree', sans-serif; color: #2B0F0B">
+
+  <div style="position: absolute; left: 24px; right: 24px; top: 22px; display: flex; align-items: center; gap: 14px">
+    <span style="width: 56px; height: 56px; border-radius: 50%; background: #F4B740; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 24px; box-shadow: 0 0 0 4px #FFFFFF">R</span>
+    <div style="flex: 1">
+      <h1 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-size: 30px; font-weight: 800; line-height: 1">Meri pasand</h1>
+      <p style="margin: 2px 0 0; font-size: 14px; color: #6B4A40">Chatora aapke baare mein yeh jaanta hai</p>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 98px; border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; background: #2B0F0B; color: #FFF6E5">
+    <div style="flex: 1">
+      <div style="font-size: 16px; font-weight: 800">Memory</div>
+      <div style="font-size: 13px; color: #E9CFAE">{{ memoryNote }}</div>
+    </div>
+    <button role="switch" aria-checked="{{ memoryOn }}" aria-label="Memory" onClick="{{ toggle }}" style="{{ trackStyle }}">
+      <span style="{{ knobStyle }}"></span>
+    </button>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 190px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 14px; box-shadow: 0 3px 0 #EADBC0">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Khaana</div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px">
+        <span style="width: 18px; height: 18px; border: 2px solid #8B3A1A; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="9" height="8" viewBox="0 0 8 7" aria-hidden="true"><path d="M4 0l4 7H0z" fill="#8B3A1A"/></svg></span>
+        <span style="font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 800; line-height: 1">Non-veg</span>
+      </div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 14px; box-shadow: 0 3px 0 #EADBC0">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Mirchi</div>
+      <div style="display: flex; gap: 2px; margin-top: 8px" aria-label="Spice 3 of 5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#C8161D" stroke="#8E0E14" stroke-width="1.4" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#C8161D" stroke="#8E0E14" stroke-width="1.4" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#C8161D" stroke="#8E0E14" stroke-width="1.4" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9B48F" stroke-width="1.4" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9B48F" stroke-width="1.4" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/></svg>
+      </div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 14px; box-shadow: 0 3px 0 #EADBC0">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Usual budget</div>
+      <div style="font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; margin-top: 8px">₹250–400</div>
+    </div>
+    <div style="background: #FFFFFF; border-radius: 20px; padding: 14px; box-shadow: 0 3px 0 #EADBC0">
+      <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Dinner time</div>
+      <div style="font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; margin-top: 8px">~9:00 pm</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 384px">
+    <h2 style="margin: 0 0 8px; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Pasand hai</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 6px">
+      <span style="height: 34px; padding: 0 12px; border-radius: 999px; background: #FFF0EC; color: #8E0E14; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center">North Indian</span>
+      <span style="height: 34px; padding: 0 12px; border-radius: 999px; background: #FFF0EC; color: #8E0E14; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center">Indo-Chinese</span>
+      <span style="height: 34px; padding: 0 12px; border-radius: 999px; background: #FFF0EC; color: #8E0E14; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center">Street food</span>
+      <span style="height: 34px; padding: 0 12px; border-radius: 999px; background: #2B0F0B; color: #FFF6E5; font-size: 14px; font-weight: 800; display: inline-flex; align-items: center">Nahi: Mushroom, Karela</span>
+    </div>
+
+    <div style="margin: 16px 0 6px; display: flex; align-items: center; justify-content: space-between"><h2 style="margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8A5A12">Maine seekha</h2><button style="height: 36px; padding: 0 12px; border-radius: 10px; border: 1.5px solid #C8161D; background: transparent; color: #C8161D; font-size: 13px; font-weight: 800">Sab bhool jao</button></div>
+    <div style="background: #FFFFFF; border-radius: 20px; box-shadow: 0 3px 0 #EADBC0; padding: 4px 6px 4px 14px">
+      <sc-for list="{{ learned }}" as="l" hint-placeholder-count="3">
+        <div style="{{ l.row }}">
+          <span style="flex: 1; font-size: 14px; line-height: 1.35"><b>{{ l.title }}</b><br><span style="color: #6B4A40">{{ l.sub }}</span></span>
+          <button aria-label="{{ l.forget }}" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: transparent; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+          </button>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 16px; right: 16px; bottom: 16px; height: 68px; background: #2B0F0B; border-radius: 24px; display: flex; align-items: center; justify-content: space-around; padding: 0 8px; box-shadow: 0 12px 24px rgba(43,15,11,0.25)">
+    <a href="Home.dc.html" aria-label="Home" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
+    </a>
+    <a href="Chat.dc.html" aria-label="Chats" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+    </a>
+    <a href="Plan.dc.html" aria-label="Plan my day" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="5" rx="1.5"/><rect x="5" y="14" width="14" height="5" rx="1.5"/><path d="M8 7V4.5h8V7"/></svg>
+    </a>
+    <a href="Memory.dc.html" aria-current="page" style="height: 46px; padding: 0 16px; border-radius: 16px; background: #F4B740; color: #2B0F0B; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B0F0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Me
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: true };
+  }
+  renderVals() {
+    var self = this;
+    var on = this.state.on;
+    var items = [
+      { title: 'Tikka 4 baar order kiya', sub: 'Isliye tandoori picks upar aate hain' },
+      { title: 'Weekdays pe 30 min se kam', sub: 'Jaldi wale options pehle' },
+      { title: 'Paneer ghar pe rehta hai', sub: 'Cook mode mein use karta hoon' }
+    ];
+    return {
+      memoryOn: on,
+      memoryNote: on ? 'On — har din aur behtar picks' : 'Off — kuch yaad nahi rakhunga',
+      toggle: function () { self.setState({ on: !self.state.on }); },
+      trackStyle: 'width: 60px; height: 34px; border-radius: 999px; border: none; padding: 3px; display: flex; ' + (on ? 'background: #1E8E3E; justify-content: flex-end;' : 'background: #6B4A40; justify-content: flex-start;'),
+      knobStyle: 'width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; display: block;',
+      learned: items.map(function (it, i) {
+        return {
+          title: it.title, sub: it.sub, forget: 'Bhool jao: ' + it.title,
+          row: 'display: flex; align-items: center; gap: 8px; padding: 4px 0;' + (i < items.length - 1 ? ' border-bottom: 1.5px solid #F3E7D0;' : '')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

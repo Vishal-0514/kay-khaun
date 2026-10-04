@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun — Your taste</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&amp;family=Figtree:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:#2B0F0B}a:hover{color:#C8161D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFBF4; font-family: 'Figtree', system-ui, sans-serif; color: #2B0F0B">
+
+  <div style="position: absolute; left: 24px; right: 24px; top: 16px; display: flex; align-items: center; gap: 16px">
+    <a href="V4Welcome.dc.html" aria-label="Back" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: #FFFFFF; border: 1px solid #EFE4D3; box-sizing: border-box; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B0F0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <div style="flex: 1; display: flex; gap: 4px" aria-label="Step 2 of 3"><div style="flex: 1; height: 4px; border-radius: 2px; background: #2B0F0B"></div><div style="flex: 1; height: 4px; border-radius: 2px; background: #2B0F0B"></div><div style="flex: 1; height: 4px; border-radius: 2px; background: #EFE4D3"></div></div>
+    <a href="V4Home.dc.html" style="font-size: 15px; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; padding: 12px 0">Skip</a>
+  </div>
+  <div style="position: absolute; left: 24px; right: 24px; top: 84px">
+    <h1 style="margin: 0; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 28px; line-height: 1.15; letter-spacing: -0.01em">What do you like to eat?</h1>
+    <p style="margin: 4px 0 0; font-size: 14px; line-height: 1.43; color: #6E5A52">The more I know, the fewer questions I'll ask.</p>
+
+    <div style="margin-top: 24px; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">Diet</div>
+    <div style="margin-top: 12px; display: flex; gap: 8px">
+      <button onClick="{{ pickVeg }}" aria-pressed="{{ vegSel }}" style="{{ vegStyle }}"><span style="width: 14px; height: 14px; border: 1.5px solid #1E8E3E; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0"><span style="width: 6px; height: 6px; border-radius: 50%; background: #1E8E3E"></span></span> Veg</button>
+      <button onClick="{{ pickNonveg }}" aria-pressed="{{ nonvegSel }}" style="{{ nonvegStyle }}"><span style="width: 14px; height: 14px; border: 1.5px solid #8B3A1A; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0"><svg width="8" height="7" viewBox="0 0 8 7" aria-hidden="true"><path d="M4 0l4 7H0z" fill="#8B3A1A"/></svg></span> Non-veg</button>
+      <button onClick="{{ pickEgg }}" aria-pressed="{{ eggSel }}" style="{{ eggStyle }}">Egg only</button>
+    </div>
+
+    <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">Spice level</span><span style="font-size: 14px; font-weight: 600; color: #C8161D">{{ spiceLabel }}</span></div>
+    <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; align-items: end">
+      <sc-for list="{{ spice }}" as="s" hint-placeholder-count="5">
+        <button onClick="{{ s.pick }}" aria-label="{{ s.label }}" style="height: 44px; border: none; background: transparent; padding: 0; display: flex; align-items: flex-end"><span style="{{ s.bar }}"></span></button>
+      </sc-for>
+    </div>
+    <div style="margin-top: 6px; display: flex; justify-content: space-between; font-size: 12px; color: #6E5A52"><span>Mild</span><span>Extra hot</span></div>
+
+    <div style="margin-top: 24px; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">Favourite cuisines</div>
+    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px">
+      <sc-for list="{{ cuisines }}" as="c" hint-placeholder-count="7">
+        <button onClick="{{ c.pick }}" aria-pressed="{{ c.sel }}" style="{{ c.style }}">{{ c.name }}</button>
+      </sc-for>
+    </div>
+
+    <div style="margin-top: 24px; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">Budget per meal</div>
+    <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <sc-for list="{{ budgets }}" as="b" hint-placeholder-count="3">
+        <button onClick="{{ b.pick }}" aria-pressed="{{ b.sel }}" style="{{ b.style }}">{{ b.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 16px 24px 24px; background: #FFFBF4; border-top: 1px solid #EFE4D3"><a href="V4Home.dc.html" style="height: 52px; border-radius: 14px; background: #C8161D; color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; ">Continue</a></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { diet: 'nonveg', spice: 3, budget: 'mid', cuisines: ['North Indian', 'Biryani', 'Street food'] };
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    var pill = function (on) { return 'height: 44px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; ' + (on ? 'background: #2B0F0B; color: #FFFFFF; border: 1px solid #2B0F0B;' : 'background: #FFFFFF; color: #2B0F0B; border: 1px solid #EFE4D3;'); };
+    var labels = ['Mild', 'Light', 'Medium', 'Hot', 'Extra hot'];
+    return {
+      vegStyle: pill(st.diet === 'veg'), nonvegStyle: pill(st.diet === 'nonveg'), eggStyle: pill(st.diet === 'egg'),
+      vegSel: st.diet === 'veg', nonvegSel: st.diet === 'nonveg', eggSel: st.diet === 'egg',
+      pickVeg: function () { self.setState({ diet: 'veg' }); }, pickNonveg: function () { self.setState({ diet: 'nonveg' }); }, pickEgg: function () { self.setState({ diet: 'egg' }); },
+      spiceLabel: labels[st.spice - 1],
+      spice: [1, 2, 3, 4, 5].map(function (n) {
+        return { label: 'Spice: ' + labels[n - 1], pick: function () { self.setState({ spice: n }); },
+          bar: 'display: block; width: 100%; border-radius: 8px; height: ' + (12 + n * 6) + 'px; background: ' + (n <= st.spice ? (n === st.spice ? '#C8161D' : '#E9787C') : '#EFE4D3') + ';' };
+      }),
+      cuisines: ["North Indian","Biryani","Street food","Chinese","South Indian","Healthy","Desserts"].map(function (name) {
+        var on = st.cuisines.indexOf(name) >= 0;
+        return { name: name, sel: on,
+          pick: function () { var l = self.state.cuisines.slice(), k = l.indexOf(name); if (k >= 0) l.splice(k, 1); else l.push(name); self.setState({ cuisines: l }); },
+          style: 'height: 40px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 500; ' + (on ? 'background: #FDECEA; color: #5C0A0F; border: 1.5px solid #C8161D;' : 'background: #FFFFFF; color: #2B0F0B; border: 1px solid #EFE4D3;') };
+      }),
+      budgets: [['low', 'Under ₹300'], ['mid', '₹300–500'], ['high', '₹500+']].map(function (b) {
+        var on = st.budget === b[0];
+        return { label: b[1], sel: on, pick: function () { self.setState({ budget: b[0] }); },
+          style: 'height: 48px; border-radius: 14px; font-size: 15px; font-weight: 500; ' + (on ? 'background: #2B0F0B; color: #FFFFFF; border: 1px solid #2B0F0B;' : 'background: #FFFFFF; color: #2B0F0B; border: 1px solid #EFE4D3;') };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun Pop — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&amp;family=Shrikhand&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+a{color:#141414}a:hover{color:#E63B2E}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFF3D6; font-family: 'Bricolage Grotesque', sans-serif; color: #141414">
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 20px; display: flex; align-items: center; justify-content: space-between">
+    <button style="height: 42px; padding: 0 14px 0 10px; border-radius: 999px; background: #FFFFFF; border: 3px solid #141414; box-shadow: 3px 3px 0 #141414; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: #141414">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#E63B2E" stroke="#141414" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5" fill="#FFFFFF"/></svg>
+      Andheri W
+    </button>
+    <a href="PopMe.dc.html" aria-label="Profile" style="width: 46px; height: 46px; border-radius: 50%; background: #FF7AB6; border: 3px solid #141414; box-shadow: 3px 3px 0 #141414; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-family: 'Shrikhand', serif; font-size: 20px; color: #141414; text-decoration: none">R</a>
+  </div>
+
+  <h1 style="position: absolute; left: 20px; right: 20px; top: 80px; margin: 0; font-family: 'Shrikhand', serif; font-weight: 400; font-size: 58px; line-height: 1">Kya khaun<span style="color: #E63B2E">?</span></h1>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 164px; height: 116px; border-radius: 26px; background: #E63B2E; border: 3px solid #141414; box-shadow: 5px 5px 0 #141414; box-sizing: border-box; display: flex; align-items: center; padding: 0 12px 0 14px; gap: 12px">
+    <a href="PopChat.dc.html" style="flex: 1; display: flex; align-items: center; gap: 14px; text-decoration: none; color: #141414">
+      <span style="width: 76px; height: 76px; flex-shrink: 0; border-radius: 50%; background: #FFD23F; border: 3px solid #141414; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="#FFFFFF"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </span>
+      <span style="display: flex; flex-direction: column">
+        <span style="font-family: 'Shrikhand', serif; font-size: 30px; line-height: 1">Bol do!</span>
+        <span style="font-size: 14px; font-weight: 700">ya type karo</span>
+      </span>
+    </a>
+    <a href="PopFridge.dc.html" aria-label="Photo se batao" style="width: 52px; height: 52px; border-radius: 16px; background: #FFFFFF; border: 3px solid #141414; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    </a>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 302px; display: flex; justify-content: space-between; align-items: baseline">
+    <span style="font-size: 16px; font-weight: 800">Mood kya hai?</span>
+    <span style="font-size: 13px; font-weight: 700">₹400 · 30 min</span>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 330px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+    <button onClick="{{ teekha.pick }}" aria-pressed="{{ teekha.sel }}" style="{{ teekha.style }}">
+      <img src="/_blob/a41267d2a84e11df1ae4b5a9ba648ff7" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Teekha</span>
+      <sc-if value="{{ teekha.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+    <button onClick="{{ street.pick }}" aria-pressed="{{ street.sel }}" style="{{ street.style }}">
+      <img src="/_blob/b06c1a27c41ab31cfb996cdf71a04f32" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Street</span>
+      <sc-if value="{{ street.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+    <button onClick="{{ comfort.pick }}" aria-pressed="{{ comfort.sel }}" style="{{ comfort.style }}">
+      <img src="/_blob/e391c1926c7a9c4713053c8c1a1b102d" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Comfort</span>
+      <sc-if value="{{ comfort.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+    <button onClick="{{ chinese.pick }}" aria-pressed="{{ chinese.sel }}" style="{{ chinese.style }}">
+      <img src="/_blob/510e5fa70ae5903694b089ffb3791967" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Chinese</span>
+      <sc-if value="{{ chinese.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+    <button onClick="{{ light.pick }}" aria-pressed="{{ light.sel }}" style="{{ light.style }}">
+      <img src="/_blob/fe38516ff6849cc5816223a2ccb71918" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Light</span>
+      <sc-if value="{{ light.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+    <button onClick="{{ meetha.pick }}" aria-pressed="{{ meetha.sel }}" style="{{ meetha.style }}">
+      <img src="/_blob/e5d7ff8c635ec06e9d28bb35035de7af" alt="" style="width: 66px; height: 66px">
+      <span style="font-size: 16px; font-weight: 800">Meetha</span>
+      <sc-if value="{{ meetha.sel }}" hint-placeholder-val="{{ false }}">
+        <span style="position: absolute; right: -8px; top: -8px; width: 28px; height: 28px; border-radius: 50%; background: #141414; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFD23F" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+      </sc-if>
+    </button>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 610px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+    <a href="PopPicks.dc.html" style="height: 58px; border-radius: 18px; background: #141414; border: 3px solid #141414; box-shadow: 4px 4px 0 #FF7AB6; box-sizing: border-box; color: #FFD23F; font-size: 16px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFD23F" aria-hidden="true"><path d="M12 2l2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3z"/></svg>
+      Tum decide karo
+    </a>
+    <a href="PopDabba.dc.html" style="height: 58px; border-radius: 18px; background: #1FA855; border: 3px solid #141414; box-shadow: 4px 4px 0 #141414; box-sizing: border-box; color: #141414; font-size: 16px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="5" rx="1.5"/><rect x="5" y="14" width="14" height="5" rx="1.5"/><path d="M8 7V4.5h8V7"/></svg>
+      Din plan karo
+    </a>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 16px; right: 16px; bottom: 16px; height: 68px; background: #FFFFFF; border: 3px solid #141414; border-radius: 22px; box-shadow: 4px 4px 0 #141414; box-sizing: border-box; display: flex; align-items: center; justify-content: space-around; padding: 0 6px">
+    <a href="PopHome.dc.html" aria-current="page" style="height: 46px; padding: 0 14px; border-radius: 14px; background: #FFD23F; border: 2.5px solid #141414; box-sizing: border-box; color: #141414; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home
+    </a>
+    <a href="PopChat.dc.html" aria-label="Chats" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+    </a>
+    <a href="PopDabba.dc.html" aria-label="Plan my day" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="5" rx="1.5"/><rect x="5" y="14" width="14" height="5" rx="1.5"/><path d="M8 7V4.5h8V7"/></svg>
+    </a>
+    <a href="PopMe.dc.html" aria-label="Meri pasand" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#141414" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mood: 'teekha' };
+  }
+  renderVals() {
+    var self = this;
+    var defs = [
+      { id: 'teekha', label: 'Teekha', img: '/_blob/a41267d2a84e11df1ae4b5a9ba648ff7', bg: '#E63B2E', tilt: -3 },
+      { id: 'street', label: 'Street', img: '/_blob/b06c1a27c41ab31cfb996cdf71a04f32', bg: '#FFD23F', tilt: 2 },
+      { id: 'comfort', label: 'Comfort', img: '/_blob/e391c1926c7a9c4713053c8c1a1b102d', bg: '#FFFFFF', tilt: -2 },
+      { id: 'chinese', label: 'Chinese', img: '/_blob/510e5fa70ae5903694b089ffb3791967', bg: '#FF7AB6', tilt: 3 },
+      { id: 'light', label: 'Light', img: '/_blob/fe38516ff6849cc5816223a2ccb71918', bg: '#1FA855', tilt: -3 },
+      { id: 'meetha', label: 'Meetha', img: '/_blob/e5d7ff8c635ec06e9d28bb35035de7af', bg: '#FFFFFF', tilt: 2 }
+    ];
+    var out = {};
+    defs.forEach(function (d) {
+        var on = self.state.mood === d.id;
+        out[d.id] = {
+          label: d.label, img: d.img, sel: on,
+          pick: function () { self.setState({ mood: d.id }); },
+          style: 'position: relative; height: 126px; border-radius: 22px; border: 3px solid #141414; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #141414; background: ' + d.bg + '; ' +
+            (on ? 'box-shadow: 6px 6px 0 #141414; transform: rotate(' + d.tilt + 'deg) translate(-3px, -3px);' : 'box-shadow: 3px 3px 0 #141414;')
+        };
+    });
+    return out;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kk-mobile-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/admin/Downloads/kya-khaun-app/mobile", "run", "web", "--", "--port", "8091"],
+      "port": 8091
+    },
+    {
+      "name": "kk-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/admin/Downloads/kya-khaun-app/server", "run", "dev"],
+      "port": 4100
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun — Profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&amp;family=Figtree:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:#2B0F0B}a:hover{color:#C8161D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFBF4; font-family: 'Figtree', system-ui, sans-serif; color: #2B0F0B">
+
+  <div style="position: absolute; left: 24px; right: 24px; top: 24px; display: flex; align-items: center; gap: 16px">
+    <span style="width: 64px; height: 64px; border-radius: 50%; background: #5C0A0F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 26px">R</span>
+    <div style="flex: 1"><h1 style="margin: 0; font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 22px; line-height: 1.2">Riya</h1><div style="font-size: 14px; line-height: 1.43; color: #6E5A52">Your food profile</div></div>
+  </div>
+  <div style="position: absolute; left: 16px; right: 16px; top: 112px; background: #FFFFFF; border-radius: 20px; box-shadow: 0 0 0 1px rgba(43,15,11,0.03), 0 2px 6px rgba(43,15,11,0.05), 0 6px 14px rgba(43,15,11,0.07); padding: 16px 16px 16px 20px; display: flex; align-items: center; gap: 12px">
+    <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600">Remember my taste</span><span style="font-size: 13px; color: #6E5A52">{{ memoryNote }}</span></span>
+    <button role="switch" aria-checked="{{ memoryOn }}" aria-label="Remember my taste" onClick="{{ toggle }}" style="{{ trackStyle }}"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.25)"></span></button>
+  </div>
+  <div style="position: absolute; left: 24px; right: 24px; top: 212px">
+    <div style="font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">Preferences</div>
+    <div style="margin-top: 4px">
+      <a href="#edit" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3; text-decoration: none; color: #2B0F0B"><span style="flex: 1; font-size: 16px; line-height: 1.5; font-weight: 400">Diet</span><span style="width: 14px; height: 14px; border: 1.5px solid #8B3A1A; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0"><svg width="8" height="7" viewBox="0 0 8 7" aria-hidden="true"><path d="M4 0l4 7H0z" fill="#8B3A1A"/></svg></span><span style="font-size: 14px; color: #6E5A52">Non-veg</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a><a href="#edit" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3; text-decoration: none; color: #2B0F0B"><span style="flex: 1; font-size: 16px; line-height: 1.5; font-weight: 400">Spice level</span><span style="font-size: 14px; color: #6E5A52">Medium</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a><a href="#edit" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3; text-decoration: none; color: #2B0F0B"><span style="flex: 1; font-size: 16px; line-height: 1.5; font-weight: 400">Budget per meal</span><span style="font-size: 14px; color: #6E5A52">₹250–400</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a><a href="#edit" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3; text-decoration: none; color: #2B0F0B"><span style="flex: 1; font-size: 16px; line-height: 1.5; font-weight: 400">Favourite cuisines</span><span style="font-size: 14px; color: #6E5A52">North Indian +2</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a><a href="#edit" style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3; text-decoration: none; color: #2B0F0B"><span style="flex: 1; font-size: 16px; line-height: 1.5; font-weight: 400">Avoid</span><span style="font-size: 14px; color: #6E5A52">Mushroom, Karela</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+    </div>
+    <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: baseline"><span style="font-family: 'Baloo 2', Georgia, serif; font-weight: 600; font-size: 18px; line-height: 1.25">What Chatora has learned</span><button style="border: none; background: transparent; padding: 8px 0; font-size: 14px; font-weight: 600; color: #C8161D">Clear all</button></div>
+    <div style="margin-top: 4px"><div style="min-height: 56px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #EFE4D3;"><span style="flex: 1; font-size: 15px; line-height: 1.4">You order tikka about twice a week</span><button aria-label="Forget: You order tikka about twice a week" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div><div style="min-height: 56px; display: flex; align-items: center; gap: 12px; "><span style="flex: 1; font-size: 15px; line-height: 1.4">Dinner is usually around 9 pm</span><button aria-label="Forget: Dinner is usually around 9 pm" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></div></div>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: #FFFFFF; border-top: 1px solid #EFE4D3; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 8px 8px 16px; box-sizing: border-box"><a href="V4Home.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 500; color: #6E5A52"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</a><a href="V4Chat.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 500; color: #6E5A52"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Chats</a><a href="V4Plan.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 500; color: #6E5A52"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E5A52" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>My day</a><a href="V4Profile.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 700; color: #C8161D"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C8161D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profile</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: true };
+  }
+  renderVals() {
+    var self = this, on = this.state.on;
+    return {
+      memoryOn: on,
+      memoryNote: on ? 'Picks get better every day' : "Off. I won't remember anything",
+      toggle: function () { self.setState({ on: !self.state.on }); },
+      trackStyle: 'width: 52px; height: 32px; border-radius: 999px; border: none; padding: 3px; display: flex; ' + (on ? 'background: #1E7A44; justify-content: flex-end;' : 'background: #C9B9A6; justify-content: flex-start;')
+    };
+  }
+}
+</script>
+</body>
+</html>

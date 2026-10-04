@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun — Profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:#8E0E14}a:hover{color:#C8161D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFF6E5; font-family: 'Figtree', sans-serif; color: #2B0F0B">
+
+  <div style="position: absolute; left: 16px; right: 16px; top: 18px; height: 112px; border-radius: 26px; background: #8E0E14; padding: 0 18px; box-sizing: border-box; display: flex; align-items: center; gap: 14px; overflow: hidden">
+    <img src="/_blob/2f4b9a50bdb01e9f4378ed4751b93746" alt="" style="position: absolute; right: -40px; top: -30px; width: 170px; height: 170px; opacity: 0.35">
+    <span style="position: relative; width: 60px; height: 60px; border-radius: 50%; background: #F4B740; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 800; color: #2B0F0B">R</span>
+    <span style="position: relative; display: flex; flex-direction: column"><span style="font-family: 'Baloo 2', sans-serif; font-size: 22px; font-weight: 800; color: #FFF6E5; line-height: 1.1">Riya</span><span style="font-size: 13px; color: #F9D9A8">Your food profile</span></span>
+  </div>
+
+  <div style="position: absolute; left: 16px; right: 16px; top: 146px; height: 66px; border-radius: 20px; background: #FFFFFF; border: 1px solid #F1E4CC; box-shadow: 0 10px 24px rgba(90,8,12,0.08); padding: 0 14px 0 16px; box-sizing: border-box; display: flex; align-items: center; gap: 12px">
+    <span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 800">Personalised memory</span><span style="font-size: 12px; color: #6B4A40">{{ memoryNote }}</span></span>
+    <button role="switch" aria-checked="{{ memoryOn }}" aria-label="Personalised memory" onClick="{{ toggle }}" style="{{ trackStyle }}"><span style="width: 26px; height: 26px; border-radius: 50%; background: #FFFFFF; display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></span></button>
+  </div>
+
+  <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #8A5A12; position: absolute; left: 20px; top: 230px">Preferences</div>
+  <div style="position: absolute; left: 16px; right: 16px; top: 254px; border-radius: 22px; background: #FFFFFF; border: 1px solid #F1E4CC; box-shadow: 0 10px 24px rgba(90,8,12,0.08); padding: 0 14px">
+    <div style="min-height: 54px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F5EBDA; padding: 0 2px">
+      <span style="flex: 1; font-size: 15px; font-weight: 700">Diet</span><span style="width: 14px; height: 14px; border: 1.6px solid #8B3A1A; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0; background: #FFFFFF"><svg width="8" height="7" viewBox="0 0 8 7" aria-hidden="true"><path d="M4 0l4 7H0z" fill="#8B3A1A"/></svg></span><span style="font-size: 14px; color: #6B4A40; font-weight: 600">Non-veg</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9A58A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+    <div style="min-height: 54px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F5EBDA; padding: 0 2px">
+      <span style="flex: 1; font-size: 15px; font-weight: 700">Spice level</span><span style="font-size: 14px; color: #6B4A40; font-weight: 600">Medium</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9A58A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+    <div style="min-height: 54px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F5EBDA; padding: 0 2px">
+      <span style="flex: 1; font-size: 15px; font-weight: 700">Budget per meal</span><span style="font-size: 14px; color: #6B4A40; font-weight: 600">₹250–400</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9A58A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+    <div style="min-height: 54px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F5EBDA; padding: 0 2px">
+      <span style="flex: 1; font-size: 15px; font-weight: 700">Avoid</span><span style="font-size: 14px; color: #6B4A40; font-weight: 600">Mushroom, Karela</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9A58A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+    <div style="min-height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 2px">
+      <span style="flex: 1; font-size: 15px; font-weight: 700">Favourites</span>
+      <span style="display: flex"><img src="/_blob/148fa86b4e47db21b300f5abc103c207" alt="" style="width: 38px; height: 38px; margin-left: 0px"><img src="/_blob/2f4b9a50bdb01e9f4378ed4751b93746" alt="" style="width: 38px; height: 38px; margin-left: -10px"><img src="/_blob/31c6934d5f85569b808906ef5d054aab" alt="" style="width: 38px; height: 38px; margin-left: -10px"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9A58A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 554px; display: flex; justify-content: space-between; align-items: center">
+    <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #8A5A12; ">What Chatora has learned</div>
+    <button style="height: 32px; padding: 0 4px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: #8E0E14">Clear all</button>
+  </div>
+  <div style="position: absolute; left: 16px; right: 16px; top: 588px; border-radius: 22px; background: #FFFFFF; border: 1px solid #F1E4CC; box-shadow: 0 10px 24px rgba(90,8,12,0.08); padding: 2px 6px 2px 12px">
+    <div style="height: 56px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #F5EBDA">
+      <img src="/_blob/f804e4f34cacfc3c1c9f736b0068685a" alt="" style="width: 40px; height: 40px"><span style="flex: 1; font-size: 14px; font-weight: 600">Orders tikka about twice a week</span>
+      <button aria-label="Forget: Orders tikka about twice a week" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+    </div>
+    <div style="height: 56px; display: flex; align-items: center; gap: 10px">
+      <img src="/_blob/04d12512c684ccc173d26e4b49432b36" alt="" style="width: 40px; height: 40px"><span style="flex: 1; font-size: 14px; font-weight: 600">Usually eats dinner around 9 pm</span>
+      <button aria-label="Forget: Usually eats dinner around 9 pm" style="width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+    </div>
+  </div>
+  <nav aria-label="Main" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: #FFFFFF; border-top: 1px solid #F1E4CC; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 8px 8px 18px; box-sizing: border-box"><a href="V3Home.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 12px; font-weight: 600; color: #6B4A40"><span style="width: 52px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; "><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B4A40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</a><a href="V3Chat.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 12px; font-weight: 600; color: #6B4A40"><span style="width: 52px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; "><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B4A40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>Chats</a><a href="V3Plan.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 12px; font-weight: 600; color: #6B4A40"><span style="width: 52px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; "><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B4A40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>Plan</a><a href="V3Profile.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; font-size: 12px; font-weight: 800; color: #C8161D"><span style="width: 52px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: #FFE9E3;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8161D" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>Profile</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { on: true };
+  }
+  renderVals() {
+    var self = this, on = this.state.on;
+    return {
+      memoryOn: on,
+      memoryNote: on ? 'On. Picks get better every day' : 'Off. Nothing is remembered',
+      toggle: function () { self.setState({ on: !self.state.on }); },
+      trackStyle: 'width: 56px; height: 32px; border-radius: 999px; border: none; padding: 3px; display: flex; ' + (on ? 'background: #1E7A44; justify-content: flex-end;' : 'background: #B9A58A; justify-content: flex-start;')
+    };
+  }
+}
+</script>
+</body>
+</html>

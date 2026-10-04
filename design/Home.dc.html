@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="hi-Latn">
+<head>
+<meta charset="utf-8">
+<title>Kya Khaun — Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&amp;family=Figtree:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+a{color:#8E0E14}a:hover{color:#C8161D}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFF6E5; font-family: 'Figtree', sans-serif; color: #2B0F0B">
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 20px; height: 48px; display: flex; align-items: center; justify-content: space-between">
+    <button style="height: 40px; padding: 0 14px 0 10px; border-radius: 999px; border: none; background: #FFFFFF; box-shadow: 0 2px 0 #EADBC0; display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: #2B0F0B">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8161D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Andheri West, Mumbai
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4A40" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <a href="Memory.dc.html" aria-label="Profile" style="width: 44px; height: 44px; border-radius: 50%; background: #F4B740; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 18px; color: #2B0F0B; text-decoration: none; box-shadow: 0 0 0 3px #FFFFFF">R</a>
+  </div>
+
+  <div style="position: absolute; left: 24px; right: 24px; top: 82px">
+    <p style="margin: 0; font-size: 15px; font-weight: 600; color: #6B4A40">Shaam ke 7:40 baje, Riya —</p>
+    <h1 style="margin: 0; font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: -0.01em">Aaj kya khaun<span style="color: #C8161D">?</span></h1>
+  </div>
+
+  <div style="position: absolute; left: 35px; top: 168px; width: 320px; height: 320px; border-radius: 50%; background: #FFFBF2; border: 10px solid #E8A93A; box-sizing: border-box; box-shadow: inset 0 0 0 6px #FBE3B0, 0 18px 32px rgba(142,14,20,0.16)">
+    <div style="position: absolute; left: 0; top: 0; width: 300px; height: 300px">
+
+      <button onClick="{{ pickSpicy }}" aria-pressed="{{ spicySel }}" style="{{ spicyStyle }} left: 107px; top: 3px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21c-1.5 0-2-1.5-1-3 3-4 7-6 9-10 .8-1.6 2.4-2.4 4-2 1.6.5 2.3 2.2 1.8 3.8C18 15 12 21 6 21z"/><path d="M17 6c0-2 1-3 3-3"/></svg>
+        Spicy
+      </button>
+      <button onClick="{{ pickLight }}" aria-pressed="{{ lightSel }}" style="{{ lightStyle }} left: 206px; top: 75px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19C5 10 11 4 20 4c0 9-6 15-15 15z"/><path d="M5 19l8-8"/></svg>
+        Light
+      </button>
+      <button onClick="{{ pickComfort }}" aria-pressed="{{ comfortSel }}" style="{{ comfortStyle }} left: 168px; top: 191px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M9 8c0-1 1-1.5 1-2.5M14 8c0-1 1-1.5 1-2.5"/></svg>
+        Comfort
+      </button>
+      <button onClick="{{ pickStreet }}" aria-pressed="{{ streetSel }}" style="{{ streetStyle }} left: 46px; top: 191px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11c0-3.3 3.6-6 8-6s8 2.7 8 6z"/><path d="M3 14h18M5 17h14c0 1.7-1.3 3-3 3H8c-1.7 0-3-1.3-3-3z"/></svg>
+        Street
+      </button>
+      <button onClick="{{ pickSweet }}" aria-pressed="{{ sweetSel }}" style="{{ sweetStyle }} left: 8px; top: 75px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M9 10h.01M14 9h.01M12 14h.01M15 13h.01M9.5 14.5h.01"/></svg>
+        Sweet
+      </button>
+
+      <a href="Chat.dc.html" aria-label="Tap to speak" style="position: absolute; left: 98px; top: 98px; width: 104px; height: 104px; border-radius: 50%; background: #C8161D; border: 6px solid #FFFFFF; box-sizing: border-box; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 22px rgba(200,22,29,0.4), 0 0 0 10px rgba(200,22,29,0.12)">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </a>
+      <span style="position: absolute; left: 120px; width: 60px; top: 214px; text-align: center; font-family: 'Baloo 2', sans-serif; font-size: 15px; font-weight: 700; color: #8E0E14">Bolo!</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 504px; display: flex; gap: 8px; justify-content: center">
+    <button style="height: 40px; padding: 0 14px; border-radius: 10px; border: none; background: #1E6B3A; color: #FFFFFF; font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 6px; outline: 1.5px dashed #B9E4C7; outline-offset: -5px">₹400 tak</button>
+    <button style="height: 40px; padding: 0 14px; border-radius: 10px; border: none; background: #FFFFFF; box-shadow: 0 2px 0 #EADBC0; color: #2B0F0B; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8161D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      30 min
+    </button>
+    <button style="height: 40px; padding: 0 14px; border-radius: 10px; border: none; background: #FFFFFF; box-shadow: 0 2px 0 #EADBC0; color: #2B0F0B; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px">
+      <span style="width: 14px; height: 14px; border: 1.6px solid #8B3A1A; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="8" height="7" viewBox="0 0 8 7" aria-hidden="true"><path d="M4 0l4 7H0z" fill="#8B3A1A"/></svg></span>
+      Non-veg
+    </button>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 560px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+    <a href="Results.dc.html" style="height: 76px; border-radius: 20px; background: #2B0F0B; color: #FFF6E5; text-decoration: none; padding: 12px 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#F4B740" aria-hidden="true"><path d="M12 2l2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3z"/></svg>
+      <span style="font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; line-height: 1">Tum hi decide karo</span>
+    </a>
+    <a href="Plan.dc.html" style="height: 76px; border-radius: 20px; background: #F4B740; color: #2B0F0B; text-decoration: none; padding: 12px 14px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B0F0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="5" rx="1.5"/><rect x="5" y="14" width="14" height="5" rx="1.5"/><path d="M8 7V4.5h8V7"/></svg>
+      <span style="font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 700; line-height: 1">Plan my day</span>
+    </a>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 650px; height: 56px; border-radius: 18px; background: #FFFFFF; box-shadow: 0 3px 0 #EADBC0; display: flex; align-items: center; padding: 0 6px 0 4px; gap: 4px">
+    <a href="Fridge.dc.html" aria-label="Photo se batao" style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #FFF0EC">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8161D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    </a>
+    <input aria-label="Type your craving" placeholder="Likho: 'kuch cheesy, 300 ke andar'" style="flex: 1; min-width: 0; height: 44px; border: none; background: transparent; font-size: 15px; color: #2B0F0B; outline: none">
+    <a href="Chat.dc.html" aria-label="Send" style="width: 44px; height: 44px; border-radius: 14px; background: #2B0F0B; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4B740" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>
+    </a>
+  </div>
+
+  <nav aria-label="Main" style="position: absolute; left: 16px; right: 16px; bottom: 16px; height: 68px; background: #2B0F0B; border-radius: 24px; display: flex; align-items: center; justify-content: space-around; padding: 0 8px; box-shadow: 0 12px 24px rgba(43,15,11,0.25)">
+    <a href="Home.dc.html" aria-current="page" style="height: 46px; padding: 0 16px; border-radius: 16px; background: #F4B740; color: #2B0F0B; text-decoration: none; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2B0F0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home
+    </a>
+    <a href="Chat.dc.html" aria-label="Chats" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>
+    </a>
+    <a href="Plan.dc.html" aria-label="Plan my day" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="7" width="14" height="5" rx="1.5"/><rect x="5" y="14" width="14" height="5" rx="1.5"/><path d="M8 7V4.5h8V7"/></svg>
+    </a>
+    <a href="Memory.dc.html" aria-label="Meri pasand" style="width: 48px; height: 46px; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F7E6C8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mood: 'spicy' };
+  }
+  katori(id) {
+    var on = this.state.mood === id;
+    return 'position: absolute; width: 86px; height: 86px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-family: \'Baloo 2\', sans-serif; font-size: 15px; font-weight: 700; line-height: 1; padding: 0; ' +
+      (on ? 'background: #C8161D; color: #FFFFFF; border: 3px solid #8E0E14; box-shadow: 0 6px 12px rgba(200,22,29,0.35);' : 'background: #FFFFFF; color: #2B0F0B; border: 3px solid #F1D29A; box-shadow: inset 0 -4px 0 #FBE9C6;');
+  }
+  renderVals() {
+    var self = this;
+    var pick = function (id) { return function () { self.setState({ mood: id }); }; };
+    var m = this.state.mood;
+    return {
+      spicyStyle: this.katori('spicy'), lightStyle: this.katori('light'), comfortStyle: this.katori('comfort'), streetStyle: this.katori('street'), sweetStyle: this.katori('sweet'),
+      spicySel: m === 'spicy', lightSel: m === 'light', comfortSel: m === 'comfort', streetSel: m === 'street', sweetSel: m === 'sweet',
+      pickSpicy: pick('spicy'), pickLight: pick('light'), pickComfort: pick('comfort'), pickStreet: pick('street'), pickSweet: pick('sweet')
+    };
+  }
+}
+</script>
+</body>
+</html>
