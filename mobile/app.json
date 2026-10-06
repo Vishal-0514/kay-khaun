@@ -20,7 +20,14 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-font",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kya Khaun uses your photos to spot the ingredients in your kitchen.",
+          "cameraPermission": "Kya Khaun uses the camera to spot the ingredients in your fridge."
+        }
+      ]
     ]
   }
 }

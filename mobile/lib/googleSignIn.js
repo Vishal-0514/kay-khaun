@@ -17,8 +17,8 @@ const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 let configured = false;
 
 export function googleUnavailableReason() {
-  if (!google?.GoogleSignin) return 'Google sign-in works in the installed app build. For now, continue with phone or email.';
-  if (!webClientId) return 'Google sign-in is not set up yet (EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID). Continue with phone or email for now.';
+  if (!google?.GoogleSignin) return 'Google sign-in works in the installed app build. For now, continue with email.';
+  if (!webClientId) return 'Google sign-in is not set up yet (EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID). Continue with email for now.';
   return null;
 }
 

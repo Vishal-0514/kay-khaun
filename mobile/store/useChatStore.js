@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
+import { useCookStore } from './useCookStore';
 
 // The current chat with Chatora plus the last set of picks, which the
-// Results and Dish screens read.
+// Results and Dish screens read. Recipes go to the cook store.
 export const useChatStore = create((set, get) => ({
   conversation: null, // { id, title, slip, messages[] }
   picks: [],
@@ -24,6 +25,7 @@ export const useChatStore = create((set, get) => ({
         conversation: data.conversation,
         ...(data.picks.length ? { picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } } : null),
       });
+      if (data.recipes?.length) useCookStore.getState().setFromChat(data);
       return data;
     } catch (err) {
       // Put the chat back as it was so the user can retry.
@@ -37,6 +39,7 @@ export const useChatStore = create((set, get) => ({
   async open(id) {
     const { data } = await api.get(`/chat/${id}`);
     set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } });
+    if (data.recipes?.length) useCookStore.getState().setFromChat(data);
   },
 
   async quickPicks(mood) {

@@ -33,6 +33,12 @@ const shapes = {
   plus: [['path', 'M12 5v14M5 12h14']],
   route: [['circle', { cx: 6, cy: 18, r: 2.5 }], ['circle', { cx: 18, cy: 6, r: 2.5 }], ['path', 'M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5']],
   external: [['path', 'M7 17L17 7M9 7h8v8']],
+  pause: [['path', 'M9 6v12M15 6v12']],
+  play: [['path', 'M8 5.5v13l11-6.5z']],
+  image: [['rect', { x: 3, y: 4, width: 18, height: 16, rx: 2 }], ['circle', { cx: 9, cy: 10, r: 2 }], ['path', 'M21 16l-5-5-9 9']],
+  people: [['circle', { cx: 9, cy: 8, r: 3.5 }], ['path', 'M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5'], ['path', 'M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.7.8 2.9 2.5 3.5 5.2']],
+  restart: [['path', 'M4 12a8 8 0 1 0 2.3-5.7'], ['path', 'M4 4v4.5h4.5']],
+  basket: [['path', 'M3 10h18l-2 10H5z'], ['path', 'M8 10l3-6M16 10l-3-6M9 14v3M15 14v3']],
 };
 
 export default function Icon({ name, size = 20, color = '#2B0F0B', strokeWidth = 2 }) {

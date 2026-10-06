@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BandHeader, { useBandHeight } from '../components/BandHeader';
 import Button from '../components/Button';
 import Icon, { DietMark } from '../components/Icon';
+import Animated from 'react-native-reanimated';
+import { PressScale, riseUp, sheetUp } from '../components/Motion';
 import { api, errorMessage } from '../lib/api';
 import { signOut } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
@@ -79,7 +81,7 @@ export default function Taste() {
         onBack={user?.onboarded ? undefined : () => signOut().then(() => router.replace('/welcome'))}
       />
       <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 32, paddingBottom: 120 + insets.bottom }} keyboardShouldPersistTaps="handled">
-        <View style={styles.card}>
+        <Animated.View entering={riseUp(0, 150)} style={styles.card}>
           <Text style={styles.section} nativeID="name-label">What should I call you?</Text>
           <TextInput
             aria-labelledby="name-label"
@@ -99,10 +101,10 @@ export default function Taste() {
             {DIETS.map((d) => {
               const on = diet === d.id;
               return (
-                <Pressable key={d.id} role="radio" aria-checked={on} onPress={() => setDiet(d.id)} style={[styles.pill, on && styles.pillOn]}>
+                <PressScale scaleTo={0.92} key={d.id} role="radio" aria-checked={on} onPress={() => setDiet(d.id)} style={[styles.pill, on && styles.pillOn]}>
                   {d.id !== 'egg' && <DietMark type={d.id} />}
                   <Text style={[styles.pillText, on && styles.pillTextOn]}>{d.label}</Text>
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
@@ -115,9 +117,9 @@ export default function Taste() {
             {SPICE.map((label, i) => {
               const n = i + 1;
               return (
-                <Pressable key={label} role="radio" aria-label={`Spice: ${label}`} aria-checked={n === spice} onPress={() => setSpice(n)} style={styles.spiceHit}>
+                <PressScale scaleTo={0.92} key={label} role="radio" aria-label={`Spice: ${label}`} aria-checked={n === spice} onPress={() => setSpice(n)} style={styles.spiceHit}>
                   <View style={[styles.spiceBar, { height: 12 + n * 6, backgroundColor: n <= spice ? HEAT[i] : colors.hair }]} />
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
@@ -131,7 +133,7 @@ export default function Taste() {
             {CUISINES.map((c) => {
               const on = cuisines.includes(c.name);
               return (
-                <Pressable
+                <PressScale scaleTo={0.92}
                   key={c.name}
                   role="checkbox"
                   aria-checked={on}
@@ -139,7 +141,7 @@ export default function Taste() {
                   style={[styles.chip, on && { backgroundColor: c.tint, borderColor: c.ink, borderWidth: 1.5 }]}
                 >
                   <Text style={[styles.chipText, on && { color: c.ink, fontFamily: fonts.bold }]}>{c.name}</Text>
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
@@ -149,9 +151,9 @@ export default function Taste() {
             {BUDGETS.map((b) => {
               const on = budget === b.id;
               return (
-                <Pressable key={b.id} role="radio" aria-checked={on} onPress={() => setBudget(b.id)} style={[styles.budget, on && styles.budgetOn]}>
+                <PressScale scaleTo={0.92} key={b.id} role="radio" aria-checked={on} onPress={() => setBudget(b.id)} style={[styles.budget, on && styles.budgetOn]}>
                   <Text style={[styles.budgetText, on && { color: colors.goldText }]}>{b.label}</Text>
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
@@ -161,20 +163,20 @@ export default function Taste() {
             {AVOID.map((item) => {
               const on = avoid.includes(item);
               return (
-                <Pressable key={item} role="checkbox" aria-checked={on} onPress={() => setAvoid(toggle(avoid, item))} style={[styles.chip, on && styles.avoidOn]}>
+                <PressScale scaleTo={0.92} key={item} role="checkbox" aria-checked={on} onPress={() => setAvoid(toggle(avoid, item))} style={[styles.chip, on && styles.avoidOn]}>
                   {on && <Icon name="close" size={14} color={colors.cream} strokeWidth={2.4} />}
                   <Text style={[styles.chipText, on && { color: colors.cream }]}>{item}</Text>
-                </Pressable>
+                </PressScale>
               );
             })}
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + space.base }]}>
+      <Animated.View entering={sheetUp(350)} style={[styles.footer, { paddingBottom: insets.bottom + space.base }]}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Button title="Continue" icon={null} onPress={save} loading={busy} disabled={!name.trim()} />
-      </View>
+      </Animated.View>
     </View>
   );
 }

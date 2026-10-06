@@ -35,7 +35,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }} />
+      {/* Page transitions: screens slide in from the right; sheets like the kitchen rise from
+          the bottom; welcome and the main tabs cross-fade. */}
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas }, animation: 'slide_from_right', animationDuration: 320 }}>
+        <Stack.Screen name="index" options={{ animation: 'none' }} />
+        <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        <Stack.Screen name="taste" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
+      </Stack>
     </SafeAreaProvider>
   );
 }

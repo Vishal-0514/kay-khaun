@@ -1,4 +1,4 @@
-import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
+import { findIngredientsInText } from '../data/pantry.js';
 
 // Backup reader for chat messages (English + Hinglish keywords). Claude (ai.js)
 // is the main reader; this keeps the app answering if Claude is unreachable.
@@ -27,9 +27,11 @@ const CUISINE_WORDS = {
 };
 const DISH_WORDS = ['biryani', 'roll', 'frankie', 'noodles', 'dosa', 'idli', 'pav bhaji', 'vada pav', 'momos', 'paneer', 'chicken', 'mutton', 'fish', 'prawn', 'dal', 'rajma', 'khichdi', 'misal', 'thali', 'keema', 'pulao', 'kebab'];
 
+const HAVE = /(^|[^a-z])(i have|i've got|we have|have got|got some|hai|hain|he|paas|pass|fridge|kitchen|left|bacha|bache|available)([^a-z]|$)/;
+
 export function parseWithKeywords(raw) {
   const text = ` ${raw.toLowerCase().replace(/₹/g, ' rs ')} `;
-  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, timeMax: null, branch: null, avoid: [] };
+  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, timeMax: null, branch: null, avoid: [], ingredients: [] };
 
   for (const [mood, words] of Object.entries(MOOD_WORDS)) if (has(text, words)) out.moods.push(mood);
   for (const [cuisine, words] of Object.entries(CUISINE_WORDS)) if (has(text, words)) out.cuisines.push(cuisine);
@@ -58,6 +60,9 @@ export function parseWithKeywords(raw) {
 
   if (has(text, ['order', 'order in', 'deliver', 'delivery', 'mangwa', 'mangao', 'bahar se', 'outside', 'swiggy', 'zomato'])) out.branch = 'order';
   if (has(text, ['cook', 'cook at home', 'make at home', 'ghar pe', 'banao', 'banana', 'recipe', 'fridge'])) out.branch = 'cook';
+
+  // "I have eggs and bread", "mere paas aloo hai": things in their kitchen.
+  if (HAVE.test(text)) out.ingredients = findIngredientsInText(text);
 
   const found = [...out.moods, ...out.dishWords];
   out.craving = found.length ? found.slice(0, 3).join(', ') : null;

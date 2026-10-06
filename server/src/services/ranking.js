@@ -31,7 +31,7 @@ export function effectiveCriteria(slots, prefs = {}) {
   };
 }
 
-function normalizeAvoid(list = []) {
+export function normalizeAvoid(list = []) {
   const map = { mushroom: 'mushroom', karela: 'karela', baingan: 'baingan', seafood: 'seafood', 'onion & garlic': 'onion-garlic' };
   return list.map((x) => map[x.toLowerCase()]).filter(Boolean);
 }

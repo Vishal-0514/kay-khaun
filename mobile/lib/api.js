@@ -54,6 +54,7 @@ api.interceptors.response.use(
 // The server's own message when it sent one, otherwise a plain explanation.
 export function errorMessage(error) {
   if (error.response?.data?.error) return error.response.data.error;
-  if (error.code === 'ECONNABORTED' || !error.response) return "Can't reach Kya Khaun right now. Check your internet and try again.";
+  // No answer, or the tunnel/proxy answered because the server is down.
+  if (error.code === 'ECONNABORTED' || !error.response || [502, 503, 504].includes(error.response.status)) return "Can't reach Kya Khaun right now. Check your internet and try again.";
   return 'Something went wrong. Please try again.';
 }

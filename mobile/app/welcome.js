@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import MumbaiScene from '../components/MumbaiScene';
 import Button from '../components/Button';
 import Icon from '../components/Icon';
+import { Float, Glow, Reveal, TypingDots, appear, fromLeft, fromRight, leave, rise, sheetUp } from '../components/Motion';
 import { api, errorMessage } from '../lib/api';
 import { googleUnavailableReason, getGoogleIdToken } from '../lib/googleSignIn';
 import { homeRouteFor } from '../lib/session';
@@ -14,6 +16,16 @@ import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, type, space, radius } from '../lib/theme';
 
 const SHEET_HEIGHT = 400;
+
+// The little conversation that plays on the welcome screen, on a loop.
+const DEMOS = [
+  { ask: 'Something spicy under ₹400, in 30 minutes', reply: 'Found 5 picks near you', icon: 'bag' },
+  { ask: 'Ghar pe kya banaun? Aloo, pyaaz, dahi hai', reply: '3 recipes from your kitchen', icon: 'pot' },
+  { ask: 'Light veg dinner, jaldi please', reply: 'Top 5, ready in 25 min', icon: 'clock' },
+];
+const TYPE_MS = 32; // per character
+const THINK_MS = 900;
+const HOLD_MS = 2600;
 
 function GoogleG() {
   return (
@@ -26,6 +38,68 @@ function GoogleG() {
   );
 }
 
+// Types out a craving, shows Chatora thinking, then pops in the answer — then the next one.
+function CravingDemo() {
+  const [index, setIndex] = useState(0);
+  const [typed, setTyped] = useState(0);
+  const [phase, setPhase] = useState('typing'); // typing -> thinking -> answered -> leaving
+  const demo = DEMOS[index];
+
+  useEffect(() => {
+    setTyped(0);
+    setPhase('typing');
+    const timers = [];
+    const typing = setInterval(() => setTyped((n) => Math.min(n + 1, demo.ask.length)), TYPE_MS);
+    const typedAt = 500 + demo.ask.length * TYPE_MS;
+    const leaveAt = typedAt + THINK_MS + HOLD_MS;
+    timers.push(setTimeout(() => setPhase('thinking'), typedAt));
+    timers.push(setTimeout(() => setPhase('answered'), typedAt + THINK_MS));
+    // Let both bubbles fade away before the next craving starts typing.
+    timers.push(setTimeout(() => setPhase('leaving'), leaveAt));
+    timers.push(setTimeout(() => setIndex((i) => (i + 1) % DEMOS.length), leaveAt + 350));
+    return () => {
+      clearInterval(typing);
+      timers.forEach(clearTimeout);
+    };
+  }, [index, demo.ask.length]);
+
+  return (
+    <View style={styles.demo} aria-label={`Example: ${demo.ask}. ${demo.reply}.`}>
+      {phase !== 'leaving' ? (
+        <Animated.View key={`ask${index}`} entering={fromLeft()} exiting={leave} style={styles.askBubble}>
+          <View style={styles.askMic}>
+            <Glow size={46} color="#F4C766" />
+            <Icon name="mic" size={16} color={colors.maroon} strokeWidth={2.4} />
+          </View>
+          <Text style={styles.askText}>
+            “{demo.ask.slice(0, typed)}
+            {typed < demo.ask.length ? <Text style={{ color: colors.gold }}>|</Text> : '”'}
+          </Text>
+        </Animated.View>
+      ) : (
+        <View style={styles.askPlaceholder} />
+      )}
+
+      <View style={styles.replySlot}>
+        {phase === 'thinking' ? (
+          <Animated.View key={`think${index}`} entering={fromRight()} exiting={leave} style={styles.thinking}>
+            <TypingDots color={colors.maroon} />
+          </Animated.View>
+        ) : null}
+        {phase === 'answered' ? (
+          <Animated.View key={`reply${index}`} entering={fromRight()} exiting={leave} style={styles.replyBubble}>
+            <View style={styles.replyTick}>
+              <Icon name="check" size={12} color="#FFFFFF" strokeWidth={3.2} />
+            </View>
+            <Text style={styles.replyText}>{demo.reply}</Text>
+            <Icon name={demo.icon} size={16} color={colors.goldText} />
+          </Animated.View>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
 export default function Welcome() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -35,6 +109,13 @@ export default function Welcome() {
   const [guestBusy, setGuestBusy] = useState(false);
 
   const sceneHeight = Math.max(360, height - SHEET_HEIGHT + 40);
+
+  // Slow "camera push" into the Mumbai scene.
+  const zoom = useSharedValue(1.14);
+  useEffect(() => {
+    zoom.value = withTiming(1, { duration: 2400, easing: Easing.out(Easing.cubic) });
+  }, [zoom]);
+  const sceneStyle = useAnimatedStyle(() => ({ transform: [{ scale: zoom.value }] }));
 
   async function continueWithGoogle() {
     const reason = googleUnavailableReason();
@@ -69,60 +150,68 @@ export default function Welcome() {
 
   return (
     <View style={styles.root}>
-      <View style={[styles.scene, { height: sceneHeight }]}>
+      <Animated.View style={[styles.scene, { height: sceneHeight }, sceneStyle]}>
         <MumbaiScene width={width} height={sceneHeight} />
-      </View>
+      </Animated.View>
+
+      {/* Gold sparkles drifting over the city */}
+      <Float style={[styles.spark, { right: 36, top: insets.top + 64 }]} distance={10} duration={2800}>
+        <Icon name="spark" size={18} color={colors.gold} />
+      </Float>
+      <Float style={[styles.spark, { right: 86, top: insets.top + 132 }]} distance={7} duration={3400} delay={700}>
+        <Icon name="spark" size={11} color="#F4C766" />
+      </Float>
+      <Float style={[styles.spark, { left: width * 0.62, top: insets.top + 18 }]} distance={6} duration={3000} delay={1300}>
+        <Icon name="spark" size={9} color="#F4C766" />
+      </Float>
 
       <View style={[styles.top, { paddingTop: insets.top + space.lg }]}>
-        <View style={styles.brandRow}>
+        <Animated.View entering={rise(0, 150)} style={styles.brandRow}>
           <View style={styles.brandMark}>
             <Text style={styles.brandMarkText}>K</Text>
           </View>
           <Text style={styles.brandName}>Kya Khaun?</Text>
-        </View>
-        <Text style={[styles.kicker, { marginTop: space.lg }]}>Your AI food guide</Text>
-        <Text style={styles.hero}>Hungry tonight?</Text>
-
-        <View style={styles.askBubble}>
-          <View style={styles.askMic}>
-            <Icon name="mic" size={16} color={colors.maroon} strokeWidth={2.4} />
-          </View>
-          <Text style={styles.askText}>"Something spicy under ₹400, in 30 minutes"</Text>
-        </View>
-        <View style={styles.replyBubble}>
-          <View style={styles.replyTick}>
-            <Icon name="check" size={12} color="#FFFFFF" strokeWidth={3.2} />
-          </View>
-          <Text style={styles.replyText}>Found 5 picks near you</Text>
-        </View>
+        </Animated.View>
+        <Reveal delay={250} style={{ marginTop: space.lg }}>
+          <Text style={styles.kicker}>Your AI food guide</Text>
+        </Reveal>
+        <Reveal delay={420}>
+          <Text style={styles.hero}>Hungry tonight?</Text>
+        </Reveal>
+        <Animated.View entering={appear(0, 900)}>
+          <CravingDemo />
+        </Animated.View>
       </View>
 
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + space.base }]}>
-        <Text style={styles.title} role="heading">
+      <Animated.View entering={sheetUp(150)} style={[styles.sheet, { paddingBottom: insets.bottom + space.base }]}>
+        <Animated.Text entering={rise(0, 550)} style={styles.title} role="heading">
           Can't decide{'\n'}what to eat?
-        </Text>
-        <Text style={styles.lede}>Tell me your craving, budget and time. I'll find the right meal in seconds.</Text>
+        </Animated.Text>
+        <Animated.Text entering={rise(1, 550)} style={styles.lede}>
+          Tell me your craving, budget and time. I'll find the right meal in seconds.
+        </Animated.Text>
         <View style={styles.buttons}>
-          <Button variant="outline" title="Continue with Google" icon={<GoogleG />} loading={googleBusy} onPress={continueWithGoogle} />
-          <Button
-            title="Continue with phone"
-            icon={<Icon name="phone" color="#FFFFFF" />}
-            onPress={() => router.push({ pathname: '/sign-in', params: { method: 'phone' } })}
-          />
+          <Animated.View entering={rise(2, 550)}>
+            <Button variant="outline" title="Continue with Google" icon={<GoogleG />} loading={googleBusy} onPress={continueWithGoogle} />
+          </Animated.View>
+          <Animated.View entering={rise(3, 550)}>
+            <Button sheen title="Continue with email" icon={<Icon name="mail" color="#FFFFFF" />} onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'login' } })} />
+          </Animated.View>
         </View>
-        <View style={styles.footer}>
-          <Button variant="link" title="Use email instead" onPress={() => router.push({ pathname: '/sign-in', params: { method: 'email' } })} />
+        <Animated.View entering={rise(4, 550)} style={styles.footer}>
+          <Button variant="link" title="New here? Create an account" onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'signup' } })} />
           <Text style={styles.legal}>By continuing you agree to our Terms and Privacy Policy.</Text>
           {__DEV__ ? <Button variant="link" title="Skip login (testing only)" loading={guestBusy} onPress={skipLogin} /> : null}
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.maroonDeep },
+  root: { flex: 1, backgroundColor: colors.maroonDeep, overflow: 'hidden' },
   scene: { position: 'absolute', left: 0, right: 0, top: 0 },
+  spark: { position: 'absolute' },
   top: { paddingHorizontal: space.lg },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   brandMark: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
@@ -130,10 +219,11 @@ const styles = StyleSheet.create({
   brandName: { fontFamily: fonts.display, fontSize: 20, color: colors.cream },
   kicker: { ...type.label, color: '#F4C766', letterSpacing: 1.5 },
   hero: { fontFamily: fonts.display, fontSize: 36, lineHeight: 40, color: colors.cream, marginTop: space.xs },
+  demo: { marginTop: space.xl, minHeight: 124 },
   askBubble: {
-    marginTop: space.xl,
     alignSelf: 'flex-start',
-    maxWidth: 270,
+    maxWidth: 280,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -145,11 +235,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(244,199,102,0.35)',
   },
+  askPlaceholder: { height: 52 },
   askMic: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F4C766', alignItems: 'center', justifyContent: 'center' },
   askText: { flex: 1, fontFamily: fonts.regular, fontSize: 14, lineHeight: 19, color: colors.cream },
+  replySlot: { marginTop: space.md, minHeight: 40, alignItems: 'flex-end' },
+  thinking: { paddingHorizontal: 16, paddingVertical: 13, borderRadius: 18, borderBottomRightRadius: 4, backgroundColor: colors.cream },
   replyBubble: {
-    marginTop: space.md,
-    alignSelf: 'flex-end',
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.sm,

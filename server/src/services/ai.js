@@ -2,11 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
 
-// Chatora's brain. Two jobs, both grounded:
+// Chatora's brain. Every job is grounded:
 //  1. understand() reads the message (with the chat so far) into slots and writes
 //     the reply when Chatora needs to ask something or the message isn't about food.
 //  2. explainPicks() writes the answer and one reason per dish, using ONLY the
 //     dish facts we pass in. Dishes, prices and times always come from ranking.js.
+//  3. explainRecipes() does the same for home recipes (cooking.js).
+//  4. scanKitchen() lists the ingredients in a fridge or kitchen photo.
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
@@ -57,6 +59,7 @@ const understandSchema = strictObject({
   timeMax: nullable('integer'),
   branch: { type: ['string', 'null'], enum: ['order', 'cook', null] },
   avoid: { type: 'array', items: { type: 'string', enum: AVOIDABLE } },
+  ingredients: { type: 'array', items: { type: 'string' } },
   language: { type: 'string', enum: LANGUAGES },
   aboutFood: { type: 'boolean' },
   reply: { type: 'string' },
@@ -73,6 +76,7 @@ const understandCheck = z.object({
   timeMax: z.number().int().min(5).max(240).nullable(),
   branch: z.enum(['order', 'cook']).nullable(),
   avoid: z.array(z.enum(AVOIDABLE)),
+  ingredients: z.array(z.string().max(40)).max(30),
   language: z.enum(LANGUAGES),
   aboutFood: z.boolean(),
   reply: z.string().min(1).max(400),
@@ -91,14 +95,16 @@ Slots — report only what the latest message adds or changes; use null / [] for
 - timeMax: minutes they can wait. "quick", "jaldi", "hungry now" = 30.
 - branch: "order" to get food delivered, "cook" to make it at home, else null.
 - avoid: things they don't want, from: ${AVOIDABLE.join(', ')}.
+- ingredients: food items they say they have at home right now, in simple lowercase English ("aloo" = "potato", "dahi" = "curd").
 - language: the language they wrote in.
 - aboutFood: false for greetings, thanks or unrelated chat.
 
 reply — one or two short, friendly sentences in the SAME language and style they used (Hinglish in Latin script if they wrote Hinglish):
 - If aboutFood is false: answer briefly and invite them to say what they feel like eating.
 - Else if the order-or-cook choice is still unknown (not in the slip and not in this message): acknowledge what they want in a few words and ask ONLY whether they want to order in or cook at home.
+- Else if they want to cook and no ingredients are known yet (none in the slip or this message): ask what they have at home, and mention they can scan their fridge.
 - Else: a short acknowledgement such as "On it!" — the app will add the results.
-Never name restaurants, dishes, prices or delivery times in the reply.`;
+Never name restaurants, dishes, recipes, prices or delivery times in the reply.`;
 
 export async function understand({ text, history, slip }) {
   const content = [
@@ -109,7 +115,7 @@ export async function understand({ text, history, slip }) {
   return understandCheck.parse(await callJson({ system: UNDERSTAND_SYSTEM, content, schema: understandSchema, maxTokens: 1500 }));
 }
 
-// ---------- 2. explain picks ----------
+// ---------- 2 + 3. explain picks / recipes ----------
 
 const explainSchema = strictObject({
   message: { type: 'string' },
@@ -121,13 +127,19 @@ const explainCheck = z.object({
   reasons: z.array(z.object({ id: z.string(), reason: z.string().min(1).max(120) })),
 });
 
+async function explain(system, payload, ids) {
+  const out = explainCheck.parse(await callJson({ system, content: JSON.stringify(payload), schema: explainSchema, maxTokens: 2500 }));
+  const known = new Set(ids);
+  return { message: out.message, reasons: Object.fromEntries(out.reasons.filter((r) => known.has(r.id)).map((r) => [r.id, r.reason])) };
+}
+
 const EXPLAIN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already chosen and ranked the dishes; you only explain them.
 Use ONLY the facts given for each dish (name, restaurant, price, delivery minutes, rating, spice, cuisine, diet, distance). Never invent dishes, prices, times, offers or ingredients.
 - message: two short sentences max, in the user's language and style. Name the #1 dish with its restaurant, price and minutes exactly as given. If "relaxed" is set, gently say which limit you stretched.
 - reasons: for EVERY dish, one reason of at most 12 words, personal to what they asked for and their taste, in the same language. Use the dish id exactly as given.`;
 
 export async function explainPicks({ text, language, slip, picks, relaxed, userName, taste }) {
-  const facts = picks.map((p, i) => ({
+  const dishes = picks.map((p, i) => ({
     rank: i + 1,
     id: p.id,
     name: p.name,
@@ -141,8 +153,53 @@ export async function explainPicks({ text, language, slip, picks, relaxed, userN
     diet: p.diet,
     distanceKm: p.distanceKm,
   }));
-  const content = JSON.stringify({ userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, relaxed, dishes: facts });
-  const out = explainCheck.parse(await callJson({ system: EXPLAIN_SYSTEM, content, schema: explainSchema, maxTokens: 2500 }));
-  const ids = new Set(picks.map((p) => p.id));
-  return { message: out.message, reasons: Object.fromEntries(out.reasons.filter((r) => ids.has(r.id)).map((r) => [r.id, r.reason])) };
+  return explain(EXPLAIN_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, relaxed, dishes }, picks.map((p) => p.id));
+}
+
+const RECIPES_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The user wants to cook at home. The app has already chosen and ranked recipes from what they have; you only explain them.
+Use ONLY the facts given for each recipe (name, minutes, level, what they have, what is missing). Never invent recipes, ingredients, steps or times.
+- message: two short sentences max, in the user's language and style. Name the #1 recipe and its minutes exactly as given. If it needs something they don't have, say so plainly.
+- reasons: for EVERY recipe, one reason of at most 12 words, personal to what they asked for, in the same language. Use the recipe id exactly as given.`;
+
+export async function explainRecipes({ text, language, haveLabels, recipes, userName, taste }) {
+  const facts = recipes.map((r, i) => ({
+    rank: i + 1,
+    id: r.id,
+    name: r.name,
+    minutes: r.time,
+    level: r.level,
+    serves: r.serves,
+    diet: r.diet,
+    hasAllIngredients: r.missing.length === 0,
+    missing: r.missing.map((m) => m.label),
+  }));
+  return explain(RECIPES_SYSTEM, { userMessage: text, language, userName: userName || null, theyHave: haveLabels, savedTaste: taste, recipes: facts }, recipes.map((r) => r.id));
+}
+
+// ---------- 4. scan a fridge / kitchen photo ----------
+
+export const SCAN_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+const scanSchema = strictObject({
+  isKitchen: { type: 'boolean' },
+  items: { type: 'array', items: strictObject({ name: { type: 'string' }, sure: { type: 'boolean' } }) },
+});
+
+const scanCheck = z.object({
+  isKitchen: z.boolean(),
+  items: z.array(z.object({ name: z.string().min(1).max(40), sure: z.boolean() })).max(30),
+});
+
+const SCAN_SYSTEM = `You look at a photo from an Indian home — an open fridge, kitchen shelf, vegetable basket or groceries on a counter — and list the cooking ingredients you can see.
+- name: simple lowercase English, singular, the way an Indian home cook would say it: "tomato", "onion", "green chilli", "coriander leaves", "paneer", "curd", "egg", "capsicum", "lemon", "ginger".
+- sure: false when it is partly hidden, blurry, or in a closed box or container you are guessing about (a white tub might be curd).
+- List each ingredient once, most visible first, at most 20. Skip drinks, packaged snacks, sauces and non-food items unless they're a cooking staple (milk, butter, cheese, bread, eggs, noodles are fine).
+- isKitchen: false if the photo has no food at all (then items is empty).`;
+
+export async function scanKitchen({ image, mediaType }) {
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+    { type: 'text', text: 'List the cooking ingredients in this photo.' },
+  ];
+  return scanCheck.parse(await callJson({ system: SCAN_SYSTEM, content, schema: scanSchema, maxTokens: 1500 }));
 }

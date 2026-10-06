@@ -5,14 +5,21 @@ const pickSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const recipeSchema = new mongoose.Schema(
+  { id: String, name: String, time: Number, level: String, have: Number, total: Number },
+  { _id: false }
+);
+
 const messageSchema = new mongoose.Schema(
   {
     role: { type: String, enum: ['user', 'ai'], required: true },
     text: { type: String, required: true },
-    // ai messages: 'question' asks for something, 'picks' carries results, 'info' is plain text
-    kind: { type: String, enum: ['text', 'question', 'picks', 'info'], default: 'text' },
+    // ai messages: 'question' asks for something, 'picks' carries dishes to order,
+    // 'recipes' carries things to cook, 'info' is plain text
+    kind: { type: String, enum: ['text', 'question', 'picks', 'recipes', 'info'], default: 'text' },
     options: [{ _id: false, id: String, label: String }],
     picks: [pickSchema],
+    recipes: [recipeSchema],
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
@@ -33,6 +40,8 @@ const conversationSchema = new mongoose.Schema(
       timeMax: { type: Number, default: null },
       branch: { type: String, default: null },
       avoid: [String],
+      // Cook at home: pantry ids of what they have (unknown items as 'x-name').
+      ingredients: [String],
     },
     messages: [messageSchema],
   },

@@ -15,13 +15,15 @@ const preferencesSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// One account can be reached by phone, email or Google. Each is optional but
-// unique when present, so signing in a second way finds the same person.
+// One account can be reached by email + password or Google (same email = same
+// person). phone is kept only for accounts made before phone login was removed.
 const userSchema = new mongoose.Schema(
   {
     phone: { type: String, trim: true, unique: true, sparse: true },
     email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
     googleId: { type: String, unique: true, sparse: true },
+    // bcrypt hash; never sent anywhere (select: false). Empty for Google-only accounts.
+    passwordHash: { type: String, select: false },
     name: { type: String, trim: true, default: '' },
     avatarUrl: { type: String },
     preferences: { type: preferencesSchema, default: () => ({}) },

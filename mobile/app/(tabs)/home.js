@@ -7,6 +7,8 @@ import IconButton from '../../components/IconButton';
 import Icon, { DietMark } from '../../components/Icon';
 import PlateRing from '../../components/PlateRing';
 import DishMeta from '../../components/DishMeta';
+import Animated from 'react-native-reanimated';
+import { Glow, PressScale, Reveal, rise, riseUp } from '../../components/Motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useChatStore } from '../../store/useChatStore';
 import { errorMessage } from '../../lib/api';
@@ -77,21 +79,23 @@ export default function Home() {
           <IconButton name="user" label="Profile" onDark onPress={() => router.push('/profile')} />
         </View>
         <View style={styles.greeting}>
-          <View style={styles.helloRow}>
+          <Animated.View entering={rise(0, 100)} style={styles.helloRow}>
             <Icon name="moon" size={16} color={colors.gold} />
             <Text style={styles.hello}>
               {hello}
               {user?.name ? `, ${user.name}` : ''}
             </Text>
-          </View>
-          <Text style={styles.title} role="heading">
-            What are you in the{'\n'}mood for <Text style={{ color: colors.gold }}>{when}</Text>
-          </Text>
+          </Animated.View>
+          <Reveal delay={150}>
+            <Text style={styles.title} role="heading">
+              What are you in the{'\n'}mood for <Text style={{ color: colors.gold }}>{when}</Text>
+            </Text>
+          </Reveal>
         </View>
       </MaroonBand>
 
       {/* The order slip: what Chatora needs, and the big talk button. */}
-      <View style={[styles.slip, { marginTop: bandHeight - 104 }]}>
+      <Animated.View entering={riseUp(0, 260)} style={[styles.slip, { marginTop: bandHeight - 104 }]}>
         <Pressable style={styles.slipFields} onPress={() => router.push('/chat')} aria-label="Tell Chatora what you want">
           <View style={[styles.field, styles.fieldTop]}>
             <Text style={styles.fieldLabel}>Craving</Text>
@@ -111,36 +115,41 @@ export default function Home() {
           </View>
         </Pressable>
         <View style={styles.talk}>
-          <Pressable role="button" aria-label="Talk to Chatora" onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })} style={({ pressed }) => [styles.mic, pressed && { opacity: 0.85 }]}>
-            <Icon name="mic" size={26} color="#FFFFFF" />
-          </Pressable>
+          <View style={styles.micWrap}>
+            <Glow size={84} color={colors.red} />
+            <PressScale scaleTo={0.9} role="button" aria-label="Talk to Chatora" onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })} style={styles.mic}>
+              <Icon name="mic" size={26} color="#FFFFFF" />
+            </PressScale>
+          </View>
           <Text style={styles.talkText}>Tap to talk</Text>
         </View>
-      </View>
+      </Animated.View>
 
-      <View style={styles.actions}>
-        <Pressable role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
+      <Animated.View entering={rise(0, 400)} style={styles.actions}>
+        <PressScale role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
           <Icon name="type" size={18} />
           <Text style={styles.actionText}>Type instead</Text>
-        </Pressable>
-        <Pressable role="button" style={styles.action} onPress={() => notify('Scan my fridge', 'Cooking from your fridge arrives in the next update.')}>
+        </PressScale>
+        <PressScale role="button" style={styles.action} onPress={() => router.push('/kitchen')}>
           <Icon name="camera" size={18} />
           <Text style={styles.actionText}>Scan my fridge</Text>
-        </Pressable>
-      </View>
+        </PressScale>
+      </Animated.View>
 
       <View style={styles.moods}>
-        {MOODS.map((m) => (
-          <Pressable key={m.id} role="button" aria-label={`${m.label} picks`} onPress={() => openMood(m.id)} style={styles.mood}>
-            <View style={[styles.moodCircle, { backgroundColor: m.tint }]}>
-              {loadingMood === m.id ? <ActivityIndicator color={m.ink} /> : <Icon name={m.icon} size={26} color={m.ink} strokeWidth={1.9} />}
-            </View>
-            <Text style={styles.moodLabel}>{m.label}</Text>
-          </Pressable>
+        {MOODS.map((m, i) => (
+          <Animated.View key={m.id} entering={rise(i, 450)}>
+            <PressScale scaleTo={0.88} role="button" aria-label={`${m.label} picks`} onPress={() => openMood(m.id)} style={styles.mood}>
+              <View style={[styles.moodCircle, { backgroundColor: m.tint }]}>
+                {loadingMood === m.id ? <ActivityIndicator color={m.ink} /> : <Icon name={m.icon} size={26} color={m.ink} strokeWidth={1.9} />}
+              </View>
+              <Text style={styles.moodLabel}>{m.label}</Text>
+            </PressScale>
+          </Animated.View>
         ))}
       </View>
 
-      <View style={styles.sectionHead}>
+      <Animated.View entering={rise(0, 700)} style={styles.sectionHead}>
         <Text style={type.head}>Chatora's pick for you</Text>
         <Pressable
           onPress={async () => {
@@ -151,9 +160,10 @@ export default function Home() {
         >
           <Text style={styles.link}>See all 5</Text>
         </Pressable>
-      </View>
+      </Animated.View>
       {topPick ? (
-        <Pressable role="button" style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
+        <Animated.View entering={rise(0, 760)}>
+        <PressScale scaleTo={0.98} role="button" style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
           <PlateRing size={72} value={topPick.match / 100}>
             <Text style={styles.matchValue}>{topPick.match}</Text>
             <Text style={styles.matchLabel}>% match</Text>
@@ -171,22 +181,25 @@ export default function Home() {
             <DishMeta price={topPick.price} eta={topPick.eta} />
           </View>
           <Icon name="chevron" color={colors.muted} />
-        </Pressable>
+        </PressScale>
+        </Animated.View>
       ) : (
         <View style={[styles.pick, { justifyContent: 'center' }]}>
           <ActivityIndicator color={colors.red} />
         </View>
       )}
 
-      <Pressable role="button" style={styles.plan} onPress={() => notify('Plan my whole day', 'Plan My Day arrives in a later update.')}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.planTitle}>Plan my whole day</Text>
-          <Text style={styles.planText}>Breakfast to dinner, within your budget</Text>
-        </View>
-        <View style={styles.planArrow}>
-          <Icon name="arrow" size={18} color={colors.gold} />
-        </View>
-      </Pressable>
+      <Animated.View entering={rise(0, 840)}>
+        <PressScale scaleTo={0.98} role="button" style={styles.plan} onPress={() => notify('Plan my whole day', 'Plan My Day arrives in a later update.')}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.planTitle}>Plan my whole day</Text>
+            <Text style={styles.planText}>Breakfast to dinner, within your budget</Text>
+          </View>
+          <View style={styles.planArrow}>
+            <Icon name="arrow" size={18} color={colors.gold} />
+          </View>
+        </PressScale>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -210,6 +223,7 @@ const styles = StyleSheet.create({
   fieldValue: { fontFamily: fonts.semibold, fontSize: 17, color: colors.ink, marginTop: 2 },
   placeholder: { color: colors.muted, fontFamily: fonts.medium, fontSize: 16 },
   talk: { width: 96, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  micWrap: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
   mic: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', ...shadow.red },
   talkText: { fontFamily: fonts.bold, fontSize: 12, color: colors.goldText },
   actions: { flexDirection: 'row', gap: space.sm, marginHorizontal: space.base, marginTop: space.md },

@@ -1,18 +1,11 @@
 import { Router } from 'express';
 import { validateBody } from '../utils/validate.js';
+import { signUpSchema, logInSchema, forgotSchema, resetSchema, googleSchema, refreshSchema } from '../validators/authValidators.js';
 import {
-  sendPhoneOtpSchema,
-  verifyPhoneOtpSchema,
-  sendEmailOtpSchema,
-  verifyEmailOtpSchema,
-  googleSchema,
-  refreshSchema,
-} from '../validators/authValidators.js';
-import {
-  sendPhoneOtp,
-  verifyPhoneOtp,
-  sendEmailOtp,
-  verifyEmailOtp,
+  emailSignUp,
+  emailLogIn,
+  forgotPassword,
+  resetPassword,
   googleSignIn,
   refresh,
   logout,
@@ -21,10 +14,10 @@ import {
 
 const router = Router();
 
-router.post('/phone/send-otp', validateBody(sendPhoneOtpSchema), sendPhoneOtp);
-router.post('/phone/verify-otp', validateBody(verifyPhoneOtpSchema), verifyPhoneOtp);
-router.post('/email/send-otp', validateBody(sendEmailOtpSchema), sendEmailOtp);
-router.post('/email/verify-otp', validateBody(verifyEmailOtpSchema), verifyEmailOtp);
+router.post('/email/sign-up', validateBody(signUpSchema), emailSignUp);
+router.post('/email/log-in', validateBody(logInSchema), emailLogIn);
+router.post('/password/forgot', validateBody(forgotSchema), forgotPassword);
+router.post('/password/reset', validateBody(resetSchema), resetPassword);
 router.post('/google', validateBody(googleSchema), googleSignIn);
 router.post('/guest', guestSignIn);
 router.post('/refresh', validateBody(refreshSchema), refresh);

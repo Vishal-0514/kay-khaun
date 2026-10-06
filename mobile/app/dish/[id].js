@@ -7,6 +7,8 @@ import IconButton from '../../components/IconButton';
 import Icon, { DietMark } from '../../components/Icon';
 import PlateRing from '../../components/PlateRing';
 import Button from '../../components/Button';
+import Animated from 'react-native-reanimated';
+import { appear, rise, riseUp } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
 import { notify } from '../../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
@@ -56,7 +58,7 @@ export default function Dish() {
             <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
             <IconButton name="heart" label={saved ? 'Saved' : 'Save'} onDark onPress={() => setSaved((v) => !v)} />
           </View>
-          <View style={styles.hero}>
+          <Animated.View entering={appear(0, 100)} style={styles.hero}>
             <PlateRing size={196} value={dish.match / 100} dark ticks>
               <Text style={styles.bigMatch}>
                 {dish.match}
@@ -73,26 +75,26 @@ export default function Dish() {
             <Text style={styles.place}>
               {dish.restaurant} · {dish.area}
             </Text>
-          </View>
+          </Animated.View>
         </MaroonBand>
 
-        <View style={[styles.stats, { marginTop: bandHeight - 36 }]}>
+        <Animated.View entering={riseUp(0, 300)} style={[styles.stats, { marginTop: bandHeight - 36 }]}>
           <Stat label="Price" value={`₹${dish.price}`} />
           <Stat label="Arrives in" value={`${dish.eta} min`} />
           <Stat label="Rating" value={`${dish.rating} ★`} />
-        </View>
+        </Animated.View>
 
         <View style={styles.why}>
           <Text style={type.head}>Why I picked this</Text>
-          {dish.reasons.map((r) => {
+          {dish.reasons.map((r, i) => {
             const [tint, ink] = TILE[r.icon] ?? TILE.spark;
             return (
-              <View key={r.text} style={styles.reason}>
+              <Animated.View key={r.text} entering={rise(i, 450)} style={styles.reason}>
                 <View style={[styles.tile, { backgroundColor: tint }]}>
                   <Icon name={r.icon} size={20} color={ink} strokeWidth={1.9} />
                 </View>
                 <Text style={styles.reasonText}>{r.text}</Text>
-              </View>
+              </Animated.View>
             );
           })}
           <View style={styles.reason}>

@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import DishMeta from '../../components/DishMeta';
+import PlateRing from '../../components/PlateRing';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { PressScale, TypingDots, fromRight, rise } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
 import { errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
@@ -13,6 +16,7 @@ import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
 const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
 const DIET = { veg: 'Veg', nonveg: 'Non-veg', egg: 'Egg' };
+const BRANCHES = ['order', 'cook'];
 
 function Avatar() {
   return (
@@ -27,8 +31,9 @@ function OrderSlip({ slip }) {
   const rows = [
     ['Craving', slip.craving],
     ['Diet', DIET[slip.diet]],
-    ['Budget', slip.budget ? `${slip.budgetFromProfile ? 'About' : 'Under'} ₹${slip.budget}` : null],
+    ['Budget', slip.budget && slip.branch !== 'cook' ?`${slip.budgetFromProfile ? 'About' : 'Under'} ₹${slip.budget}` : null],
     ['Time', slip.time ? `${slip.time} min` : null],
+    ['Kitchen', slip.ingredients?.length ? slip.ingredients.slice(0, 3).join(', ') + (slip.ingredients.length > 3 ? ` +${slip.ingredients.length - 3}` : '') : null],
   ].filter(([, v]) => v);
   return (
     <View style={styles.slip}>
@@ -103,20 +108,20 @@ export default function Chat() {
   function renderItem({ item }) {
     if (item.role === 'user') {
       return (
-        <View style={[styles.userBubble, item.pending && { opacity: 0.7 }]}>
+        <Animated.View entering={fromRight()} style={[styles.userBubble, item.pending && { opacity: 0.7 }]}>
           <Text style={styles.userText}>{item.text}</Text>
-        </View>
+        </Animated.View>
       );
     }
     const isLatest = item.id === lastAi?.id;
     return (
-      <View style={styles.aiRow}>
+      <Animated.View entering={rise(0)} style={styles.aiRow}>
         <Avatar />
         <View style={styles.aiBody}>
           <Text style={item.kind === 'question' && isLatest ? styles.aiQuestion : styles.aiText}>{item.text}</Text>
           {item.kind === 'question' && isLatest && conversation?.slip ? <OrderSlip slip={conversation.slip} /> : null}
           {item.kind === 'picks' && item.picks?.length ? (
-            <Pressable role="button" style={styles.pickCard} onPress={() => router.push('/results')}>
+            <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/results')}>
               <View style={styles.pickBadge}>
                 <Text style={styles.pickBadgeText}>{item.picks[0].match}%</Text>
               </View>
@@ -133,23 +138,64 @@ export default function Chat() {
                 <Text style={styles.seeAllText}>See all {item.picks.length}</Text>
                 <Icon name="chevron" size={16} color={colors.red} />
               </View>
-            </Pressable>
+            </PressScale>
           ) : null}
-          {isLatest && item.options?.length ? (
+          {item.kind === 'recipes' && item.recipes?.length ? (
+            <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/recipes')}>
+              <PlateRing size={52} value={item.recipes[0].have / item.recipes[0].total}>
+                <Text style={styles.ringText}>
+                  {item.recipes[0].have}/{item.recipes[0].total}
+                </Text>
+              </PlateRing>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.pickName} numberOfLines={1}>
+                  {item.recipes[0].name}
+                </Text>
+                <Text style={type.small} numberOfLines={1}>
+                  {item.recipes[0].time} min · {item.recipes[0].level}
+                </Text>
+              </View>
+              <View style={styles.seeAll}>
+                <Text style={styles.seeAllText}>See all {item.recipes.length}</Text>
+                <Icon name="chevron" size={16} color={colors.red} />
+              </View>
+            </PressScale>
+          ) : null}
+          {isLatest && item.options?.some((o) => !BRANCHES.includes(o.id)) ? (
+            <View style={styles.pills}>
+              {item.options
+                .filter((o) => !BRANCHES.includes(o.id))
+                .concat(item.options.filter((o) => BRANCHES.includes(o.id)))
+                .map((o) => (
+                  <PressScale
+                    key={o.id}
+                    role="button"
+                    disabled={sending}
+                    onPress={() => (o.id === 'scan' ? router.push({ pathname: '/kitchen', params: { from: 'chat' } }) : submit(o.label))}
+                    style={[styles.pill, o.id === 'scan' && styles.pillMain]}
+                  >
+                    <Icon name={o.id === 'scan' ? 'camera' : o.id === 'order' ? 'bag' : 'pot'} size={18} color={o.id === 'scan' ? '#FFFFFF' : colors.ink} />
+                    <Text style={[styles.pillText, o.id === 'scan' && { color: '#FFFFFF' }]}>{o.id === 'scan' ? 'Scan or pick ingredients' : o.label}</Text>
+                  </PressScale>
+                ))}
+            </View>
+          ) : isLatest && item.options?.length ? (
             <View style={styles.choices}>
-              {item.options.map((o) => (
-                <Pressable key={o.id} role="button" disabled={sending} onPress={() => submit(o.label)} style={({ pressed }) => [styles.choice, pressed && { opacity: 0.8 }]}>
+              {item.options.map((o, i) => (
+                <Animated.View key={o.id} entering={rise(i, 250)} style={{ flex: 1 }}>
+                <PressScale scaleTo={0.95} role="button" disabled={sending} onPress={() => submit(o.label)} style={styles.choice}>
                   <View style={[styles.choiceIcon, { backgroundColor: o.id === 'order' ? colors.redSoft : colors.goldSoft }]}>
                     <Icon name={o.id === 'order' ? 'bag' : 'pot'} size={24} color={o.id === 'order' ? colors.red : colors.goldText} />
                   </View>
                   <Text style={styles.choiceTitle}>{o.label}</Text>
                   <Text style={styles.choiceSub}>{o.id === 'order' ? 'Delivered in ~25 min' : 'From your fridge'}</Text>
-                </Pressable>
+                </PressScale>
+                </Animated.View>
               ))}
             </View>
           ) : null}
         </View>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -187,23 +233,24 @@ export default function Chat() {
               </View>
             </View>
             <View style={styles.suggestions}>
-              {SUGGESTIONS.map((s) => (
-                <Pressable key={s} role="button" onPress={() => submit(s)} style={styles.suggestion}>
-                  <Text style={styles.suggestionText}>{s}</Text>
-                </Pressable>
+              {SUGGESTIONS.map((s, i) => (
+                <Animated.View key={s} entering={rise(i, 200)}>
+                  <PressScale role="button" onPress={() => submit(s)} style={styles.suggestion}>
+                    <Text style={styles.suggestionText}>{s}</Text>
+                  </PressScale>
+                </Animated.View>
               ))}
             </View>
           </View>
         }
         ListFooterComponent={
           sending ? (
-            <View style={styles.aiRow}>
+            <Animated.View entering={rise(0)} style={styles.aiRow}>
               <Avatar />
-              <View style={styles.typing}>
-                <ActivityIndicator size="small" color={colors.red} />
-                <Text style={type.small}>Chatora is thinking…</Text>
+              <View style={styles.typing} aria-label="Chatora is thinking">
+                <TypingDots color={colors.red} />
               </View>
-            </View>
+            </Animated.View>
           ) : null
         }
       />
@@ -222,13 +269,17 @@ export default function Chat() {
           maxLength={500}
         />
         {text.trim() ? (
-          <Pressable role="button" aria-label="Send" onPress={() => submit()} disabled={sending} style={styles.sendBtn}>
-            <Icon name="send" size={20} color="#FFFFFF" />
-          </Pressable>
+          <Animated.View key="send" entering={FadeIn.duration(220)}>
+            <PressScale scaleTo={0.88} role="button" aria-label="Send" onPress={() => submit()} disabled={sending} style={styles.sendBtn}>
+              <Icon name="send" size={20} color="#FFFFFF" />
+            </PressScale>
+          </Animated.View>
         ) : (
-          <Pressable role="button" aria-label="Speak" onPress={() => notify('Voice input', 'Talking to Chatora arrives in the voice update. For now, type your craving.')} style={styles.sendBtn}>
-            <Icon name="mic" size={22} color="#FFFFFF" />
-          </Pressable>
+          <Animated.View key="mic" entering={FadeIn.duration(220)}>
+            <PressScale scaleTo={0.88} role="button" aria-label="Speak" onPress={() => notify('Voice input', 'Talking to Chatora arrives in the voice update. For now, type your craving.')} style={styles.sendBtn}>
+              <Icon name="mic" size={22} color="#FFFFFF" />
+            </PressScale>
+          </Animated.View>
         )}
       </View>
     </KeyboardAvoidingView>
@@ -271,7 +322,12 @@ const styles = StyleSheet.create({
   pickName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
   seeAll: { alignItems: 'center' },
   seeAllText: { fontFamily: fonts.bold, fontSize: 12, color: colors.red },
-  typing: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: 6 },
+  ringText: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  pill: { height: 44, paddingHorizontal: space.base, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  pillMain: { backgroundColor: colors.red, borderColor: colors.red, ...shadow.red },
+  pillText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  typing: { alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderTopLeftRadius: 4, backgroundColor: colors.surface, ...shadow.card },
   empty: { gap: space.lg },
   suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, paddingLeft: 44 },
   suggestion: { paddingHorizontal: 14, height: 40, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair },

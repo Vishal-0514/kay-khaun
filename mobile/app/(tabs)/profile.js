@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
 import Button from '../../components/Button';
 import Icon, { DietMark } from '../../components/Icon';
+import Animated from 'react-native-reanimated';
+import { PressScale, appear, rise, riseUp } from '../../components/Motion';
 import { api, errorMessage } from '../../lib/api';
 import { signOut } from '../../lib/session';
 import { notify } from '../../lib/notify';
@@ -15,9 +17,9 @@ const SPICE = ['Mild', 'Light', 'Medium', 'Hot', 'Extra hot'];
 const BUDGET = { low: 'Under ₹300', mid: '₹300–500', high: '₹500+' };
 const DIET = { veg: 'Veg', nonveg: 'Non-veg', egg: 'Egg only' };
 
-function Row({ icon, tint, ink, label, value, lead }) {
+function Row({ n = 0, icon, tint, ink, label, value, lead }) {
   return (
-    <View style={styles.row}>
+    <Animated.View entering={rise(n, 350)} style={styles.row}>
       <View style={[styles.rowIcon, { backgroundColor: tint }]}>
         <Icon name={icon} size={18} color={ink} strokeWidth={1.9} />
       </View>
@@ -26,7 +28,7 @@ function Row({ icon, tint, ink, label, value, lead }) {
       <Text style={styles.rowValue} numberOfLines={1}>
         {value}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -58,9 +60,9 @@ export default function Profile() {
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: space.xl }}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.head, { marginTop: insets.top + 28 }]}>
-          <View style={styles.avatar}>
+          <Animated.View entering={appear(0, 100)} style={styles.avatar}>
             <Text style={styles.avatarText}>{initial}</Text>
-          </View>
+          </Animated.View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name} role="heading">
               {user?.name || 'Your profile'}
@@ -70,7 +72,7 @@ export default function Profile() {
         </View>
       </MaroonBand>
 
-      <View style={[styles.card, styles.memory, { marginTop: bandHeight - 68 }]}>
+      <Animated.View entering={riseUp(0, 200)} style={[styles.card, styles.memory, { marginTop: bandHeight - 68 }]}>
         <View style={{ flex: 1 }}>
           <Text style={styles.memoryTitle}>Remember my taste</Text>
           <Text style={type.small}>{user?.memoryEnabled ? 'Picks use your saved preferences' : "Off. Picks ignore your saved taste"}</Text>
@@ -83,21 +85,21 @@ export default function Profile() {
           thumbColor="#FFFFFF"
           aria-label="Remember my taste"
         />
-      </View>
+      </Animated.View>
 
       <Text style={[type.head, styles.section]}>Preferences</Text>
       <View style={styles.list}>
-        <Row icon="leaf" tint="#E3F2E7" ink={colors.green} label="Diet" value={DIET[p.diet] ?? 'Not set'} lead={p.diet && p.diet !== 'egg' ? <DietMark type={p.diet} /> : null} />
-        <Row icon="flame" tint="#FDE3E1" ink={colors.red} label="Spice level" value={SPICE[(p.spice ?? 3) - 1]} />
-        <Row icon="rupee" tint="#FCEBD0" ink="#A8670F" label="Budget per meal" value={BUDGET[p.budget] ?? 'Not set'} />
-        <Row icon="bowl" tint="#FDE8D6" ink="#B8501A" label="Favourites" value={p.cuisines?.length ? p.cuisines.join(', ') : 'None yet'} />
-        <Row icon="close" tint="#FBE4EC" ink="#A92E5A" label="Avoid" value={p.avoid?.length ? p.avoid.join(', ') : 'Nothing'} />
+        <Row n={0} icon="leaf" tint="#E3F2E7" ink={colors.green} label="Diet" value={DIET[p.diet] ?? 'Not set'} lead={p.diet && p.diet !== 'egg' ? <DietMark type={p.diet} /> : null} />
+        <Row n={1} icon="flame" tint="#FDE3E1" ink={colors.red} label="Spice level" value={SPICE[(p.spice ?? 3) - 1]} />
+        <Row n={2} icon="rupee" tint="#FCEBD0" ink="#A8670F" label="Budget per meal" value={BUDGET[p.budget] ?? 'Not set'} />
+        <Row n={3} icon="bowl" tint="#FDE8D6" ink="#B8501A" label="Favourites" value={p.cuisines?.length ? p.cuisines.join(', ') : 'None yet'} />
+        <Row n={4} icon="close" tint="#FBE4EC" ink="#A92E5A" label="Avoid" value={p.avoid?.length ? p.avoid.join(', ') : 'Nothing'} />
       </View>
       <Button variant="outline" title="Edit my taste" onPress={() => router.push('/taste')} style={styles.edit} />
 
-      <Pressable role="button" onPress={() => signOut().then(() => router.replace('/welcome'))} style={styles.signOut}>
+      <PressScale role="button" onPress={() => signOut().then(() => router.replace('/welcome'))} style={styles.signOut}>
         <Text style={styles.signOutText}>{user?.isGuest ? 'Leave test account' : 'Sign out'}</Text>
-      </Pressable>
+      </PressScale>
     </ScrollView>
   );
 }

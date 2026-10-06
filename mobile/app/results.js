@@ -7,8 +7,9 @@ import IconButton from '../components/IconButton';
 import Icon, { DietMark } from '../components/Icon';
 import PlateRing from '../components/PlateRing';
 import Button from '../components/Button';
+import Animated from 'react-native-reanimated';
+import { PressScale, rise, riseUp } from '../components/Motion';
 import { useChatStore } from '../store/useChatStore';
-import { notify } from '../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street: 'Street', sweet: 'Sweet' };
@@ -61,22 +62,22 @@ export default function Results() {
             <Icon name="bag" size={16} color={colors.maroon} />
             <Text style={[styles.segText, { color: colors.maroon, fontFamily: fonts.bold }]}>Order in</Text>
           </View>
-          <Pressable style={styles.segItem} onPress={() => notify('Cook at home', 'Recipes from your fridge arrive in the next update.')}>
+          <PressScale role="button" style={styles.segItem} onPress={() => router.push('/kitchen')}>
             <Icon name="pot" size={16} color={colors.cream} />
             <Text style={styles.segText}>Cook at home</Text>
-          </Pressable>
+          </PressScale>
         </View>
       </MaroonBand>
 
       {!top ? (
-        <View style={[styles.card, { marginTop: bandHeight - 84, alignItems: 'center' }]}>
+        <Animated.View entering={riseUp(0, 150)} style={[styles.card, { marginTop: bandHeight - 84, alignItems: 'center' }]}>
           <Text style={type.head}>Nothing to show yet</Text>
           <Text style={[type.small, { marginTop: space.sm, textAlign: 'center' }]}>Tell Chatora what you feel like, and your picks will appear here.</Text>
           <Button title="Ask Chatora" onPress={() => router.replace('/chat')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
-        </View>
+        </Animated.View>
       ) : (
         <>
-          <View style={[styles.card, { marginTop: bandHeight - 84 }]}>
+          <Animated.View entering={riseUp(0, 150)} style={[styles.card, { marginTop: bandHeight - 84 }]}>
             <View style={styles.topRow}>
               <PlateRing size={84} value={top.match / 100}>
                 <Text style={styles.match}>{top.match}</Text>
@@ -104,18 +105,21 @@ export default function Results() {
             <Text style={styles.reason}>{top.reasons.map((r) => r.text).slice(0, 2).join('. ')}.</Text>
             <View style={styles.actions}>
               <Button title="Order now" onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
-              <Pressable role="button" aria-label={saved ? 'Saved' : 'Save'} onPress={() => setSaved((v) => !v)} style={styles.heart}>
+              <PressScale scaleTo={0.88} role="button" aria-label={saved ? 'Saved' : 'Save'} onPress={() => setSaved((v) => !v)} style={[styles.heart, saved && { backgroundColor: colors.redSoft, borderColor: colors.redSoft }]}>
                 <Icon name="heart" size={22} color={colors.red} strokeWidth={saved ? 2.6 : 2} />
-              </Pressable>
+              </PressScale>
             </View>
-          </View>
+          </Animated.View>
 
           {rest.length ? (
             <>
-              <Text style={[type.head, styles.also]}>Also good</Text>
+              <Animated.Text entering={rise(0, 350)} style={[type.head, styles.also]}>
+                Also good
+              </Animated.Text>
               <View style={styles.list}>
                 {rest.map((p, i) => (
-                  <Pressable key={p.id} role="button" onPress={() => router.push(`/dish/${p.id}`)} style={styles.row}>
+                  <Animated.View key={p.id} entering={rise(i, 420)}>
+                  <PressScale scaleTo={0.98} role="button" onPress={() => router.push(`/dish/${p.id}`)} style={styles.row}>
                     <View style={styles.rank}>
                       <Text style={styles.rankText}>{i + 2}</Text>
                     </View>
@@ -134,7 +138,8 @@ export default function Results() {
                       <Text style={styles.rowPrice}>₹{p.price}</Text>
                       <Text style={styles.rowMatch}>{p.match}% match</Text>
                     </View>
-                  </Pressable>
+                  </PressScale>
+                  </Animated.View>
                 ))}
               </View>
             </>

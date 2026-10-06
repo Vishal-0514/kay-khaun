@@ -1,19 +1,21 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { PressScale } from './Motion';
 import Icon from './Icon';
 import { colors } from '../lib/theme';
 
 // 44px round button. onDark = translucent version for use on the maroon band.
 export default function IconButton({ name, label, onPress, onDark = false }) {
   return (
-    <Pressable
+    <PressScale
+      scaleTo={0.88}
       role="button"
       aria-label={label}
       onPress={onPress}
       hitSlop={4}
-      style={({ pressed }) => [styles.base, onDark ? styles.dark : styles.light, pressed && { opacity: 0.7 }]}
+      style={[styles.base, onDark ? styles.dark : styles.light]}
     >
       <Icon name={name} color={onDark ? colors.cream : colors.ink} />
-    </Pressable>
+    </PressScale>
   );
 }
 
