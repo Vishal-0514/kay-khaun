@@ -2,6 +2,8 @@ import { api, refreshSession } from './api';
 import { readSession } from './tokenStorage';
 import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
+import { endFirebaseSession } from './firebase';
+import { signOutOfGoogle } from './googleSignIn';
 
 // On launch: load the saved tokens and fetch the profile. An expired access
 // token is refreshed by the API client; if that fails too, the user starts signed out.
@@ -27,6 +29,9 @@ export async function signOut() {
   clear();
   useChatStore.getState().clear();
   if (refreshToken) api.post('/auth/logout', { refreshToken }).catch(() => {});
+  // So the next Google sign-in shows the account picker again.
+  endFirebaseSession();
+  signOutOfGoogle();
 }
 
 // Where a signed-in user belongs: first-timers finish "Your taste" first.

@@ -1,0 +1,30 @@
+# Render blueprint: the Kya Khaun API on Render's free plan.
+# Render → New → Blueprint → pick this repo. Fill in the values marked
+# "sync: false" when Render asks (they're secrets, so they never go in git).
+services:
+  - type: web
+    name: kya-khaun-server
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: kyakhaun
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FIREBASE_PROJECT_ID
+        value: kay-khaun
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: claude-opus-5-5
+      - key: ALLOW_GUEST_LOGIN
+        value: "false"

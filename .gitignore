@@ -7,3 +7,4 @@ web-build/
 .DS_Store
 # reference material, kept out of this repo
 awesome-design-md/
+*.local.md

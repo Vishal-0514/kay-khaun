@@ -9,7 +9,8 @@ import Button from '../components/Button';
 import Icon from '../components/Icon';
 import { Float, Glow, Reveal, TypingDots, appear, fromLeft, fromRight, leave, rise, sheetUp } from '../components/Motion';
 import { api, errorMessage } from '../lib/api';
-import { googleUnavailableReason, getGoogleIdToken } from '../lib/googleSignIn';
+import { googleUnavailableReason, signInWithGoogle } from '../lib/googleSignIn';
+import { signInWithGoogleToken } from '../lib/firebase';
 import { homeRouteFor } from '../lib/session';
 import { notify } from '../lib/notify';
 import { useAuthStore } from '../store/useAuthStore';
@@ -122,13 +123,14 @@ export default function Welcome() {
     if (reason) return notify('Google sign-in', reason);
     setGoogleBusy(true);
     try {
-      const idToken = await getGoogleIdToken();
-      if (!idToken) return;
-      const { data } = await api.post('/auth/google', { idToken });
-      setSession(data);
-      router.replace(homeRouteFor(data.user));
+      // Google's account picker -> Firebase -> our server's session (like KARIS).
+      const googleToken = await signInWithGoogle();
+      if (!googleToken) return;
+      const session = await signInWithGoogleToken(googleToken);
+      setSession(session);
+      router.replace(homeRouteFor(session.user));
     } catch (err) {
-      notify("Couldn't sign in with Google", errorMessage(err));
+      notify("Couldn't sign in with Google", err.message);
     } finally {
       setGoogleBusy(false);
     }

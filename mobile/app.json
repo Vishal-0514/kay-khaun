@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "backgroundColor": "#FFFBF4",
     "android": {
-      "package": "app.kyakhaun"
+      "package": "app.kyakhaun",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "ios": {
       "bundleIdentifier": "app.kyakhaun",
@@ -20,7 +23,6 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-font",
-      "@react-native-google-signin/google-signin",
       [
         "expo-image-picker",
         {
@@ -28,6 +30,12 @@
           "cameraPermission": "Kya Khaun uses the camera to spot the ingredients in your fridge."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6ff91634-5a35-43b8-bdf4-94ad502c6ff2"
+      }
+    }
   }
 }

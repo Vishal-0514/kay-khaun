@@ -15,15 +15,14 @@ const preferencesSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// One account can be reached by email + password or Google (same email = same
-// person). phone is kept only for accounts made before phone login was removed.
+// One account per email. People sign in through Firebase (email + password or
+// Google); firebaseUid links the Firebase account. phone is only on accounts
+// made before phone login was removed.
 const userSchema = new mongoose.Schema(
   {
     phone: { type: String, trim: true, unique: true, sparse: true },
     email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
-    googleId: { type: String, unique: true, sparse: true },
-    // bcrypt hash; never sent anywhere (select: false). Empty for Google-only accounts.
-    passwordHash: { type: String, select: false },
+    firebaseUid: { type: String, unique: true, sparse: true },
     name: { type: String, trim: true, default: '' },
     avatarUrl: { type: String },
     preferences: { type: preferencesSchema, default: () => ({}) },

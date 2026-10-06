@@ -11,7 +11,7 @@ kya-khaun-app/
 
 ## What's built (Phase 0 + 1)
 
-- **Server:** email + password and Google sign-in (plus "Forgot password" by emailed code); short-lived access tokens with rotating refresh tokens; profile and taste preferences API.
+- **Server:** sign-in through Firebase (email + password with email verification, or Google), the same way as KARIS; short-lived access tokens with rotating refresh tokens; profile and taste preferences API.
 - **App:** design system in code (colours, Baloo 2 + Figtree, maroon jaali header, plate ring), plus the Welcome, Sign in, Enter code, Your taste and a simple Home screen.
 
 ## What's built (Phase 2)
@@ -50,8 +50,6 @@ npm run dev
 ```
 Check it at http://localhost:4100/api/health. It should show `"db": "connected"`.
 
-While `EMAIL_PROVIDER=console`, password-reset codes are **printed in this terminal** instead of being emailed, which costs nothing. Look for lines like `[Password reset] you@example.com -> 482913`.
-
 If `db` shows `disconnected`, your internet address probably changed: in MongoDB Atlas → Network Access, add `0.0.0.0/0` (allow from anywhere) so it stops happening.
 
 ### 3. Run the app
@@ -61,33 +59,35 @@ npm run web
 ```
 To run on your phone with Expo Go, run `npx expo start` and scan the QR code. Then set `EXPO_PUBLIC_API_URL` in `mobile/.env` to your PC's Wi-Fi address, e.g. `http://192.168.1.20:4100/api`.
 
-## Google sign-in (later)
+## Sign-in (Firebase, like KARIS)
 
-Google sign-in uses the official native library, so it works in a **development build**, not in Expo Go or the browser. Until then the button explains this, and email sign-in works everywhere.
+Firebase checks the email + password (or Google account), sends the verification and password-reset emails for free, and gives the app an ID token. The app sends it to `POST /api/auth/firebase`; the server checks it with Firebase, accepts **verified emails only**, links it to one Kya Khaun account per email, and returns our own session. Firebase's own session is thrown away straight after.
 
-1. In Google Cloud Console → APIs & Services → Credentials, create OAuth client IDs:
-   - **Web** (used to issue the ID token)
-   - **Android** (package `app.kyakhaun` + your SHA-1)
-   - **iOS** (bundle `app.kyakhaun`)
-2. `mobile/.env`: set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (and `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`).
-3. `mobile/app.json`: give the `@react-native-google-signin/google-signin` plugin your iOS URL scheme:
-   `["@react-native-google-signin/google-signin", { "iosUrlScheme": "com.googleusercontent.apps.<your-ios-client-id>" }]`
-4. `server/.env`: set `GOOGLE_CLIENT_IDS` to the web, android and ios client IDs, comma-separated.
-5. Build: `npx expo run:android` (or an EAS development build).
+**One-time Firebase setup (free Spark plan):**
+1. https://console.firebase.google.com → **Add project** → "Kya Khaun" (Google Analytics not needed).
+2. **Build → Authentication → Get started → Sign-in method**: enable **Email/Password** and **Google**.
+3. **Project settings → Your apps → Web (`</>`)** → register "Kya Khaun web" → copy `apiKey`, `authDomain`, `projectId`, `appId` into `mobile/.env` (`EXPO_PUBLIC_FIREBASE_*`). These are public, not secrets.
+4. `server/.env`: `FIREBASE_PROJECT_ID` = the same project ID. No service-account key is needed.
 
-## Real password-reset email (before launch)
+Email + password then works everywhere — Expo Go, the browser and app builds.
 
-Set `EMAIL_PROVIDER=smtp` plus the `SMTP_*` values. Gmail with an app password or Brevo's free plan both work. The server refuses to start in production while it is still `console`.
+**Google sign-in** needs an installed **development build** (not Expo Go):
+1. Make a free account at https://expo.dev, then in `mobile/`: `npx eas-cli login`.
+2. `npm run build:android` (answer **Yes** to generating a keystore). ~15 min; open the .apk link on the phone to install.
+3. `npx eas-cli credentials -p android` → copy the **SHA-1**.
+4. Firebase → Project settings → **Add app → Android**: package `app.kyakhaun`, paste the SHA-1.
+5. Firebase → Authentication → Sign-in method → **Google** → *Web SDK configuration* → copy the **Web client ID** into `mobile/.env` as `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`.
+6. `npx expo start --dev-client` and open the installed app.
+
+**iPhone (later):** needs an Apple Developer account. Add an iOS app in Firebase, then add the plugin to `app.json` with its URL scheme:
+`["@react-native-google-signin/google-signin", { "iosUrlScheme": "com.googleusercontent.apps.<your-ios-client-id>" }]`
+(Don't add the plugin without `iosUrlScheme` — that switches it to google-services.json mode and the Android build fails.)
 
 ## API
 
 | Method | Path | Body |
 |---|---|---|
-| POST | `/api/auth/email/sign-up` | `{ name, email, password }` (password 8+ characters) |
-| POST | `/api/auth/email/log-in` | `{ email, password }` (8 wrong tries locks the email for 15 min) |
-| POST | `/api/auth/password/forgot` | `{ email }` → emails a 6-digit code (same answer whether or not the account exists) |
-| POST | `/api/auth/password/reset` | `{ email, code, password }` → signs you in |
-| POST | `/api/auth/google` | `{ idToken }` |
+| POST | `/api/auth/firebase` | `{ idToken, name? }` — Firebase ID token from an email or Google sign-in; verified emails only |
 | POST | `/api/auth/refresh` | `{ refreshToken }` |
 | POST | `/api/auth/logout` | `{ refreshToken }` |
 | GET | `/api/profile` | (Bearer access token) |

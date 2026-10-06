@@ -1,8 +1,5 @@
-import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
-import { requestOtp, checkOtp, RESEND_AFTER_SECONDS } from '../services/otpService.js';
-import { emailMode } from '../services/otpSender.js';
-import { verifyGoogleIdToken, googleConfigured } from '../services/googleAuth.js';
+import { firebaseConfigured, verifyFirebaseIdToken } from '../services/firebaseAuth.js';
 import { issueSession, rotateRefreshToken, revokeRefreshToken, signAccessToken } from '../utils/tokens.js';
 
 // Strips fields the client never needs to see.
@@ -10,7 +7,6 @@ export function toSafeUser(user) {
   return {
     id: user._id,
     name: user.name,
-    phone: user.phone ?? null,
     email: user.email ?? null,
     avatarUrl: user.avatarUrl ?? null,
     preferences: user.preferences ?? {},
@@ -25,103 +21,44 @@ async function signedIn(res, user, isNew) {
   res.json({ success: true, ...session, isNew, user: toSafeUser(user) });
 }
 
-// ---------- email + password ----------
-
-// Slows down password guessing: after 8 wrong tries an email is locked for 15 minutes.
-// In memory is enough for one server; move to the database if we run several.
-const FAIL_LIMIT = 8;
-const LOCK_MS = 15 * 60 * 1000;
-const failures = new Map(); // email -> { count, until }
-
-function lockedFor(email) {
-  const f = failures.get(email);
-  if (!f) return 0;
-  if (f.until && f.until > Date.now()) return Math.ceil((f.until - Date.now()) / 60000);
-  if (f.until) failures.delete(email);
-  return 0;
-}
-
-function noteFailure(email) {
-  const f = failures.get(email) ?? { count: 0, until: 0 };
-  f.count += 1;
-  if (f.count >= FAIL_LIMIT) f.until = Date.now() + LOCK_MS;
-  failures.set(email, f);
-}
-
-export async function emailSignUp(req, res) {
-  const { name, email, password } = req.body;
-  const existing = await User.findOne({ email }).select('+passwordHash');
-  if (existing) {
-    const error = existing.passwordHash
-      ? 'An account with this email already exists. Log in instead.'
-      : 'This email already has an account (made with Google). Continue with Google, or use "Forgot password" to add a password.';
-    return res.status(409).json({ success: false, code: 'EMAIL_TAKEN', error });
+// POST /api/auth/firebase — people sign in with Firebase in the app (email +
+// password, or Google), and the app sends Firebase's ID token here. We only
+// accept verified email addresses, and one email is one Kya Khaun account
+// whichever way they sign in. The answer is our own session (access + refresh).
+export async function firebaseSignIn(req, res) {
+  const { idToken, name } = req.body;
+  if (!firebaseConfigured()) {
+    return res.status(503).json({ success: false, error: "Sign-in isn't set up on the server yet (FIREBASE_PROJECT_ID)." });
   }
-  const user = await User.create({ name, email, passwordHash: await bcrypt.hash(password, 10) });
-  await signedIn(res, user, true);
-}
-
-export async function emailLogIn(req, res) {
-  const { email, password } = req.body;
-  const minutes = lockedFor(email);
-  if (minutes) return res.status(429).json({ success: false, error: `Too many wrong tries. Please wait ${minutes} min, or reset your password.` });
-
-  const user = await User.findOne({ email }).select('+passwordHash');
-  if (user && !user.passwordHash) {
-    return res.status(401).json({ success: false, error: 'This email signs in with Google. Tap "Continue with Google", or use "Forgot password" to add a password.' });
+  const account = await verifyFirebaseIdToken(idToken);
+  if (!account) {
+    return res.status(401).json({ success: false, error: "We couldn't confirm your sign-in. Please try again." });
   }
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    noteFailure(email);
-    return res.status(401).json({ success: false, error: "That email and password don't match. Check them and try again." });
-  }
-  failures.delete(email);
-  await signedIn(res, user, false);
-}
-
-// Always answers the same way, so nobody can use it to find out who has an account.
-export async function forgotPassword(req, res) {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  if (user) {
-    const result = await requestOtp('email', email);
-    if (!result.ok) return res.status(result.status).json({ success: false, error: result.error, retryAfter: result.retryAfter });
-  }
-  res.json({ success: true, retryAfter: RESEND_AFTER_SECONDS, devConsole: emailMode === 'console' });
-}
-
-export async function resetPassword(req, res) {
-  const { email, code, password } = req.body;
-  const check = await checkOtp('email', email, code);
-  if (!check.ok) return res.status(check.status).json({ success: false, error: check.error });
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ success: false, error: 'This code has expired. Please request a new one.' });
-  user.passwordHash = await bcrypt.hash(password, 10);
-  await user.save();
-  failures.delete(email);
-  await signedIn(res, user, false);
-}
-
-export async function googleSignIn(req, res) {
-  if (!googleConfigured) {
-    return res.status(503).json({ success: false, error: 'Google sign-in is not set up on the server yet (GOOGLE_CLIENT_IDS).' });
-  }
-  let profile;
-  try {
-    profile = await verifyGoogleIdToken(req.body.idToken);
-  } catch (err) {
-    return res.status(401).json({ success: false, error: err.status ? err.message : 'Google sign-in could not be verified.' });
+  if (!account.emailVerified) {
+    return res.status(403).json({
+      success: false,
+      code: 'EMAIL_NOT_VERIFIED',
+      error: 'Please verify your email address first — check your inbox for our link.',
+    });
   }
 
-  // Same Google account, or an account already made with this verified email.
-  let user = await User.findOne({ $or: [{ googleId: profile.googleId }, { email: profile.email }] });
+  // Same Firebase account, or an account already made with this email
+  // (e.g. signed up with a password, now signing in with Google).
+  let user = (await User.findOne({ firebaseUid: account.uid })) ?? (await User.findOne({ email: account.email }));
   const isNew = !user;
   if (!user) {
-    user = await User.create(profile);
+    user = await User.create({ email: account.email, name: name || account.name || '', firebaseUid: account.uid });
   } else {
-    user.googleId = profile.googleId;
-    if (!user.name) user.name = profile.name;
-    if (!user.avatarUrl) user.avatarUrl = profile.avatarUrl;
-    await user.save();
+    let changed = false;
+    if (!user.firebaseUid) {
+      user.firebaseUid = account.uid;
+      changed = true;
+    }
+    if (!user.name && (name || account.name)) {
+      user.name = name || account.name;
+      changed = true;
+    }
+    if (changed) await user.save();
   }
   await signedIn(res, user, isNew);
 }

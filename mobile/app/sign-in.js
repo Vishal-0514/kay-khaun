@@ -6,14 +6,14 @@ import BandHeader, { useBandHeight } from '../components/BandHeader';
 import Button from '../components/Button';
 import Icon from '../components/Icon';
 import { glideTo, leave, rise, smoothLayout } from '../components/Motion';
-import { api, errorMessage } from '../lib/api';
+import { signInWithEmail, signUpWithEmail } from '../lib/firebase';
 import { homeRouteFor } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const COPY = {
   login: { title: 'Welcome back', subtitle: 'Log in with your email and password.', cta: 'Log in' },
-  signup: { title: 'Create your account', subtitle: 'Takes 20 seconds. Then tell us what you like to eat.', cta: 'Create account' },
+  signup: { title: 'Create your account', subtitle: "Takes 20 seconds. We'll email you a link to confirm it's you.", cta: 'Create account' },
 };
 
 // Log in / Create account switch; the gold pill glides between the two.
@@ -76,14 +76,23 @@ export default function SignIn() {
     setBusy(true);
     setError('');
     try {
-      const body = signup ? { name: name.trim(), email: email.trim(), password } : { email: email.trim(), password };
-      const { data } = await api.post(`/auth/email/${signup ? 'sign-up' : 'log-in'}`, body);
-      setSession(data);
-      router.replace(homeRouteFor(data.user));
+      if (signup) {
+        // Firebase emails a verification link; they confirm it on the next screen.
+        await signUpWithEmail({ name, email, password });
+        router.push({ pathname: '/verify-email', params: { email: email.trim() } });
+        return;
+      }
+      const result = await signInWithEmail({ email, password });
+      if (result.needsVerification) {
+        router.push({ pathname: '/verify-email', params: { email: email.trim() } });
+        return;
+      }
+      setSession(result);
+      router.replace(homeRouteFor(result.user));
     } catch (err) {
-      setError(errorMessage(err));
+      setError(err.message);
       // Already registered? Flip to log in, keeping what they typed.
-      if (err.response?.data?.code === 'EMAIL_TAKEN') setMode('login');
+      if (err.code === 'auth/email-already-in-use') setMode('login');
     } finally {
       setBusy(false);
     }
