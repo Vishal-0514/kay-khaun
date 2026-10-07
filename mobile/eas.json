@@ -21,7 +21,8 @@
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyClaNe5imQ6YdpG-YQM-zIqllH3K3em6k4",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "kay-khaun.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "kay-khaun",
-        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:611672966477:web:08a22c38785ef2f25d6304"
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:611672966477:web:08a22c38785ef2f25d6304",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "611672966477-ukv952kqqj72atmde3lmokssuruauden.apps.googleusercontent.com"
       }
     },
     "production": {
