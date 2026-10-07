@@ -6,7 +6,8 @@ import MaroonBand from '../../components/MaroonBand';
 import IconButton from '../../components/IconButton';
 import Icon, { DietMark } from '../../components/Icon';
 import PlateRing from '../../components/PlateRing';
-import DishMeta from '../../components/DishMeta';
+import DishMeta, { isPlace } from '../../components/DishMeta';
+import { useLocationStore } from '../../store/useLocationStore';
 import Animated from 'react-native-reanimated';
 import { Glow, PressScale, Reveal, rise, riseUp } from '../../components/Motion';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -46,7 +47,16 @@ export default function Home() {
   const craving = slip?.craving ?? 'Tell me what you feel like';
   const budget = slip?.budget ?? prefBudget;
 
+  // Where they are, so picks are real places nearby.
+  const locationStatus = useLocationStore((s) => s.status);
+  const locationLabel = useLocationStore((s) => s.label());
+  const locate = useLocationStore((s) => s.locate);
   useEffect(() => {
+    if (locationStatus === 'idle') locate();
+  }, [locationStatus, locate]);
+
+  useEffect(() => {
+    if (locationStatus === 'idle' || locationStatus === 'locating') return undefined;
     let alive = true;
     quickPicks()
       .then((picks) => alive && setTopPick(picks[0] ?? null))
@@ -54,7 +64,7 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [quickPicks, user?.preferences]);
+  }, [quickPicks, user?.preferences, locationStatus]);
 
   async function openMood(mood) {
     setLoadingMood(mood);
@@ -72,10 +82,12 @@ export default function Home() {
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: space.xl }}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.topRow, { marginTop: insets.top + space.base }]}>
-          <View style={styles.location}>
+          <Pressable style={styles.location} onPress={locate} aria-label="Update my location" hitSlop={8}>
             <Icon name="pin" size={18} color={colors.gold} />
-            <Text style={styles.locationText}>Andheri West, Mumbai</Text>
-          </View>
+            <Text style={styles.locationText} numberOfLines={1}>
+              {locationLabel}
+            </Text>
+          </Pressable>
           <IconButton name="user" label="Profile" onDark onPress={() => router.push('/profile')} />
         </View>
         <View style={styles.greeting}>
@@ -170,15 +182,15 @@ export default function Home() {
           </PlateRing>
           <View style={{ flex: 1, gap: 2 }}>
             <View style={styles.nameRow}>
-              <DietMark type={topPick.diet === 'veg' ? 'veg' : 'nonveg'} />
+              {isPlace(topPick) ? null : <DietMark type={topPick.diet === 'veg' ? 'veg' : 'nonveg'} />}
               <Text style={styles.pickName} numberOfLines={1}>
                 {topPick.name}
               </Text>
             </View>
             <Text style={type.small} numberOfLines={1}>
-              {topPick.restaurant} · {topPick.distanceKm} km
+              {isPlace(topPick) ? topPick.restaurant : `${topPick.restaurant} · ${topPick.distanceKm} km`}
             </Text>
-            <DishMeta price={topPick.price} eta={topPick.eta} />
+            <DishMeta pick={topPick} />
           </View>
           <Icon name="chevron" color={colors.muted} />
         </PressScale>
@@ -207,7 +219,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg },
-  location: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  location: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, marginRight: space.md },
   locationText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cream },
   greeting: { paddingHorizontal: space.lg, marginTop: space.lg },
   helloRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

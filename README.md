@@ -59,6 +59,14 @@ npm run web
 ```
 To run on your phone with Expo Go, run `npx expo start` and scan the QR code. Then set `EXPO_PUBLIC_API_URL` in `mobile/.env` to your PC's Wi-Fi address, e.g. `http://192.168.1.20:4100/api`.
 
+## Real nearby restaurants (order on Zomato / Swiggy)
+
+Kya Khaun suggests; customers order on Zomato or Swiggy. With a Google key and the user's location, "Order in" picks are **real restaurants near them** from Google Places API (New): name, Google rating, distance, price range for one, open now, plus "Try here" dish ideas (labelled as typical — we don't have menus). Each pick has **Zomato** and **Swiggy** buttons that open the restaurant there (`server/src/services/nearby.js`, `places.js`).
+
+Setup: Google Cloud → project **kay-khaun** → link billing → enable **Places API (New)** → Credentials → API key restricted to Places API (New) → `GOOGLE_MAPS_API_KEY` in `server/.env` and in Render's Environment. Results are cached for 6 hours per ~1 km area and search, to stay inside Google's free monthly usage.
+
+Without a key or location the app falls back to the sample Mumbai menu (marked "sample").
+
 ## Sign-in (Firebase, like KARIS)
 
 Firebase checks the email + password (or Google account), sends the verification and password-reset emails for free, and gives the app an ID token. The app sends it to `POST /api/auth/firebase`; the server checks it with Firebase, accepts **verified emails only**, links it to one Kya Khaun account per email, and returns our own session. Firebase's own session is thrown away straight after.

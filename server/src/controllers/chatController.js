@@ -2,6 +2,8 @@ import Conversation from '../models/Conversation.js';
 import { aiEnabled, understand, explainPicks, explainRecipes } from '../services/ai.js';
 import { parseWithKeywords } from '../services/intent.js';
 import { recommend } from '../services/ranking.js';
+import { nearbyPicks } from '../services/nearby.js';
+import { placesEnabled } from '../services/places.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 
@@ -51,6 +53,10 @@ const backupText = {
   askKitchen: 'Nice, let\'s cook! What do you have at home? Type a few things like "eggs, onion, bread", or scan your fridge.',
   picks: ({ picks, relaxed }) => {
     const top = picks[0];
+    if (top.source === 'places') {
+      const rating = top.rating ? ` (★${top.rating.toFixed(1)}, ${top.distanceKm} km away)` : ` (${top.distanceKm} km away)`;
+      return `My top pick is ${top.name}${rating}. Here are your top ${picks.length} — tap one to order on Zomato or Swiggy.`;
+    }
     const lead = relaxed === 'time' ? 'Nothing arrives that fast, so I widened the time a little. ' : relaxed === 'budget' ? 'Nothing fit the budget, so here are the closest options. ' : '';
     return `${lead}My top pick is ${top.name} from ${top.restaurant}: ₹${top.price}, about ${top.eta} min. Here are your top ${picks.length}.`;
   },
@@ -117,6 +123,20 @@ async function describeRecipes(recipes, { text, intent, conv, user }) {
   }
 }
 
+// Real nearby places when we know where they are and Google is set up;
+// otherwise the sample Mumbai menu (handy for building and testing).
+async function findPicks(slots, user, location) {
+  if (placesEnabled && location) {
+    try {
+      const result = await nearbyPicks(slots, prefsOf(user), location);
+      if (result.picks.length) return result;
+    } catch (err) {
+      console.error('Nearby search failed, using the sample menu:', err.message);
+    }
+  }
+  return recommend(slots, prefsOf(user));
+}
+
 function toPublic(conv, user) {
   return {
     id: conv._id,
@@ -128,7 +148,7 @@ function toPublic(conv, user) {
 }
 
 export async function sendMessage(req, res) {
-  const { conversationId, text } = req.body;
+  const { conversationId, text, location } = req.body;
   let conv = conversationId ? await Conversation.findOne({ _id: conversationId, user: req.user._id }) : null;
   if (conversationId && !conv) return res.status(404).json({ success: false, error: 'Chat not found' });
   if (!conv) conv = new Conversation({ user: req.user._id });
@@ -167,7 +187,7 @@ export async function sendMessage(req, res) {
       }
     }
   } else {
-    const result = recommend(slots, prefsOf(req.user));
+    const result = await findPicks(slots, req.user, location);
     if (!result.picks.length) {
       reply = { kind: 'info', text: "I couldn't find anything that fits. Try a different craving or a bigger budget?" };
     } else {
@@ -182,7 +202,7 @@ export async function sendMessage(req, res) {
     text: reply.text,
     kind: reply.kind,
     options: reply.options ?? [],
-    picks: picks.map(({ id, name, restaurant, price, eta, match }) => ({ id, name, restaurant, price, eta, match })),
+    picks: picks.map(({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match }) => ({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match })),
     recipes: recipes.map(({ id, name, time, level, have, total }) => ({ id, name, time, level, have, total })),
   });
   await conv.save();
@@ -200,19 +220,22 @@ export async function getConversation(req, res) {
   if (!conv) return res.status(404).json({ success: false, error: 'Chat not found' });
   // Re-run the picks so the results screens can reopen a past chat.
   const slots = conv.slots.toObject();
-  const picks = slots.branch === 'order' ? recommend(slots, prefsOf(req.user)).picks : [];
+  const lat = Number(req.query.lat);
+  const lng = Number(req.query.lng);
+  const location = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, city: String(req.query.city ?? '') } : null;
+  const picks = slots.branch === 'order' ? (await findPicks(slots, req.user, location)).picks : [];
   const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(slots, prefsOf(req.user)) : [];
   res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots) });
 }
 
 // One-tap picks without a chat: Home's mood circles and "Chatora's pick".
 export async function quickPicks(req, res) {
-  const { mood } = req.body;
-  const result = recommend({ moods: mood ? [mood] : [], branch: 'order' }, prefsOf(req.user));
+  const { mood, location } = req.body;
+  const result = await findPicks({ moods: mood ? [mood] : [], branch: 'order' }, req.user, location);
   res.json({ success: true, picks: result.picks, relaxed: result.relaxed });
 }
 
 // Lets the app show whether Chatora is running on Claude.
 export function status(req, res) {
-  res.json({ success: true, ai: aiEnabled });
+  res.json({ success: true, ai: aiEnabled, places: placesEnabled });
 }

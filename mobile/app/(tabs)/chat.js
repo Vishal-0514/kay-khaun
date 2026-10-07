@@ -132,7 +132,7 @@ export default function Chat() {
                 <Text style={type.small} numberOfLines={1}>
                   {item.picks[0].restaurant}
                 </Text>
-                <DishMeta price={item.picks[0].price} eta={item.picks[0].eta} />
+                <DishMeta pick={item.picks[0]} />
               </View>
               <View style={styles.seeAll}>
                 <Text style={styles.seeAllText}>See all {item.picks.length}</Text>
