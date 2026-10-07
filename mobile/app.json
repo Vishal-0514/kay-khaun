@@ -29,6 +29,12 @@
           "photosPermission": "Kya Khaun uses your photos to spot the ingredients in your kitchen.",
           "cameraPermission": "Kya Khaun uses the camera to spot the ingredients in your fridge."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Kya Khaun uses your location to find good food near you."
+        }
       ]
     ],
     "extra": {

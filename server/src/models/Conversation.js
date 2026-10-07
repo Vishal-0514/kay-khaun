@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 
+// A pick is either a real nearby place (source 'places') or a sample dish.
 const pickSchema = new mongoose.Schema(
-  { id: String, name: String, restaurant: String, price: Number, eta: Number, match: Number },
+  { id: String, source: String, name: String, restaurant: String, price: Number, eta: Number, rating: Number, distanceKm: Number, priceLabel: String, match: Number },
   { _id: false }
 );
 

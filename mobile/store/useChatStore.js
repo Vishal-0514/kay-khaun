@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 import { useCookStore } from './useCookStore';
+import { useLocationStore } from './useLocationStore';
+
+const where = () => useLocationStore.getState().forApi();
 
 // The current chat with Chatora plus the last set of picks, which the
 // Results and Dish screens read. Recipes go to the cook store.
@@ -20,7 +23,7 @@ export const useChatStore = create((set, get) => ({
         : { id: null, title: 'New chat', slip: null, messages: [optimistic] },
     }));
     try {
-      const { data } = await api.post('/chat/messages', { conversationId: conversation?.id ?? undefined, text });
+      const { data } = await api.post('/chat/messages', { conversationId: conversation?.id ?? undefined, text, location: where() });
       set({
         conversation: data.conversation,
         ...(data.picks.length ? { picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } } : null),
@@ -37,13 +40,13 @@ export const useChatStore = create((set, get) => ({
   },
 
   async open(id) {
-    const { data } = await api.get(`/chat/${id}`);
+    const { data } = await api.get(`/chat/${id}`, { params: where() });
     set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } });
     if (data.recipes?.length) useCookStore.getState().setFromChat(data);
   },
 
   async quickPicks(mood) {
-    const { data } = await api.post('/chat/quick-picks', mood ? { mood } : {});
+    const { data } = await api.post('/chat/quick-picks', { ...(mood ? { mood } : {}), location: where() });
     set({ picks: data.picks, picksSource: { kind: mood ? 'mood' : 'pick', label: mood ?? null } });
     return data.picks;
   },

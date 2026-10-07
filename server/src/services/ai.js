@@ -53,11 +53,11 @@ const understandSchema = strictObject({
   moods: { type: 'array', items: { type: 'string', enum: MOODS } },
   cuisines: { type: 'array', items: { type: 'string', enum: CUISINES } },
   dishWords: { type: 'array', items: { type: 'string' } },
-  diet: { type: ['string', 'null'], enum: ['veg', 'nonveg', 'egg', null] },
+  diet: { anyOf: [{ type: 'string', enum: ['veg', 'nonveg', 'egg'] }, { type: 'null' }] },
   budgetMax: nullable('integer'),
   budgetStrict: nullable('boolean'),
   timeMax: nullable('integer'),
-  branch: { type: ['string', 'null'], enum: ['order', 'cook', null] },
+  branch: { anyOf: [{ type: 'string', enum: ['order', 'cook'] }, { type: 'null' }] },
   avoid: { type: 'array', items: { type: 'string', enum: AVOIDABLE } },
   ingredients: { type: 'array', items: { type: 'string' } },
   language: { type: 'string', enum: LANGUAGES },
@@ -138,7 +138,28 @@ Use ONLY the facts given for each dish (name, restaurant, price, delivery minute
 - message: two short sentences max, in the user's language and style. Name the #1 dish with its restaurant, price and minutes exactly as given. If "relaxed" is set, gently say which limit you stretched.
 - reasons: for EVERY dish, one reason of at most 12 words, personal to what they asked for and their taste, in the same language. Use the dish id exactly as given.`;
 
+const PLACES_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already found and ranked real nearby restaurants from Google; the customer orders on Zomato or Swiggy. You only explain the choices.
+Use ONLY the facts given (name, kind of place, area, distance, Google rating, price range, open now, typical dishes). You do NOT know their menu or exact prices: never state a dish price, never promise a dish is on the menu — say "try" or "known for" only about the typical dishes given.
+- message: two short sentences max, in the user's language and style. Name the #1 place with its distance and rating, and say they can tap to order on Zomato or Swiggy.
+- reasons: for EVERY place, one reason of at most 12 words, personal to what they asked for. Use the place id exactly as given.`;
+
 export async function explainPicks({ text, language, slip, picks, relaxed, userName, taste }) {
+  if (picks[0]?.source === 'places') {
+    const places = picks.map((p, i) => ({
+      rank: i + 1,
+      id: p.id,
+      name: p.name,
+      kind: p.restaurant,
+      area: p.area,
+      distanceKm: p.distanceKm,
+      googleRating: p.rating,
+      ratingCount: p.ratingCount,
+      priceRange: p.priceLabel,
+      openNow: p.openNow,
+      typicalDishes: p.ideas,
+    }));
+    return explain(PLACES_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, places }, picks.map((p) => p.id));
+  }
   const dishes = picks.map((p, i) => ({
     rank: i + 1,
     id: p.id,

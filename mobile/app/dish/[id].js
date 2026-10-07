@@ -10,7 +10,8 @@ import Button from '../../components/Button';
 import Animated from 'react-native-reanimated';
 import { appear, rise, riseUp } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
-import { notify } from '../../lib/notify';
+import { isPlace, shortPrice } from '../../components/DishMeta';
+import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
 // Each reason gets its own soft colour tile (design: V5 "Why I picked this").
@@ -22,6 +23,7 @@ const TILE = {
   heart: ['#FBE4EC', '#A92E5A'],
   star: ['#FCF1DA', colors.goldText],
   spark: ['#FCF1DA', colors.goldText],
+  route: ['#E8EEF7', '#3A5A8C'],
 };
 
 function Stat({ label, value }) {
@@ -40,6 +42,7 @@ export default function Dish() {
   const dish = useChatStore((s) => s.picks.find((p) => p.id === id));
   const [saved, setSaved] = useState(false);
   const bandHeight = 404 + insets.top;
+  const place = isPlace(dish);
 
   if (!dish) {
     return (
@@ -67,7 +70,7 @@ export default function Dish() {
               <Text style={styles.bigLabel}>match for you</Text>
             </PlateRing>
             <View style={styles.nameRow}>
-              <DietMark type={dish.diet === 'veg' ? 'veg' : 'nonveg'} size={16} />
+              {place ? null : <DietMark type={dish.diet === 'veg' ? 'veg' : 'nonveg'} size={16} />}
               <Text style={styles.name} role="heading">
                 {dish.name}
               </Text>
@@ -79,10 +82,34 @@ export default function Dish() {
         </MaroonBand>
 
         <Animated.View entering={riseUp(0, 300)} style={[styles.stats, { marginTop: bandHeight - 36 }]}>
-          <Stat label="Price" value={`₹${dish.price}`} />
-          <Stat label="Arrives in" value={`${dish.eta} min`} />
-          <Stat label="Rating" value={`${dish.rating} ★`} />
+          {place ? (
+            <>
+              <Stat label="Google rating" value={dish.rating ? `${dish.rating.toFixed(1)} ★` : '—'} />
+              <Stat label="Distance" value={`${dish.distanceKm} km`} />
+              <Stat label="For one" value={shortPrice(dish.priceLabel) ?? '—'} />
+            </>
+          ) : (
+            <>
+              <Stat label="Price" value={`₹${dish.price}`} />
+              <Stat label="Arrives in" value={`${dish.eta} min`} />
+              <Stat label="Rating" value={`${dish.rating} ★`} />
+            </>
+          )}
         </Animated.View>
+
+        {place && dish.ideas?.length ? (
+          <Animated.View entering={rise(0, 380)} style={styles.ideas}>
+            <Text style={type.head}>Try here</Text>
+            <View style={styles.ideaRow}>
+              {dish.ideas.map((idea) => (
+                <View key={idea} style={styles.idea}>
+                  <Text style={styles.ideaText}>{idea}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={type.small}>Popular at places like this. Check today's menu and prices on Zomato or Swiggy.</Text>
+          </Animated.View>
+        ) : null}
 
         <View style={styles.why}>
           <Text style={type.head}>Why I picked this</Text>
@@ -97,29 +124,33 @@ export default function Dish() {
               </Animated.View>
             );
           })}
-          <View style={styles.reason}>
-            <View style={[styles.tile, { backgroundColor: colors.soft }]}>
-              <Icon name="route" size={20} color={colors.muted} strokeWidth={1.9} />
+          {place ? null : (
+            <View style={styles.reason}>
+              <View style={[styles.tile, { backgroundColor: colors.soft }]}>
+                <Icon name="route" size={20} color={colors.muted} strokeWidth={1.9} />
+              </View>
+              <Text style={styles.reasonText}>
+                {dish.distanceKm} km away · {dish.cuisine} · {dish.spiceLabel} · sample dish
+              </Text>
             </View>
-            <Text style={styles.reasonText}>
-              {dish.distanceKm} km away · {dish.cuisine} · {dish.spiceLabel}
-            </Text>
-          </View>
+          )}
         </View>
       </ScrollView>
 
+      {/* Kya Khaun suggests; they order on Zomato or Swiggy. */}
       <View style={[styles.bar, { paddingBottom: insets.bottom + space.md }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.barPrice}>₹{dish.price}</Text>
-          <Text style={type.small} numberOfLines={1}>
-            {dish.restaurant}
-          </Text>
+        <Text style={styles.barTitle}>Order from {place ? dish.name : 'a delivery app'}</Text>
+        <View style={styles.barButtons}>
+          {Object.entries(ORDER_APPS).map(([app, a]) => (
+            <Button
+              key={app}
+              title={a.label}
+              icon={<Icon name="external" size={18} color="#FFFFFF" />}
+              onPress={() => openOrderApp(dish, app)}
+              style={[styles.orderBtn, { backgroundColor: a.color, shadowColor: a.color }]}
+            />
+          ))}
         </View>
-        <Button
-          title="Order on partner app"
-          icon={<Icon name="external" size={18} color="#FFFFFF" />}
-          onPress={() => notify('Ordering partners', `Direct ordering arrives in a later phase. For now, search "${dish.restaurant}" in your food delivery app.`)}
-        />
       </View>
     </View>
   );
@@ -143,6 +174,13 @@ const styles = StyleSheet.create({
   reason: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 14 },
   tile: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   reasonText: { ...type.body, color: colors.ink, flex: 1 },
-  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: space.base, paddingHorizontal: space.lg, paddingTop: space.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.hair },
+  bar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, paddingTop: space.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.hair },
+  barTitle: { fontFamily: fonts.semibold, fontSize: 14, color: colors.muted, marginBottom: space.sm },
+  barButtons: { flexDirection: 'row', gap: space.sm },
+  orderBtn: { flex: 1 },
+  ideas: { marginHorizontal: space.lg, marginTop: space.lg, gap: space.sm },
+  ideaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  idea: { paddingHorizontal: 14, height: 36, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.goldSoft },
+  ideaText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.goldText },
   barPrice: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink },
 });

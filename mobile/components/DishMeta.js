@@ -2,19 +2,42 @@ import { StyleSheet, Text, View } from 'react-native';
 import Icon from './Icon';
 import { colors, fonts } from '../lib/theme';
 
-// "₹249 · 22 min" with small icons, used on pick cards and rows.
-export default function DishMeta({ price, eta, rating, color = colors.ink }) {
+// One line of facts under a pick.
+//   Real nearby place: "★ 4.5 · 1.2 km · ₹100–300"
+//   Sample dish:       "₹249 · 22 min"
+export const isPlace = (pick) => pick?.source === 'places';
+export const shortPrice = (label) => label?.replace(/^About /, '').replace(/ for one$/, '') ?? null;
+
+export default function DishMeta({ pick, price, eta, rating, color = colors.ink }) {
+  if (isPlace(pick)) {
+    return (
+      <View style={styles.row}>
+        {pick.rating ? (
+          <View style={styles.item}>
+            <Icon name="star" size={13} color={colors.gold} />
+            <Text style={[styles.text, { color }]}>{pick.rating.toFixed(1)}</Text>
+          </View>
+        ) : null}
+        <View style={styles.item}>
+          <Icon name="pin" size={13} color={colors.muted} />
+          <Text style={[styles.text, { color }]}>{pick.distanceKm} km</Text>
+        </View>
+        {pick.priceLabel ? <Text style={[styles.price, { color: colors.red }]}>{shortPrice(pick.priceLabel)}</Text> : null}
+      </View>
+    );
+  }
+  const p = pick ?? { price, eta, rating };
   return (
     <View style={styles.row}>
-      <Text style={[styles.price, { color: colors.red }]}>₹{price}</Text>
+      <Text style={[styles.price, { color: colors.red }]}>₹{p.price}</Text>
       <View style={styles.item}>
         <Icon name="clock" size={14} color={colors.muted} />
-        <Text style={[styles.text, { color }]}>{eta} min</Text>
+        <Text style={[styles.text, { color }]}>{p.eta} min</Text>
       </View>
-      {rating ? (
+      {p.rating ? (
         <View style={styles.item}>
           <Icon name="star" size={13} color={colors.gold} />
-          <Text style={[styles.text, { color }]}>{rating}</Text>
+          <Text style={[styles.text, { color }]}>{p.rating}</Text>
         </View>
       ) : null}
     </View>

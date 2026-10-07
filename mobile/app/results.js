@@ -10,6 +10,8 @@ import Button from '../components/Button';
 import Animated from 'react-native-reanimated';
 import { PressScale, rise, riseUp } from '../components/Motion';
 import { useChatStore } from '../store/useChatStore';
+import DishMeta, { isPlace, shortPrice } from '../components/DishMeta';
+import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street: 'Street', sweet: 'Sweet' };
@@ -89,7 +91,7 @@ export default function Results() {
                   <Text style={styles.badgeText}>Chatora's pick</Text>
                 </View>
                 <View style={styles.nameRow}>
-                  <DietMark type={top.diet === 'veg' ? 'veg' : 'nonveg'} />
+                  {isPlace(top) ? null : <DietMark type={top.diet === 'veg' ? 'veg' : 'nonveg'} />}
                   <Text style={styles.name}>{top.name}</Text>
                 </View>
                 <Text style={type.small}>
@@ -98,13 +100,29 @@ export default function Results() {
               </View>
             </View>
             <View style={styles.stats}>
-              <Stat label="Price" value={`₹${top.price}`} />
-              <Stat label="Arrives in" value={`${top.eta} min`} />
-              <Stat label="Rating" value={`${top.rating} ★`} />
+              {isPlace(top) ? (
+                <>
+                  <Stat label="Rating" value={top.rating ? `${top.rating.toFixed(1)} ★` : '—'} />
+                  <Stat label="Distance" value={`${top.distanceKm} km`} />
+                  <Stat label="For one" value={shortPrice(top.priceLabel) ?? '—'} />
+                </>
+              ) : (
+                <>
+                  <Stat label="Price" value={`₹${top.price}`} />
+                  <Stat label="Arrives in" value={`${top.eta} min`} />
+                  <Stat label="Rating" value={`${top.rating} ★`} />
+                </>
+              )}
             </View>
             <Text style={styles.reason}>{top.reasons.map((r) => r.text).slice(0, 2).join('. ')}.</Text>
             <View style={styles.actions}>
-              <Button title="Order now" onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
+              {isPlace(top) ? (
+                Object.entries(ORDER_APPS).map(([app, a]) => (
+                  <Button key={app} title={a.label} onPress={() => openOrderApp(top, app)} style={{ flex: 1, backgroundColor: a.color, shadowColor: a.color }} />
+                ))
+              ) : (
+                <Button title="See details" onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
+              )}
               <PressScale scaleTo={0.88} role="button" aria-label={saved ? 'Saved' : 'Save'} onPress={() => setSaved((v) => !v)} style={[styles.heart, saved && { backgroundColor: colors.redSoft, borderColor: colors.redSoft }]}>
                 <Icon name="heart" size={22} color={colors.red} strokeWidth={saved ? 2.6 : 2} />
               </PressScale>
@@ -125,17 +143,17 @@ export default function Results() {
                     </View>
                     <View style={{ flex: 1, gap: 2 }}>
                       <View style={styles.nameRow}>
-                        <DietMark type={p.diet === 'veg' ? 'veg' : 'nonveg'} />
+                        {isPlace(p) ? null : <DietMark type={p.diet === 'veg' ? 'veg' : 'nonveg'} />}
                         <Text style={styles.rowName} numberOfLines={1}>
                           {p.name}
                         </Text>
                       </View>
                       <Text style={type.small} numberOfLines={1}>
-                        {p.restaurant} · {p.eta} min
+                        {isPlace(p) ? `${p.restaurant} · ${p.distanceKm} km` : `${p.restaurant} · ${p.eta} min`}
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                      <Text style={styles.rowPrice}>₹{p.price}</Text>
+                      <Text style={styles.rowPrice}>{isPlace(p) ? (p.rating ? `★ ${p.rating.toFixed(1)}` : shortPrice(p.priceLabel) ?? '') : `₹${p.price}`}</Text>
                       <Text style={styles.rowMatch}>{p.match}% match</Text>
                     </View>
                   </PressScale>

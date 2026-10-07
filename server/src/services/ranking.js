@@ -100,6 +100,7 @@ export function recommend(slots, prefs, { limit = 5 } = {}) {
         .slice(0, limit)
         .map(({ d, total, nameHit }) => ({
           ...d,
+          source: 'sample',
           match: Math.min(99, Math.round(52 + 47 * total)),
           spiceLabel: SPICE_WORD[d.spice - 1],
           reasons: reasonsFor(d, c, nameHit),
