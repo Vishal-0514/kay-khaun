@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import Animated from 'react-native-reanimated';
 import { appear, rise, riseUp } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
+import { planDish, usePlanStore } from '../../store/usePlanStore';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
@@ -39,7 +40,9 @@ export default function Dish() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
-  const dish = useChatStore((s) => s.picks.find((p) => p.id === id));
+  const fromChat = useChatStore((s) => s.picks.find((p) => p.id === id));
+  const fromPlan = usePlanStore((s) => planDish(s.plan, id));
+  const dish = fromChat ?? fromPlan;
   const [saved, setSaved] = useState(false);
   const bandHeight = 404 + insets.top;
   const place = isPlace(dish);

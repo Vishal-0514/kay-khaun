@@ -32,6 +32,13 @@ kya-khaun-app/
 - **In chat:** "I want to cook" → Chatora asks what you have → recipes appear in the chat. "Mere paas aloo pyaaz hai" works too.
 - **Photo scan needs `ANTHROPIC_API_KEY`.** Without it, typing ingredients still works and the camera buttons explain why scan is off.
 
+## Plan my whole day
+
+- **Home → "Plan my whole day"** plans breakfast, lunch, evening snack and dinner within a day budget (defaults from the taste profile: low ₹600, mid ₹1,000, high ₹1,800). Change the budget, the mood of the day (balanced, light, comfort, spicy, street) or which meals to plan, and it re-plans.
+- `server/src/services/dayPlan.js` scores dishes per meal with the same taste scoring as chat, then tries every combination of the best and cheapest candidates and keeps the best day that fits the budget, with no repeated restaurant and a small penalty for repeating a cuisine or stacking fiery meals. If nothing fits, it returns the cheapest day and says it's over.
+- Each meal has **Swap** (a few alternatives) and opens the usual dish page with Zomato / Swiggy. The bar at the bottom shows the day total against the budget.
+- With Google Places on and a location, each meal is a real nearby place (price range instead of exact price). Claude writes a one-line intro for the day; without the key a template is used.
+
 ## Voice input
 
 - **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).
@@ -113,6 +120,7 @@ Email + password then works everywhere — Expo Go, the browser and app builds.
 | POST | `/api/cook/recipes` | `{ ingredients[], mood?, timeMax? }` → `{ kitchen, recipes }` |
 | GET | `/api/cook/recipes/:id?have=a,b` | full recipe marked against what you have |
 | POST | `/api/cook/scan` | `{ image (base64), mediaType }` → `{ items }` (needs the API key) |
+| POST | `/api/plan` | `{ budget?, mood?, meals[]?, location? }` → `{ plan }`: one pick per meal plus swaps, total, and Chatora's note |
 | GET | `/api/chat/:id` | one chat, with its picks re-ranked |
 | POST | `/api/chat/quick-picks` | `{ mood? }` → 5 picks from your taste profile |
 

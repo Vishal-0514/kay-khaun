@@ -202,7 +202,7 @@ export default function Home() {
       )}
 
       <Animated.View entering={rise(0, 840)}>
-        <PressScale scaleTo={0.98} role="button" style={styles.plan} onPress={() => notify('Plan my whole day', 'Plan My Day arrives in a later update.')}>
+        <PressScale scaleTo={0.98} role="button" style={styles.plan} onPress={() => router.push('/plan')}>
           <View style={{ flex: 1 }}>
             <Text style={styles.planTitle}>Plan my whole day</Text>
             <Text style={styles.planText}>Breakfast to dinner, within your budget</Text>

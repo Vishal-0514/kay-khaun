@@ -197,6 +197,28 @@ export async function explainRecipes({ text, language, haveLabels, recipes, user
   return explain(RECIPES_SYSTEM, { userMessage: text, language, userName: userName || null, theyHave: haveLabels, savedTaste: taste, recipes: facts }, recipes.map((r) => r.id));
 }
 
+const PLAN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already planned the user's meals for the day; you only introduce the plan.
+Use ONLY the facts given (meal, dish or place name, restaurant, price or price range, cuisine). Never invent dishes, prices or places.
+- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening) and, if total and budget are given, say the total against the budget exactly as given.`;
+
+export async function explainPlan({ plan, userName, taste }) {
+  const meals = plan.meals.map((m) => ({
+    meal: m.label,
+    name: m.pick.name,
+    restaurant: m.pick.restaurant,
+    price: m.pick.price ?? null,
+    priceRange: m.pick.priceLabel ?? null,
+    cuisine: m.pick.cuisine,
+  }));
+  const out = await callJson({
+    system: PLAN_SYSTEM,
+    content: JSON.stringify({ userName: userName || null, dayMood: plan.moodLabel, budget: plan.budget, total: plan.spent, savedTaste: taste, meals }),
+    schema: strictObject({ message: { type: 'string' } }),
+    maxTokens: 800,
+  });
+  return z.object({ message: z.string().min(1).max(400) }).parse(out).message;
+}
+
 // ---------- 4. scan a fridge / kitchen photo ----------
 
 export const SCAN_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp'];

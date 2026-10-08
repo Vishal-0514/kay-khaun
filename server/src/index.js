@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import chatRoutes from './routes/chat.js';
 import cookRoutes from './routes/cook.js';
+import planRoutes from './routes/plan.js';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/cook', cookRoutes);
+app.use('/api/plan', planRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -5,9 +5,9 @@ import { dishes } from '../data/mumbaiMenu.js';
 // so nothing can be invented.
 
 const BUDGET_FROM_PREF = { low: 300, mid: 500, high: 900 };
-const SPICE_WORD = ['mild', 'mild', 'medium', 'spicy', 'very spicy'];
+export const SPICE_WORD = ['mild', 'mild', 'medium', 'spicy', 'very spicy'];
 
-function dietAllows(want, dishDiet) {
+export function dietAllows(want, dishDiet) {
   if (!want || want === 'nonveg') return true; // non-veg eaters can have anything
   if (want === 'egg') return dishDiet !== 'nonveg';
   return dishDiet === 'veg';
@@ -36,7 +36,7 @@ export function normalizeAvoid(list = []) {
   return list.map((x) => map[x.toLowerCase()]).filter(Boolean);
 }
 
-function score(d, c) {
+export function score(d, c) {
   const wantsSpicy = c.moods.includes('spicy');
   const otherMoods = c.moods.filter((m) => m !== 'spicy');
   const nameHit = c.dishWords.some((w) => d.name.toLowerCase().includes(w));
@@ -58,7 +58,7 @@ function score(d, c) {
   return { total, nameHit };
 }
 
-function reasonsFor(d, c, nameHit) {
+export function reasonsFor(d, c, nameHit) {
   const r = [];
   if (nameHit) r.push({ icon: 'spark', text: 'Exactly what you asked for' });
   if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: `${d.spice === 5 ? 'Fiery' : 'Properly spicy'}, just like you asked` });
