@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,6 +9,7 @@ import { restoreSession } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors } from '../lib/theme';
 import { ToastHost } from '../components/Toast';
+import { listenForReminders } from '../lib/reminders';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -25,6 +26,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     restoreSession();
+    // Tapping a meal reminder opens the app on the right screen.
+    return listenForReminders((url) => router.push(url));
   }, []);
 
   useEffect(() => {

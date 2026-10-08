@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 // A pick is either a real nearby place (source 'places') or a sample dish.
 const pickSchema = new mongoose.Schema(
-  { id: String, source: String, name: String, restaurant: String, price: Number, eta: Number, rating: Number, distanceKm: Number, priceLabel: String, match: Number },
+  { id: String, source: String, name: String, restaurant: String, price: Number, eta: Number, rating: Number, distanceKm: Number, priceLabel: String, match: Number, people: Number, groupPrice: Number },
   { _id: false }
 );
 
@@ -38,6 +38,9 @@ const conversationSchema = new mongoose.Schema(
       diet: { type: String, default: null },
       budgetMax: { type: Number, default: null },
       budgetStrict: { type: Boolean, default: null },
+      // Group orders: how many are eating, and whether budgetMax is per person.
+      people: { type: Number, default: null },
+      budgetPerPerson: { type: Boolean, default: null },
       timeMax: { type: Number, default: null },
       branch: { type: String, default: null },
       avoid: [String],

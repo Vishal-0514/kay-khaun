@@ -56,6 +56,8 @@ const understandSchema = strictObject({
   diet: { anyOf: [{ type: 'string', enum: ['veg', 'nonveg', 'egg'] }, { type: 'null' }] },
   budgetMax: nullable('integer'),
   budgetStrict: nullable('boolean'),
+  budgetPerPerson: nullable('boolean'),
+  people: nullable('integer'),
   timeMax: nullable('integer'),
   branch: { anyOf: [{ type: 'string', enum: ['order', 'cook'] }, { type: 'null' }] },
   avoid: { type: 'array', items: { type: 'string', enum: AVOIDABLE } },
@@ -73,6 +75,8 @@ const understandCheck = z.object({
   diet: z.enum(['veg', 'nonveg', 'egg']).nullable(),
   budgetMax: z.number().int().min(20).max(10000).nullable(),
   budgetStrict: z.boolean().nullable(),
+  budgetPerPerson: z.boolean().nullable(),
+  people: z.number().int().min(1).max(12).nullable(),
   timeMax: z.number().int().min(5).max(240).nullable(),
   branch: z.enum(['order', 'cook']).nullable(),
   avoid: z.array(z.enum(AVOIDABLE)),
@@ -92,6 +96,8 @@ Slots — report only what the latest message adds or changes; use null / [] for
 - dishWords: specific dishes or ingredients they mention, lowercase English ("biryani", "paneer").
 - diet: "veg", "nonveg" or "egg" only if stated or implied by a dish (chicken = nonveg).
 - budgetMax: their limit in rupees for this meal. budgetStrict: true for "under / max / se kam / ke andar", false for "around / about / tak".
+- people: how many are eating if they say ("hum 4 log", "for two", "family of 5" = 5), else null.
+- budgetPerPerson: true if the budget is per person ("300 each", "per head"), false if it is for the whole group, null when no group or no budget.
 - timeMax: minutes they can wait. "quick", "jaldi", "hungry now" = 30.
 - branch: "order" to get food delivered, "cook" to make it at home, else null.
 - avoid: things they don't want, from: ${AVOIDABLE.join(', ')}.
@@ -135,7 +141,7 @@ async function explain(system, payload, ids) {
 
 const EXPLAIN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already chosen and ranked the dishes; you only explain them.
 Use ONLY the facts given for each dish (name, restaurant, price, delivery minutes, rating, spice, cuisine, diet, distance). Never invent dishes, prices, times, offers or ingredients.
-- message: two short sentences max, in the user's language and style. Name the #1 dish with its restaurant, price and minutes exactly as given. If "relaxed" is set, gently say which limit you stretched.
+- message: two short sentences max, in the user's language and style. Name the #1 dish with its restaurant, price and minutes exactly as given. If "people" is more than 1, the price is per person: also give the groupPrice for all of them, exactly as given. If "relaxed" is set, gently say which limit you stretched.
 - reasons: for EVERY dish, one reason of at most 12 words, personal to what they asked for and their taste, in the same language. Use the dish id exactly as given.`;
 
 const PLACES_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already found and ranked real nearby restaurants from Google; the customer orders on Zomato or Swiggy. You only explain the choices.
@@ -173,6 +179,7 @@ export async function explainPicks({ text, language, slip, picks, relaxed, userN
     cuisine: p.cuisine,
     diet: p.diet,
     distanceKm: p.distanceKm,
+    ...(p.people > 1 ? { people: p.people, groupPrice: p.groupPrice } : null),
   }));
   return explain(EXPLAIN_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, relaxed, dishes }, picks.map((p) => p.id));
 }
@@ -199,10 +206,10 @@ export async function explainRecipes({ text, language, haveLabels, recipes, user
 
 const PLAN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already planned the user's meals for the day; you only introduce the plan.
 Use ONLY the facts given (meal, dish or place name, restaurant, price or price range, cuisine, and whether they cook it at home). Never invent dishes, prices or places.
-- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening); mention any meal they cook at home. If total and budget are given, say the total against the budget exactly as given.`;
+- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening); mention any meal they cook at home. If totalPerPerson and budgetPerPerson are given, say the total against the budget exactly as given; if people is more than 1, say it is per person and also give groupTotal for everyone.`;
 
 // meals: [{ label, cook, name, restaurant?, price?, priceLabel?, cuisine? }] — what's showing now.
-export async function explainPlan({ meals, budget, total, moodLabel, userName, taste }) {
+export async function explainPlan({ meals, budget, total, moodLabel, people = 1, userName, taste }) {
   const facts = meals.map((m) => ({
     meal: m.label,
     cookAtHome: Boolean(m.cook),
@@ -214,7 +221,7 @@ export async function explainPlan({ meals, budget, total, moodLabel, userName, t
   }));
   const out = await callJson({
     system: PLAN_SYSTEM,
-    content: JSON.stringify({ userName: userName || null, dayMood: moodLabel, budget, total, savedTaste: taste, meals: facts }),
+    content: JSON.stringify({ userName: userName || null, dayMood: moodLabel, budgetPerPerson: budget, totalPerPerson: total, people, groupTotal: total != null && people > 1 ? total * people : null, savedTaste: taste, meals: facts }),
     schema: strictObject({ message: { type: 'string' } }),
     maxTokens: 800,
   });

@@ -29,7 +29,10 @@ export default function DishMeta({ pick, price, eta, rating, color = colors.ink 
   const p = pick ?? { price, eta, rating };
   return (
     <View style={styles.row}>
-      <Text style={[styles.price, { color: colors.red }]}>₹{p.price}</Text>
+      <Text style={[styles.price, { color: colors.red }]}>
+        ₹{p.price}
+        {p.people > 1 ? <Text style={styles.group}> · ₹{p.groupPrice} for {p.people}</Text> : null}
+      </Text>
       <View style={styles.item}>
         <Icon name="clock" size={14} color={colors.muted} />
         <Text style={[styles.text, { color }]}>{p.eta} min</Text>
@@ -49,4 +52,5 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   price: { fontFamily: fonts.bold, fontSize: 14 },
   text: { fontFamily: fonts.semibold, fontSize: 14 },
+  group: { fontFamily: fonts.semibold, fontSize: 13, color: colors.muted },
 });

@@ -28,8 +28,11 @@ export function planMessage(plan, choice, cook) {
     return `${m.label}: ${p.name}${p.restaurant && p.restaurant !== p.name ? `, ${p.restaurant}` : ''}${price}`;
   });
   const total = dayTotal(plan, choice, cook);
-  const sum = total != null ? `\nTotal ${rupees(total)} of ${rupees(plan.budget)}` : '';
-  return `My food plan for today:\n${lines.join('\n')}${sum}${footer()}`;
+  const people = plan.people > 1 ? plan.people : 1;
+  const group = people > 1 ? ` per person (${rupees(total * people)} for ${people})` : '';
+  const sum = total != null ? `\nTotal ${rupees(total)}${group} of ${rupees(plan.budget)}` : '';
+  const heading = people > 1 ? `Our food plan for today (${people} of us)` : 'My food plan for today';
+  return `${heading}:\n${lines.join('\n')}${sum}${footer()}`;
 }
 
 // Opens the share sheet; in a browser without one, copies the text instead.

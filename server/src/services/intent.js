@@ -29,9 +29,22 @@ const DISH_WORDS = ['biryani', 'roll', 'frankie', 'noodles', 'dosa', 'idli', 'pa
 
 const HAVE = /(^|[^a-z])(i have|i've got|we have|have got|got some|hai|hain|he|paas|pass|fridge|kitchen|left|bacha|bache|available)([^a-z]|$)/;
 
+const NUMBER_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, panch: 5, chhe: 6, che: 6, saat: 7, aath: 8 };
+const PEOPLE_WORDS = 'people|persons|person|log|logon|jan|members|friends|of us|guests';
+
+function peopleIn(text) {
+  const n = (w) => (/^\d+$/.test(w) ? Number(w) : NUMBER_WORDS[w] ?? null);
+  // "4 people", "teen log", "5 friends"
+  const counted = text.match(new RegExp(`(?<![a-z0-9])(\\d{1,2}|${Object.keys(NUMBER_WORDS).join('|')})\\s+(?:${PEOPLE_WORDS})(?![a-z])`));
+  // "for two", "hum 3" — but not "for 30 min" or "for 400 rs"
+  const forN = text.match(/(?:for|hum|we are|we're)\s+(\d{1,2}|two|three|four|five|six|seven|eight|do|teen|chaar|char|paanch|chhe)(?![a-z0-9])(?!\s*(?:min|rs|rupees|bucks|ke|se|tak))/);
+  const value = counted ? n(counted[1]) : forN ? n(forN[1]) : has(text, ['couple', 'date night', 'for both of us', 'hum dono', 'dono ke liye']) ? 2 : null;
+  return value && value >= 1 && value <= 12 ? value : null;
+}
+
 export function parseWithKeywords(raw) {
   const text = ` ${raw.toLowerCase().replace(/₹/g, ' rs ')} `;
-  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, timeMax: null, branch: null, avoid: [], ingredients: [] };
+  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, budgetPerPerson: null, people: null, timeMax: null, branch: null, avoid: [], ingredients: [] };
 
   for (const [mood, words] of Object.entries(MOOD_WORDS)) if (has(text, words)) out.moods.push(mood);
   for (const [cuisine, words] of Object.entries(CUISINE_WORDS)) if (has(text, words)) out.cuisines.push(cuisine);
@@ -51,6 +64,12 @@ export function parseWithKeywords(raw) {
     out.budgetMax = Number(money[1]);
     out.budgetStrict = !/around|about|approx|tak/.test(money[0]);
   }
+
+  // Group: "for 4 people", "hum 3 log", "for two", "teen log". A budget said
+  // for a group is for everyone together unless they say "per person".
+  out.people = peopleIn(text);
+  if (out.budgetMax && has(text, ['per person', 'per head', 'each', 'har ek', 'ek ka', 'per plate', 'har kisi'])) out.budgetPerPerson = true;
+  else if (out.budgetMax && out.people > 1) out.budgetPerPerson = false;
 
   // Time: "30 min", "half an hour", "jaldi", "quick"
   const mins = text.match(/(\d{1,3})\s*(?:min|mins|minute|minutes|minat)/);

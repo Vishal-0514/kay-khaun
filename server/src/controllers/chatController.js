@@ -18,7 +18,7 @@ const HISTORY_TURNS = 8;
 
 // New values from this message override the slip; "avoid" and the kitchen only ever grow.
 function mergeSlots(slots, intent) {
-  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'timeMax', 'branch']) {
+  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch']) {
     if (intent[key] !== null && intent[key] !== undefined) slots[key] = intent[key];
   }
   for (const key of ['moods', 'cuisines', 'dishWords']) {
@@ -37,6 +37,8 @@ function slipView(slots, user) {
     diet: slots.diet ?? p.diet ?? null,
     budget,
     budgetFromProfile: !slots.budgetMax && Boolean(budget),
+    people: slots.people > 1 ? slots.people : null,
+    budgetPerPerson: slots.people > 1 && slots.budgetMax ? Boolean(slots.budgetPerPerson) : null,
     time: slots.timeMax ?? null,
     branch: slots.branch ?? null,
     ingredients: (slots.ingredients ?? []).map(labelOf),
@@ -58,7 +60,8 @@ const backupText = {
       return `My top pick is ${top.name}${rating}. Here are your top ${picks.length} — tap one to order on Zomato or Swiggy.`;
     }
     const lead = relaxed === 'time' ? 'Nothing arrives that fast, so I widened the time a little. ' : relaxed === 'budget' ? 'Nothing fit the budget, so here are the closest options. ' : '';
-    return `${lead}My top pick is ${top.name} from ${top.restaurant}: ₹${top.price}, about ${top.eta} min. Here are your top ${picks.length}.`;
+    const cost = top.people > 1 ? `₹${top.price} each (about ₹${top.groupPrice} for ${top.people})` : `₹${top.price}`;
+    return `${lead}My top pick is ${top.name} from ${top.restaurant}: ${cost}, about ${top.eta} min. Here are your top ${picks.length}.`;
   },
   recipes: (recipes) => {
     const top = recipes[0];
@@ -203,7 +206,7 @@ export async function sendMessage(req, res) {
     text: reply.text,
     kind: reply.kind,
     options: reply.options ?? [],
-    picks: picks.map(({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match }) => ({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match })),
+    picks: picks.map(({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match, people, groupPrice }) => ({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match, people, groupPrice })),
     recipes: recipes.map(({ id, name, time, level, have, total }) => ({ id, name, time, level, have, total })),
   });
   await conv.save();

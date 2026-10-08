@@ -131,7 +131,7 @@ export default function Dish() {
             </>
           ) : (
             <>
-              <Stat label="Price" value={`₹${dish.price}`} />
+              {dish.people > 1 ? <Stat label={`For ${dish.people} (₹${dish.price} each)`} value={`₹${dish.groupPrice}`} /> : <Stat label="Price" value={`₹${dish.price}`} />}
               <Stat label="Arrives in" value={`${dish.eta} min`} />
               <Stat label="Rating" value={`${dish.rating} ★`} />
             </>

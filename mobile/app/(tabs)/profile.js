@@ -13,6 +13,7 @@ import { confirm, notify } from '../../lib/notify';
 import { toast } from '../../components/Toast';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useMeStore } from '../../store/useMeStore';
+import { readReminders } from '../../lib/reminders';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
 const SPICE = ['Mild', 'Light', 'Medium', 'Hot', 'Extra hot'];
@@ -97,6 +98,7 @@ export default function Profile() {
   const loadSaved = useMeStore((s) => s.loadSaved);
   const clearLearned = useMeStore((s) => s.clearLearned);
   const memoryOn = Boolean(user?.memoryEnabled);
+  const [reminderCount, setReminderCount] = useState(0);
 
   // Fresh numbers each time Profile opens.
   useFocusEffect(
@@ -104,6 +106,7 @@ export default function Profile() {
       loadLearned().catch(() => {});
       loadSaved().catch(() => {});
       loadWeek().catch(() => {});
+      readReminders().then((r) => setReminderCount(Object.values(r).filter((x) => x.on).length));
     }, [loadLearned, loadSaved, loadWeek])
   );
 
@@ -171,6 +174,7 @@ export default function Profile() {
       <View style={styles.list}>
         <NavRow n={0} icon="heart" tint="#FBE4EC" ink="#A92E5A" label="Saved" value={savedCount ? `${savedCount} ${savedCount === 1 ? 'pick' : 'picks'}` : 'None yet'} onPress={() => router.push('/saved')} />
         <NavRow n={1} icon="clock" tint={colors.goldSoft} ink={colors.goldText} label="History" value="Orders and saved days" onPress={() => router.push('/history')} />
+        <NavRow n={2} icon="moon" tint="#E8EEF7" ink="#3A5A8C" label="Meal reminders" value={reminderCount ? `${reminderCount} on` : 'Off'} onPress={() => router.push('/reminders')} />
       </View>
 
       {memoryOn && week?.enabled ? <WeekCard week={week} /> : null}

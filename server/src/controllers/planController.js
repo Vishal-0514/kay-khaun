@@ -4,7 +4,7 @@ import { placesEnabled } from '../services/places.js';
 import { prefsOf, tasteOf } from '../services/taste.js';
 
 // meals: [{ label, cook, name }] — what's showing. total is null for real places.
-function templateNote({ meals, budget, total }) {
+function templateNote({ meals, budget, total, people = 1 }) {
   const first = meals[0];
   const last = meals.at(-1);
   if (!first) return "I couldn't plan a day with those choices. Try a bigger budget or fewer limits.";
@@ -12,7 +12,8 @@ function templateNote({ meals, budget, total }) {
   const cooked = meals.filter((m) => m.cook).length;
   const home = cooked ? ` ${cooked === 1 ? 'One meal is' : `${cooked} meals are`} from your own kitchen.` : '';
   if (total == null) return `Here's your day: ${shape}.${home} Tap any meal to order it on Zomato or Swiggy.`;
-  const sum = total > budget ? `It comes to ₹${total}, a little over your ₹${budget} — swap a meal to bring it down.` : `All of it for ₹${total} of your ₹${budget}.`;
+  const group = people > 1 ? ` per person (₹${(total * people).toLocaleString('en-IN')} for all ${people})` : '';
+  const sum = total > budget ? `It comes to ₹${total}${group}, a little over your ₹${budget} — swap a meal to bring it down.` : `All of it for ₹${total} of your ₹${budget}${group}.`;
   return `Here's your day: ${shape}.${home} ${sum}`;
 }
 
@@ -38,13 +39,13 @@ export async function makePlan(req, res) {
   }
 
   const meals = plan.meals.map((m) => ({ label: m.label, cook: false, name: m.pick.name, restaurant: m.pick.restaurant, price: m.pick.price, priceLabel: m.pick.priceLabel, cuisine: m.pick.cuisine }));
-  const note = await noteFor({ meals, budget: plan.budget, total: plan.spent, moodLabel: plan.moodLabel }, req.user);
+  const note = await noteFor({ meals, budget: plan.budget, total: plan.spent, moodLabel: plan.moodLabel, people: plan.people }, req.user);
   res.json({ success: true, plan: { ...plan, note } });
 }
 
 // After swaps or "cook at home", a fresh note for what's showing now.
 export async function planNote(req, res) {
-  const { meals, budget, moodLabel } = req.body;
+  const { meals, budget, moodLabel, people = 1 } = req.body;
   const total = meals.some((m) => !m.cook && m.price == null) ? null : meals.reduce((s, m) => s + (m.cook ? 0 : m.price), 0);
-  res.json({ success: true, note: await noteFor({ meals, budget, total, moodLabel }, req.user) });
+  res.json({ success: true, note: await noteFor({ meals, budget, total, moodLabel, people }, req.user) });
 }

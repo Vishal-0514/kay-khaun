@@ -15,10 +15,22 @@ export function dietAllows(want, dishDiet) {
 }
 
 // slots: what this conversation asked for. prefs: the saved taste profile (or {}).
+// Dishes that work for a table of friends or family.
+const SHAREABLE = new Set([
+  'chicken-dum-biryani', 'mutton-biryani', 'veg-dum-biryani', 'egg-biryani', 'chicken-65-biryani', 'andhra-chilli-biryani',
+  'pav-bhaji', 'cheese-pav-bhaji', 'tawa-pulao', 'paneer-tikka-platter', 'tandoori-chicken-half', 'chicken-koliwada', 'prawns-koliwada',
+  'chicken-momos', 'veg-momos', 'tandoori-momos', 'chilli-chicken-gravy', 'manchurian-rice', 'schezwan-noodles-chicken', 'veg-hakka-noodles',
+  'butter-chicken-naan', 'dal-makhani-naan', 'bhel-puri', 'sev-puri', 'masala-pav',
+]);
+
 export function effectiveCriteria(slots, prefs = {}) {
+  const people = slots.people > 1 ? Math.min(12, slots.people) : 1;
+  // A group budget is for everyone unless they said "per person".
+  const budget = slots.budgetMax && people > 1 && !slots.budgetPerPerson ? Math.round(slots.budgetMax / people) : slots.budgetMax;
   return {
+    people,
     diet: slots.diet ?? prefs.diet ?? null,
-    budgetMax: slots.budgetMax ?? BUDGET_FROM_PREF[prefs.budget] ?? null,
+    budgetMax: budget ?? BUDGET_FROM_PREF[prefs.budget] ?? null,
     budgetStrict: slots.budgetMax ? slots.budgetStrict !== false : false,
     timeMax: slots.timeMax ?? null,
     moods: slots.moods ?? [],
@@ -58,8 +70,10 @@ export function score(d, c) {
   const personal = Math.max(0, Math.min(1, (c.favCuisines.includes(d.cuisine) ? 1 : 0.5) + 0.4 * nudge.cuisineAff));
   const rating = Math.max(0, Math.min(1, (d.rating - 3.8) / 0.9));
 
-  // A dish they named still wins when the mood alone already maxes out taste.
-  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost + (nameHit ? 0.06 : 0);
+  // A dish they named still wins when the mood alone already maxes out taste;
+  // for 3 or more, dishes made for sharing get a small lift.
+  const sharing = c.people >= 3 && SHAREABLE.has(d.id) ? 0.05 : 0;
+  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost + (nameHit ? 0.06 : 0) + sharing;
   return { total, nameHit };
 }
 
@@ -73,9 +87,10 @@ export function reasonsFor(d, c, nameHit) {
     const mood = c.moods.find((m) => d.moods.includes(m));
     if (mood) r.push({ icon: 'bowl', text: { comfort: 'Warm, filling comfort food', light: 'Light and easy on the stomach', street: 'Proper Mumbai street style', sweet: 'Something sweet, as you wanted' }[mood] });
   }
+  if (c.people > 1) r.push({ icon: 'bowl', text: `₹${d.price * c.people} for ${c.people} of you${SHAREABLE.has(d.id) && c.people >= 3 ? ', good for sharing' : ''}` });
   if (c.budgetMax && d.price <= c.budgetMax) {
     const left = c.budgetMax - d.price;
-    r.push({ icon: 'rupee', text: left >= 20 ? `₹${left} under your budget` : 'Right on your budget' });
+    r.push({ icon: 'rupee', text: c.people > 1 ? `Fits ₹${c.budgetMax} per person` : left >= 20 ? `₹${left} under your budget` : 'Right on your budget' });
   } else if (c.budgetMax) r.push({ icon: 'rupee', text: `₹${d.price - c.budgetMax} over budget — worth a look` });
   if (c.timeMax && d.eta <= c.timeMax) r.push({ icon: 'clock', text: c.timeMax - d.eta >= 5 ? `Arrives ${c.timeMax - d.eta} min before your limit` : `Arrives in about ${d.eta} min` });
   if (c.favCuisines.includes(d.cuisine) && !learnedReason?.text.includes(d.cuisine)) r.push({ icon: 'heart', text: `You love ${d.cuisine}` });
@@ -108,6 +123,7 @@ export function recommend(slots, prefs, { limit = 5 } = {}) {
         .map(({ d, total, nameHit }) => ({
           ...d,
           source: 'sample',
+          ...(c.people > 1 ? { people: c.people, groupPrice: d.price * c.people } : null),
           match: Math.min(99, Math.round(52 + 47 * total)),
           spiceLabel: SPICE_WORD[d.spice - 1],
           reasons: reasonsFor(d, c, nameHit),

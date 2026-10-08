@@ -16,6 +16,7 @@ import { planMessage, shareText } from '../lib/share';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const BUDGETS = [500, 800, 1200, 2000];
+const PEOPLE = [1, 2, 3, 4, 5, 6];
 const MOODS = [
   ['balanced', 'Balanced'],
   ['light', 'Light'],
@@ -168,6 +169,7 @@ export default function Plan() {
   const total = dayTotal(plan, choice, cook);
   const budget = plan?.budget ?? settings.budget;
   const over = total != null && budget && total > budget;
+  const people = plan?.people > 1 ? plan.people : 1;
   const bandHeight = 150 + insets.top;
 
   return (
@@ -186,7 +188,14 @@ export default function Plan() {
         </MaroonBand>
 
         <Animated.View entering={rise(0)} style={[styles.settings, { marginTop: bandHeight - 44 }]}>
-          <Text style={type.label}>Day budget</Text>
+          <Text style={type.label}>Who's eating</Text>
+          <View style={styles.chips}>
+            {PEOPLE.map((n) => (
+              <Chip key={n} label={n === 1 ? 'Just me' : n === 6 ? '6+' : String(n)} on={(settings.people ?? 1) === n} disabled={loading} onPress={() => remake({ people: n })} />
+            ))}
+            <Chip label="All veg" on={Boolean(settings.veg)} disabled={loading} onPress={() => remake({ veg: !settings.veg })} />
+          </View>
+          <Text style={[type.label, { marginTop: space.base }]}>{settings.people > 1 ? 'Day budget per person' : 'Day budget'}</Text>
           <View style={styles.chips}>
             {/* The budget from their taste profile joins the list in order. */}
             {[...new Set([...BUDGETS, ...(budget ? [budget] : [])])].sort((a, b) => a - b).map((b) => (
@@ -246,7 +255,7 @@ export default function Plan() {
           {total != null ? (
             <>
               <View style={styles.barTop}>
-                <Text style={styles.barLabel}>Day total</Text>
+                <Text style={styles.barLabel}>{people > 1 ? `Per person · ${rupees(total * people)} for ${people}` : 'Day total'}</Text>
                 <Text style={[styles.barTotal, over && { color: colors.red }]}>
                   {rupees(total)} <Text style={styles.barOf}>of {rupees(budget)}</Text>
                 </Text>

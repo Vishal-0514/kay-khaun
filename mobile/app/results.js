@@ -108,7 +108,7 @@ export default function Results() {
                 </>
               ) : (
                 <>
-                  <Stat label="Price" value={`₹${top.price}`} />
+                  {top.people > 1 ? <Stat label={`For ${top.people} (₹${top.price} each)`} value={`₹${top.groupPrice}`} /> : <Stat label="Price" value={`₹${top.price}`} />}
                   <Stat label="Arrives in" value={`${top.eta} min`} />
                   <Stat label="Rating" value={`${top.rating} ★`} />
                 </>

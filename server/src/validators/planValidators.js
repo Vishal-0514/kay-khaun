@@ -6,6 +6,8 @@ export const planSchema = z.object({
   budget: z.number().int().min(150, 'A day needs at least ₹150').max(10000).optional(),
   meals: z.array(z.enum(MEAL_ORDER)).min(1, 'Pick at least one meal').max(4).optional(),
   mood: z.enum(Object.keys(DAY_MOODS)).optional(),
+  people: z.number().int().min(1).max(12).optional(),
+  veg: z.boolean().optional(),
   location: locationSchema.optional(),
 });
 
@@ -14,6 +16,7 @@ const text = (max) => z.string().trim().min(1).max(max);
 // What's showing on the plan after swaps / cook at home.
 export const planNoteSchema = z.object({
   budget: z.number().int().min(150).max(10000),
+  people: z.number().int().min(1).max(12).optional(),
   moodLabel: text(40),
   meals: z
     .array(

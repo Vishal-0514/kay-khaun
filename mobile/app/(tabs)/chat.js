@@ -28,12 +28,20 @@ function Avatar() {
   );
 }
 
+// "Under ₹1200 for 4", "Under ₹300 each", "About ₹500".
+function budgetText(slip) {
+  const base = `${slip.budgetFromProfile ? 'About' : 'Under'} ₹${slip.budget}`;
+  if (!slip.people) return base;
+  return slip.budgetPerPerson ? `${base} each` : `${base} for ${slip.people}`;
+}
+
 // The "order slip": what Chatora has understood so far, ticked off line by line.
 function OrderSlip({ slip }) {
   const rows = [
     ['Craving', slip.craving],
     ['Diet', DIET[slip.diet]],
-    ['Budget', slip.budget && slip.branch !== 'cook' ?`${slip.budgetFromProfile ? 'About' : 'Under'} ₹${slip.budget}` : null],
+    ['People', slip.people ? `${slip.people} of you` : null],
+    ['Budget', slip.budget && slip.branch !== 'cook' ? budgetText(slip) : null],
     ['Time', slip.time ? `${slip.time} min` : null],
     ['Kitchen', slip.ingredients?.length ? slip.ingredients.slice(0, 3).join(', ') + (slip.ingredients.length > 3 ? ` +${slip.ingredients.length - 3}` : '') : null],
   ].filter(([, v]) => v);

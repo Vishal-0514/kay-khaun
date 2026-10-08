@@ -27,7 +27,7 @@ export const usePlanStore = create((set, get) => ({
   noteStale: false,
   loading: false,
   savedAt: null, // set when this exact day is saved to History
-  settings: { budget: null, mood: 'balanced', meals: MEAL_KEYS },
+  settings: { budget: null, mood: 'balanced', meals: MEAL_KEYS, people: 1, veg: false },
 
   async make(changes = {}) {
     const settings = { ...get().settings, ...changes };
@@ -37,6 +37,8 @@ export const usePlanStore = create((set, get) => ({
         ...(settings.budget ? { budget: settings.budget } : {}),
         mood: settings.mood,
         meals: settings.meals,
+        people: settings.people,
+        veg: settings.veg,
         location: useLocationStore.getState().forApi(),
       });
       clearTimeout(noteTimer);
@@ -72,6 +74,7 @@ export const usePlanStore = create((set, get) => ({
       try {
         const { data } = await api.post('/plan/note', {
           budget: plan.budget,
+          people: plan.people ?? 1,
           moodLabel: plan.moodLabel,
           meals: plan.meals.map((m) => {
             const pick = shownPick(m, choice);
@@ -133,7 +136,7 @@ export const usePlanStore = create((set, get) => ({
 
   clear: () => {
     clearTimeout(noteTimer);
-    set({ plan: null, choice: {}, cook: {}, note: null, noteStale: false, savedAt: null, settings: { budget: null, mood: 'balanced', meals: MEAL_KEYS } });
+    set({ plan: null, choice: {}, cook: {}, note: null, noteStale: false, savedAt: null, settings: { budget: null, mood: 'balanced', meals: MEAL_KEYS, people: 1, veg: false } });
   },
 }));
 

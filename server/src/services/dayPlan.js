@@ -101,9 +101,9 @@ function comboPenalty(chosen, moodKey) {
   return p;
 }
 
-function samplePlan({ budget, meals, mood }, prefs) {
+function samplePlan({ budget, meals, mood, people, veg }, prefs) {
   const shareSum = meals.reduce((s, m) => s + MEALS[m].share, 0);
-  const base = effectiveCriteria({ moods: DAY_MOODS[mood].moods }, prefs);
+  const base = effectiveCriteria({ moods: DAY_MOODS[mood].moods, people, ...(veg ? { diet: 'veg' } : null) }, prefs);
 
   const perMeal = meals.map((meal) => {
     const c = { ...base, budgetMax: Math.round((budget * MEALS[meal].share) / shareSum), budgetStrict: false };
@@ -158,17 +158,17 @@ function samplePlan({ budget, meals, mood }, prefs) {
 
 // With real places there are no dish prices, only a price range, so the plan
 // shows each meal's share of the budget and the range of the place.
-async function placesPlan({ budget, meals, mood }, prefs, location) {
+async function placesPlan({ budget, meals, mood, people, veg }, prefs, location) {
   const shareSum = meals.reduce((s, m) => s + MEALS[m].share, 0);
   const results = await Promise.all(
     meals.map((meal) => {
       const budgetMax = Math.round((budget * MEALS[meal].share) / shareSum);
-      const slots = { dishWords: [MEALS[meal].query], moods: DAY_MOODS[mood].moods, budgetMax, budgetStrict: false };
+      const slots = { dishWords: [MEALS[meal].query], moods: DAY_MOODS[mood].moods, budgetMax, budgetStrict: false, people, budgetPerPerson: true, ...(veg ? { diet: 'veg' } : null) };
       return nearbyPicks(slots, prefs, location, { limit: 6 }).then(({ picks }) => ({ meal, budgetMax, picks }));
     })
   );
   const used = new Set();
-  const c = effectiveCriteria({}, prefs);
+  const c = effectiveCriteria(veg ? { diet: 'veg' } : {}, prefs);
   const withHome = (meal, d) => d && { ...d, home: homeRecipeFor(meal, d, c, DAY_MOODS[mood].moods) };
   return {
     overBudget: false,
@@ -188,10 +188,12 @@ function mealInfo(meal) {
   return { label, time };
 }
 
-export async function planDay({ budget, meals, mood = 'balanced', location }, prefs, { usePlaces = false } = {}) {
+// budget is per person for the day; people > 1 plans for a group (every
+// total is also given for the whole group); veg makes every meal vegetarian.
+export async function planDay({ budget, meals, mood = 'balanced', people = 1, veg = false, location }, prefs, { usePlaces = false } = {}) {
   const chosenMeals = MEAL_ORDER.filter((m) => (meals?.length ? meals : MEAL_ORDER).includes(m));
   const dayBudget = budget ?? DAY_BUDGET_FROM_PREF[prefs.budget] ?? 1000;
-  const input = { budget: dayBudget, meals: chosenMeals, mood: DAY_MOODS[mood] ? mood : 'balanced' };
+  const input = { budget: dayBudget, meals: chosenMeals, mood: DAY_MOODS[mood] ? mood : 'balanced', people: Math.max(1, Math.min(12, people)), veg: Boolean(veg) };
   const plan = usePlaces && location ? await placesPlan(input, prefs, location) : samplePlan(input, prefs);
   return { ...input, moodLabel: DAY_MOODS[input.mood].label, ...plan };
 }
