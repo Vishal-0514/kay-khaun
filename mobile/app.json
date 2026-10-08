@@ -35,6 +35,16 @@
         {
           "locationWhenInUsePermission": "Kya Khaun uses your location to find good food near you."
         }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating.",
+          "speechRecognitionPermission": "Kya Khaun turns what you say into text so Chatora can understand your craving.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
       ]
     ],
     "extra": {

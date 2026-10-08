@@ -7,11 +7,13 @@ import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import DishMeta from '../../components/DishMeta';
 import PlateRing from '../../components/PlateRing';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import VoiceBars from '../../components/VoiceBars';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { PressScale, TypingDots, fromRight, rise } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
 import { errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
+import { useVoice, voiceUnavailableReason } from '../../lib/voice';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
 const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
@@ -72,7 +74,7 @@ function OrderSlip({ slip }) {
 
 export default function Chat() {
   const router = useRouter();
-  const { focus } = useLocalSearchParams();
+  const { focus, voice } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const listRef = useRef(null);
   const inputRef = useRef(null);
@@ -81,6 +83,12 @@ export default function Chat() {
   const send = useChatStore((s) => s.send);
   const newChat = useChatStore((s) => s.newChat);
   const [text, setText] = useState('');
+  const [hint, setHint] = useState(null);
+  // Speak a craving: the live words show in the bar, and it sends when you stop.
+  const talk = useVoice({
+    onFinal: (said) => submit(said),
+    onError: (message) => setHint(message),
+  });
 
   const messages = conversation?.messages ?? [];
   const lastAi = [...messages].reverse().find((m) => m.role === 'ai');
@@ -88,6 +96,30 @@ export default function Chat() {
   useEffect(() => {
     if (focus) setTimeout(() => inputRef.current?.focus(), 300);
   }, [focus]);
+
+  // Home's "Tap to talk" opens the chat already listening.
+  useEffect(() => {
+    if (voice) setTimeout(listen, 350);
+  }, [voice]);
+
+  useEffect(() => {
+    if (!hint) return undefined;
+    const t = setTimeout(() => setHint(null), 5000);
+    return () => clearTimeout(t);
+  }, [hint]);
+
+  function listen() {
+    if (sending) return;
+    const unavailable = voiceUnavailableReason();
+    if (unavailable) {
+      setHint(unavailable);
+      inputRef.current?.focus();
+      return;
+    }
+    setHint(null);
+    inputRef.current?.blur();
+    talk.start();
+  }
 
   useEffect(() => {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
@@ -255,6 +287,26 @@ export default function Chat() {
         }
       />
 
+      {hint ? (
+        <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut.duration(200)} style={styles.hint}>
+          <Icon name="mic" size={16} color={colors.goldText} />
+          <Text style={styles.hintText}>{hint}</Text>
+        </Animated.View>
+      ) : null}
+
+      {talk.listening ? (
+        <Animated.View key="listening" entering={FadeIn.duration(220)} style={[styles.inputBar, styles.listenBar, { marginBottom: space.md }]}>
+          <PressScale scaleTo={0.88} role="button" aria-label="Cancel" onPress={talk.cancel} style={styles.cancelBtn}>
+            <Icon name="close" size={18} color={colors.muted} />
+          </PressScale>
+          <Text style={[styles.heard, !talk.heard && styles.heardWaiting]} numberOfLines={2} aria-live="polite">
+            {talk.heard || 'Listening… bolo, kya khaane ka mood hai?'}
+          </Text>
+          <PressScale scaleTo={0.88} role="button" aria-label="Done speaking" onPress={talk.stop} style={styles.sendBtn}>
+            <VoiceBars level={talk.level} color="#FFFFFF" height={22} />
+          </PressScale>
+        </Animated.View>
+      ) : (
       <View style={[styles.inputBar, { marginBottom: space.md }]}>
         <TextInput
           ref={inputRef}
@@ -276,12 +328,13 @@ export default function Chat() {
           </Animated.View>
         ) : (
           <Animated.View key="mic" entering={FadeIn.duration(220)}>
-            <PressScale scaleTo={0.88} role="button" aria-label="Speak" onPress={() => notify('Voice input', 'Talking to Chatora arrives in the voice update. For now, type your craving.')} style={styles.sendBtn}>
+            <PressScale scaleTo={0.88} role="button" aria-label="Speak" onPress={listen} disabled={sending} style={styles.sendBtn}>
               <Icon name="mic" size={22} color="#FFFFFF" />
             </PressScale>
           </Animated.View>
         )}
       </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -335,4 +388,10 @@ const styles = StyleSheet.create({
   inputBar: { marginHorizontal: space.base, height: 60, borderRadius: radius.full, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 6, gap: space.sm, ...shadow.card },
   input: { flex: 1, height: '100%', fontFamily: fonts.medium, fontSize: 16, color: colors.ink },
   sendBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center' },
+  listenBar: { paddingLeft: 6, borderWidth: 1.5, borderColor: colors.redSoft },
+  cancelBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center' },
+  heard: { flex: 1, fontFamily: fonts.medium, fontSize: 15, lineHeight: 20, color: colors.ink },
+  heardWaiting: { color: colors.muted },
+  hint: { marginHorizontal: space.base, marginBottom: space.sm, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.base, paddingVertical: space.md, borderRadius: 16, backgroundColor: colors.goldSoft },
+  hintText: { flex: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: colors.goldText },
 });

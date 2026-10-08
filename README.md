@@ -32,6 +32,12 @@ kya-khaun-app/
 - **In chat:** "I want to cook" → Chatora asks what you have → recipes appear in the chat. "Mere paas aloo pyaaz hai" works too.
 - **Photo scan needs `ANTHROPIC_API_KEY`.** Without it, typing ingredients still works and the camera buttons explain why scan is off.
 
+## Voice input
+
+- **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).
+- Uses the phone's own speech recogniser through `expo-speech-recognition` (Google on Android, Apple on iPhone, the browser's on web), so it's free. Language is Indian English (`en-IN`), which writes Hinglish in Latin letters ("kuch teekha 400 ke andar") for Claude and the keyword parser. Food words are passed as hints (`mobile/lib/voice.js`).
+- **Needs an app build** (`npm run build:share`); Expo Go doesn't include the native module, so there the mic explains this and opens the keyboard.
+
 ## First-time setup
 
 ### 1. Database (MongoDB Atlas, free)
