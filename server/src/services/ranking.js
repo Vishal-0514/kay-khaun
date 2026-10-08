@@ -1,4 +1,5 @@
 import { dishes } from '../data/mumbaiMenu.js';
+import { learnedNudge } from './taste.js';
 
 // Deterministic picker (PRD §8): hard filters first, then a weighted score.
 // Everything shown to the user — dish, price, time — comes from the data,
@@ -28,6 +29,8 @@ export function effectiveCriteria(slots, prefs = {}) {
     favCuisines: prefs.cuisines ?? [],
     // Said "non-veg" in this chat: they want meat, not just permission for it.
     wantsMeat: slots.diet === 'nonveg',
+    // What taste learning picked up (services/taste.js), or null.
+    learned: prefs.learned ?? null,
   };
 }
 
@@ -51,16 +54,19 @@ export function score(d, c) {
 
   const price = c.budgetMax ? (d.price <= c.budgetMax ? 0.75 + 0.25 * (d.price / c.budgetMax) : 0.35) : 0.8;
   const time = c.timeMax ? (d.eta <= c.timeMax ? 1 - 0.25 * (d.eta / c.timeMax) : 0.3) : 0.8;
-  const personal = c.favCuisines.includes(d.cuisine) ? 1 : 0.5;
+  const nudge = learnedNudge(c.learned, d.id, d.cuisine);
+  const personal = Math.max(0, Math.min(1, (c.favCuisines.includes(d.cuisine) ? 1 : 0.5) + 0.4 * nudge.cuisineAff));
   const rating = Math.max(0, Math.min(1, (d.rating - 3.8) / 0.9));
 
-  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating;
+  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost;
   return { total, nameHit };
 }
 
 export function reasonsFor(d, c, nameHit) {
   const r = [];
   if (nameHit) r.push({ icon: 'spark', text: 'Exactly what you asked for' });
+  const learnedReason = learnedNudge(c.learned, d.id, d.cuisine).reason;
+  if (learnedReason) r.push(learnedReason);
   if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: `${d.spice === 5 ? 'Fiery' : 'Properly spicy'}, just like you asked` });
   else {
     const mood = c.moods.find((m) => d.moods.includes(m));
@@ -71,7 +77,7 @@ export function reasonsFor(d, c, nameHit) {
     r.push({ icon: 'rupee', text: left >= 20 ? `₹${left} under your budget` : 'Right on your budget' });
   } else if (c.budgetMax) r.push({ icon: 'rupee', text: `₹${d.price - c.budgetMax} over budget — worth a look` });
   if (c.timeMax && d.eta <= c.timeMax) r.push({ icon: 'clock', text: c.timeMax - d.eta >= 5 ? `Arrives ${c.timeMax - d.eta} min before your limit` : `Arrives in about ${d.eta} min` });
-  if (c.favCuisines.includes(d.cuisine)) r.push({ icon: 'heart', text: `You love ${d.cuisine}` });
+  if (c.favCuisines.includes(d.cuisine) && !learnedReason?.text.includes(d.cuisine)) r.push({ icon: 'heart', text: `You love ${d.cuisine}` });
   if (d.rating >= 4.5) r.push({ icon: 'star', text: `Rated ${d.rating} by diners` });
   return r.slice(0, 4);
 }

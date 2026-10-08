@@ -39,6 +39,15 @@ kya-khaun-app/
 - Each meal has **Swap** (a few alternatives) and opens the usual dish page with Zomato / Swiggy. The bar at the bottom shows the day total against the budget.
 - With Google Places on and a location, each meal is a real nearby place (price range instead of exact price). Claude writes a one-line intro for the day; without the key a template is used.
 
+- **Or cook it at home:** every meal carries the closest home recipe (Pav Bhaji → Pav Bhaji, Keema Pav → Keema Matar). Switching a meal to cooking makes it ₹0 in the total and opens the recipe. After swaps or cooking, Chatora's note is rewritten for what's showing (`POST /api/plan/note`, debounced). **Save this day** keeps it in History, from where it reopens exactly as saved.
+
+## Taste learning, Saved and History
+
+- `server/src/services/taste.js` learns from what you **open** (small nudge), **order** (tap Zomato / Swiggy), **save** (♡) and mark **"Not for me"** (strong push down). Recent actions count more (half-life about a month). The learned dish and cuisine scores nudge ranking in chat, quick picks, the day plan and real places, and add reasons like "You saved this" or "You often go for South Indian".
+- Nothing is recorded or used while **Remember my taste** is off. Saving ♡ and saving a day plan always work, because the user asks for them directly.
+- **Saved** (Profile → Saved), **History** (Profile → History: orders grouped by day with "Again", saved days to reopen, remove one or clear all) and **Order again** on Home (last few distinct orders, one tap to the same app).
+- Profile → **What I've learned** shows the cuisines picked up, with **Clear what I've learned**.
+
 ## Voice input
 
 - **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).
@@ -120,7 +129,13 @@ Email + password then works everywhere — Expo Go, the browser and app builds.
 | POST | `/api/cook/recipes` | `{ ingredients[], mood?, timeMax? }` → `{ kitchen, recipes }` |
 | GET | `/api/cook/recipes/:id?have=a,b` | full recipe marked against what you have |
 | POST | `/api/cook/scan` | `{ image (base64), mediaType }` → `{ items }` (needs the API key) |
-| POST | `/api/plan` | `{ budget?, mood?, meals[]?, location? }` → `{ plan }`: one pick per meal plus swaps, total, and Chatora's note |
+| POST | `/api/plan` | `{ budget?, mood?, meals[]?, location? }` → `{ plan }`: one pick per meal plus swaps (each with a `home` recipe), total, and Chatora's note |
+| POST | `/api/plan/note` | `{ budget, moodLabel, meals[{ label, cook, name, … }] }` → `{ note }` for what's showing now |
+| GET / PUT / DELETE | `/api/me/saved`, `/api/me/saved/:itemId` | list, save `{ item }`, unsave |
+| POST | `/api/me/activity` | `{ kind: opened \| ordered \| not_for_me, item, app? }` (ignored while memory is off) |
+| GET / DELETE | `/api/me/history`, `/api/me/history/:id` | orders and saved days, newest first (`?before=` for more); remove one or all |
+| POST | `/api/me/history/plan` | save a day plan |
+| GET / DELETE | `/api/me/learned` | what taste learning picked up; clear it |
 | GET | `/api/chat/:id` | one chat, with its picks re-ranked |
 | POST | `/api/chat/quick-picks` | `{ mood? }` → 5 picks from your taste profile |
 

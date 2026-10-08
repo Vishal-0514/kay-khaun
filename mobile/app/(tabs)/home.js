@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
 import IconButton from '../../components/IconButton';
@@ -12,6 +12,9 @@ import Animated from 'react-native-reanimated';
 import { Glow, PressScale, Reveal, rise, riseUp } from '../../components/Motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useChatStore } from '../../store/useChatStore';
+import { orderAgain, useMeStore } from '../../store/useMeStore';
+import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
+import { dayLabel } from '../../lib/dates';
 import { errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
@@ -55,16 +58,31 @@ export default function Home() {
     if (locationStatus === 'idle') locate();
   }, [locationStatus, locate]);
 
-  useEffect(() => {
-    if (locationStatus === 'idle' || locationStatus === 'locating') return undefined;
-    let alive = true;
-    quickPicks()
-      .then((picks) => alive && setTopPick(picks[0] ?? null))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [quickPicks, user?.preferences, locationStatus]);
+  // Re-pick whenever Home comes back, so saves and "Not for me" show at once.
+  useFocusEffect(
+    useCallback(() => {
+      if (locationStatus === 'idle' || locationStatus === 'locating') return undefined;
+      let alive = true;
+      quickPicks()
+        .then((picks) => alive && setTopPick(picks[0] ?? null))
+        .catch(() => {});
+      return () => {
+        alive = false;
+      };
+    }, [quickPicks, user?.preferences, locationStatus])
+  );
+
+  // Saved hearts and "Order again" stay fresh whenever Home comes back.
+  const history = useMeStore((s) => s.history);
+  const loadHistory = useMeStore((s) => s.loadHistory);
+  const loadSaved = useMeStore((s) => s.loadSaved);
+  useFocusEffect(
+    useCallback(() => {
+      loadHistory().catch(() => {});
+      loadSaved().catch(() => {});
+    }, [loadHistory, loadSaved])
+  );
+  const again = orderAgain(history);
 
   async function openMood(mood) {
     setLoadingMood(mood);
@@ -201,6 +219,47 @@ export default function Home() {
         </View>
       )}
 
+      {again.length ? (
+        <Animated.View entering={rise(0, 800)}>
+          <View style={styles.sectionHead}>
+            <Text style={type.head}>Order again</Text>
+            <Pressable onPress={() => router.push('/history')} hitSlop={8}>
+              <Text style={styles.link}>History</Text>
+            </Pressable>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.againRow}>
+            {again.map((e) => {
+              const app = ORDER_APPS[e.app] ?? ORDER_APPS.zomato;
+              return (
+                <PressScale
+                  key={e.item.id}
+                  scaleTo={0.97}
+                  role="button"
+                  aria-label={`Order ${e.item.name} again on ${app.label}`}
+                  onPress={() => openOrderApp(e.item, e.app ?? 'zomato')}
+                  onLongPress={() => router.push(`/dish/${e.item.id}`)}
+                  style={styles.againCard}
+                >
+                  <Text style={styles.againName} numberOfLines={1}>
+                    {e.item.name}
+                  </Text>
+                  <Text style={type.small} numberOfLines={1}>
+                    {e.item.restaurant}
+                  </Text>
+                  <View style={styles.againFoot}>
+                    <Text style={styles.againWhen}>{dayLabel(e.at)}</Text>
+                    <View style={[styles.againApp, { backgroundColor: app.color }]}>
+                      <Icon name="restart" size={12} color="#FFFFFF" />
+                      <Text style={styles.againAppText}>{app.label}</Text>
+                    </View>
+                  </View>
+                </PressScale>
+              );
+            })}
+          </ScrollView>
+        </Animated.View>
+      ) : null}
+
       <Animated.View entering={rise(0, 840)}>
         <PressScale scaleTo={0.98} role="button" style={styles.plan} onPress={() => router.push('/plan')}>
           <View style={{ flex: 1 }}>
@@ -252,6 +311,13 @@ const styles = StyleSheet.create({
   pickName: { flex: 1, fontFamily: fonts.semibold, fontSize: 17, color: colors.ink },
   matchValue: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, color: colors.ink },
   matchLabel: { fontFamily: fonts.semibold, fontSize: 10, color: colors.muted },
+  againRow: { paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.xs, gap: space.md },
+  againCard: { width: 200, padding: 14, gap: 2, borderRadius: radius.card, backgroundColor: colors.surface, ...shadow.card },
+  againName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
+  againFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.sm },
+  againWhen: { fontFamily: fonts.medium, fontSize: 12, color: colors.muted },
+  againApp: { height: 26, paddingHorizontal: 10, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  againAppText: { fontFamily: fonts.bold, fontSize: 12, color: '#FFFFFF' },
   plan: { marginHorizontal: space.base, marginTop: space.base, height: 72, borderRadius: radius.card, backgroundColor: colors.gold, paddingLeft: 20, paddingRight: space.base, flexDirection: 'row', alignItems: 'center', gap: space.md },
   planTitle: { fontFamily: fonts.display, fontSize: 18, color: colors.maroon },
   planText: { fontFamily: fonts.regular, fontSize: 13, color: '#6A3A08' },

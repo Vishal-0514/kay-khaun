@@ -8,6 +8,7 @@ import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700
 import { restoreSession } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors } from '../lib/theme';
+import { ToastHost } from '../components/Toast';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -45,6 +46,7 @@ export default function RootLayout() {
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
+      <ToastHost />
     </SafeAreaProvider>
   );
 }

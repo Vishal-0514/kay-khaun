@@ -1,4 +1,5 @@
 import { dishes } from '../data/mumbaiMenu.js';
+import { recipes } from '../data/recipes.js';
 import { SPICE_WORD, dietAllows, effectiveCriteria, reasonsFor, score } from './ranking.js';
 import { nearbyPicks } from './nearby.js';
 
@@ -38,6 +39,42 @@ function suits(meal, d) {
   if (meal === 'breakfast') return BREAKFAST.has(d.id);
   if (meal === 'snack') return SNACK.has(d.id);
   return d.cuisine !== 'Desserts' && !NOT_A_MEAL.has(d.id);
+}
+
+// "Or cook it at home": which home recipes suit which meal.
+const COOK_BREAKFAST = new Set(['kanda-poha', 'upma', 'besan-chilla', 'aloo-paratha', 'masala-omelette', 'bread-omelette', 'veg-sandwich', 'egg-bhurji', 'banana-milkshake']);
+const COOK_SNACK = new Set(['veg-sandwich', 'masala-maggi', 'bread-omelette', 'batata-bhaji', 'paneer-capsicum-salad', 'kanda-poha', 'masala-chaas', 'banana-milkshake', 'sooji-halwa']);
+const COOK_NOT_A_MEAL = new Set([...COOK_BREAKFAST, 'onion-raita', 'masala-chaas', 'sooji-halwa', 'rice-kheer', 'masala-maggi']);
+COOK_NOT_A_MEAL.delete('egg-bhurji');
+COOK_NOT_A_MEAL.delete('aloo-paratha');
+const PLAIN_WORDS = new Set(['masala', 'with', 'veg', 'and', 'the', 'pcs', 'half', 'dry', 'style', 'home', 'mumbai', 'bombay', '2', '3', '8']);
+const words = (text) => text.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !PLAIN_WORDS.has(w))
+    .map((w) => (w.length > 4 ? w.replace(/s$/, '') : w)); // prawns → prawn
+
+function cookSuits(meal, r) {
+  if (meal === 'breakfast') return COOK_BREAKFAST.has(r.id);
+  if (meal === 'snack') return COOK_SNACK.has(r.id);
+  return !COOK_NOT_A_MEAL.has(r.id);
+}
+
+// The home recipe closest to a dish: same dish if we have it (Pav Bhaji →
+// Pav Bhaji), otherwise the same cuisine and feel, within diet and avoids.
+function homeRecipeFor(meal, d, c, moods) {
+  const dishWords = new Set(words([d.name, ...(d.ideas ?? [])].join(' ')));
+  let best = null;
+  for (const r of recipes) {
+    if (!cookSuits(meal, r) || !dietAllows(c.diet, r.diet) || r.contains.some((x) => c.avoid.includes(x))) continue;
+    // Share of the recipe's name found in the dish: "Pav Bhaji" beats "Batata Bhaji" for "Butter Pav Bhaji".
+    const recipeWords = words(r.name);
+    const overlap = recipeWords.length ? recipeWords.filter((w) => dishWords.has(w)).length / recipeWords.length : 0;
+    let s = 0.6 * overlap + (r.cuisine === d.cuisine ? 0.25 : 0);
+    if (d.moods?.some((m) => r.moods.includes(m))) s += 0.15;
+    if (moods.some((m) => r.moods.includes(m))) s += 0.15;
+    if (d.diet && r.diet === d.diet) s += 0.15;
+    s += 0.1 * (1 - Math.abs(r.spice - c.spice) / 4) - 0.1 * Math.min(1, r.time / 60);
+    if (!best || s > best.s) best = { r, s };
+  }
+  return best ? { id: best.r.id, name: best.r.name, time: best.r.time, level: best.r.level, diet: best.r.diet } : null;
 }
 
 const CANDIDATES = 9;
@@ -104,6 +141,7 @@ function samplePlan({ budget, meals, mood }, prefs) {
   const result = best ?? cheapest;
   if (!result) return { meals: [], spent: 0, overBudget: false };
   const used = new Set(result.picks.map((x) => x.d.restaurant));
+  const withHome = (meal, d) => ({ ...d, home: homeRecipeFor(meal, d, base, DAY_MOODS[mood].moods) });
   return {
     overBudget: !best,
     spent: result.spent,
@@ -112,8 +150,8 @@ function samplePlan({ budget, meals, mood }, prefs) {
       const options = ranked
         .filter((x) => x.d.id !== pick.id && (!used.has(x.d.restaurant) || x.d.restaurant === pick.restaurant))
         .slice(0, OPTIONS)
-        .map((x) => decorate(x.d, c));
-      return { meal, ...mealInfo(meal), budget: c.budgetMax, pick: decorate(pick, c), options };
+        .map((x) => withHome(meal, decorate(x.d, c)));
+      return { meal, ...mealInfo(meal), budget: c.budgetMax, pick: withHome(meal, decorate(pick, c)), options };
     }),
   };
 }
@@ -126,10 +164,12 @@ async function placesPlan({ budget, meals, mood }, prefs, location) {
     meals.map((meal) => {
       const budgetMax = Math.round((budget * MEALS[meal].share) / shareSum);
       const slots = { dishWords: [MEALS[meal].query], moods: DAY_MOODS[mood].moods, budgetMax, budgetStrict: false };
-      return nearbyPicks(slots, prefs, location, { limit: 6 }).then((picks) => ({ meal, budgetMax, picks }));
+      return nearbyPicks(slots, prefs, location, { limit: 6 }).then(({ picks }) => ({ meal, budgetMax, picks }));
     })
   );
   const used = new Set();
+  const c = effectiveCriteria({}, prefs);
+  const withHome = (meal, d) => d && { ...d, home: homeRecipeFor(meal, d, c, DAY_MOODS[mood].moods) };
   return {
     overBudget: false,
     spent: null,
@@ -138,7 +178,7 @@ async function placesPlan({ budget, meals, mood }, prefs, location) {
       const pool = fresh.length ? fresh : picks;
       const [pick, ...rest] = pool;
       if (pick) used.add(pick.id);
-      return { meal, ...mealInfo(meal), budget: budgetMax, pick: pick ?? null, options: rest.slice(0, OPTIONS) };
+      return { meal, ...mealInfo(meal), budget: budgetMax, pick: withHome(meal, pick) ?? null, options: rest.slice(0, OPTIONS).map((o) => withHome(meal, o)) };
     }).filter((m) => m.pick),
   };
 }

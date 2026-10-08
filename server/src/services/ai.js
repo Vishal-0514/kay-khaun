@@ -198,21 +198,23 @@ export async function explainRecipes({ text, language, haveLabels, recipes, user
 }
 
 const PLAN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already planned the user's meals for the day; you only introduce the plan.
-Use ONLY the facts given (meal, dish or place name, restaurant, price or price range, cuisine). Never invent dishes, prices or places.
-- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening) and, if total and budget are given, say the total against the budget exactly as given.`;
+Use ONLY the facts given (meal, dish or place name, restaurant, price or price range, cuisine, and whether they cook it at home). Never invent dishes, prices or places.
+- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening); mention any meal they cook at home. If total and budget are given, say the total against the budget exactly as given.`;
 
-export async function explainPlan({ plan, userName, taste }) {
-  const meals = plan.meals.map((m) => ({
+// meals: [{ label, cook, name, restaurant?, price?, priceLabel?, cuisine? }] — what's showing now.
+export async function explainPlan({ meals, budget, total, moodLabel, userName, taste }) {
+  const facts = meals.map((m) => ({
     meal: m.label,
-    name: m.pick.name,
-    restaurant: m.pick.restaurant,
-    price: m.pick.price ?? null,
-    priceRange: m.pick.priceLabel ?? null,
-    cuisine: m.pick.cuisine,
+    cookAtHome: Boolean(m.cook),
+    name: m.name,
+    restaurant: m.cook ? null : m.restaurant ?? null,
+    price: m.cook ? null : m.price ?? null,
+    priceRange: m.cook ? null : m.priceLabel ?? null,
+    cuisine: m.cuisine ?? null,
   }));
   const out = await callJson({
     system: PLAN_SYSTEM,
-    content: JSON.stringify({ userName: userName || null, dayMood: plan.moodLabel, budget: plan.budget, total: plan.spent, savedTaste: taste, meals }),
+    content: JSON.stringify({ userName: userName || null, dayMood: moodLabel, budget, total, savedTaste: taste, meals: facts }),
     schema: strictObject({ message: { type: 'string' } }),
     maxTokens: 800,
   });

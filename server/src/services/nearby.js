@@ -1,5 +1,6 @@
 import { searchPlaces } from './places.js';
 import { effectiveCriteria } from './ranking.js';
+import { learnedNudge } from './taste.js';
 
 // Real restaurants for "what should I eat": turn the order slip into a Google
 // Places search, rank what comes back, and attach links that open the
@@ -102,7 +103,7 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
         budget: !c.budgetMax ? 0.8 : !price ? 0.55 : price.max <= c.budgetMax ? 1 : price.max <= c.budgetMax * 1.6 ? 0.45 : 0.1,
         open: p.openNow === true ? 1 : p.openNow === null ? 0.6 : 0,
       };
-      const total = 0.3 * s.rating + 0.22 * s.relevance + 0.18 * s.distance + 0.2 * s.budget + 0.1 * s.open;
+      const total = 0.3 * s.rating + 0.22 * s.relevance + 0.18 * s.distance + 0.2 * s.budget + 0.1 * s.open + learnedNudge(c.learned, p.id, p.kind).boost;
       return { p, distanceKm, price, total };
     });
 
@@ -117,6 +118,8 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
   const picks = ranked.map(({ p, distanceKm, price, total }) => {
     const ideas = ideasFor(p, c);
     const reasons = [];
+    const learnedReason = learnedNudge(c.learned, p.id, p.kind).reason;
+    if (learnedReason) reasons.push(learnedReason);
     if (p.rating) reasons.push({ icon: 'star', text: `Rated ${p.rating.toFixed(1)} by ${p.ratingCount.toLocaleString('en-IN')} people on Google` });
     reasons.push({ icon: 'route', text: `${distanceKm.toFixed(1)} km from you` });
     if (price) reasons.push({ icon: 'rupee', text: c.budgetMax && price.max <= c.budgetMax ? `${price.label} — fits your ₹${c.budgetMax}` : price.label });

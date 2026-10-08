@@ -2,6 +2,8 @@ import { api, refreshSession } from './api';
 import { readSession } from './tokenStorage';
 import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
+import { useMeStore } from '../store/useMeStore';
+import { usePlanStore } from '../store/usePlanStore';
 import { endFirebaseSession } from './firebase';
 import { signOutOfGoogle } from './googleSignIn';
 
@@ -28,6 +30,8 @@ export async function signOut() {
   const { refreshToken, clear } = useAuthStore.getState();
   clear();
   useChatStore.getState().clear();
+  useMeStore.getState().clear();
+  usePlanStore.getState().clear();
   if (refreshToken) api.post('/auth/logout', { refreshToken }).catch(() => {});
   // So the next Google sign-in shows the account picker again.
   endFirebaseSession();

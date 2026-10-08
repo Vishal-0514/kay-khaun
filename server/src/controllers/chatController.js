@@ -4,6 +4,7 @@ import { parseWithKeywords } from '../services/intent.js';
 import { recommend } from '../services/ranking.js';
 import { nearbyPicks } from '../services/nearby.js';
 import { placesEnabled } from '../services/places.js';
+import { prefsOf, tasteOf } from '../services/taste.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 
@@ -26,8 +27,6 @@ function mergeSlots(slots, intent) {
     if (intent[key]?.length) slots[key] = [...new Set([...(slots[key] ?? []), ...intent[key]])];
   }
 }
-
-const prefsOf = (user) => (user.memoryEnabled ? user.preferences?.toObject?.() ?? user.preferences ?? {} : {});
 
 function slipView(slots, user) {
   const p = prefsOf(user);
@@ -126,15 +125,16 @@ async function describeRecipes(recipes, { text, intent, conv, user }) {
 // Real nearby places when we know where they are and Google is set up;
 // otherwise the sample Mumbai menu (handy for building and testing).
 async function findPicks(slots, user, location) {
+  const taste = await tasteOf(user);
   if (placesEnabled && location) {
     try {
-      const result = await nearbyPicks(slots, prefsOf(user), location);
+      const result = await nearbyPicks(slots, taste, location);
       if (result.picks.length) return result;
     } catch (err) {
       console.error('Nearby search failed, using the sample menu:', err.message);
     }
   }
-  return recommend(slots, prefsOf(user));
+  return recommend(slots, taste);
 }
 
 function toPublic(conv, user) {

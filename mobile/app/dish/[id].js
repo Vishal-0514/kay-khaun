@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,9 +8,14 @@ import Icon, { DietMark } from '../../components/Icon';
 import PlateRing from '../../components/PlateRing';
 import Button from '../../components/Button';
 import Animated from 'react-native-reanimated';
-import { appear, rise, riseUp } from '../../components/Motion';
+import { PressScale, appear, rise, riseUp } from '../../components/Motion';
+import HeartButton from '../../components/HeartButton';
+import { toast } from '../../components/Toast';
 import { useChatStore } from '../../store/useChatStore';
 import { planDish, usePlanStore } from '../../store/usePlanStore';
+import { meDish, useMeStore } from '../../store/useMeStore';
+import { errorMessage } from '../../lib/api';
+import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
@@ -42,10 +47,33 @@ export default function Dish() {
   const { id } = useLocalSearchParams();
   const fromChat = useChatStore((s) => s.picks.find((p) => p.id === id));
   const fromPlan = usePlanStore((s) => planDish(s.plan, id));
-  const dish = fromChat ?? fromPlan;
-  const [saved, setSaved] = useState(false);
-  const bandHeight = 404 + insets.top;
+  const fromMe = useMeStore((s) => meDish(s, id));
+  const dish = fromChat ?? fromPlan ?? fromMe;
+  const track = useMeStore((s) => s.track);
+  const notForMe = useMeStore((s) => s.notForMe);
+  const [hiding, setHiding] = useState(false);
+  // Picks opened from Saved or History have no match score or reasons.
+  const scored = dish?.match != null;
+  const bandHeight = (scored ? 404 : 250) + insets.top;
   const place = isPlace(dish);
+
+  // Opening a pick is a small sign of interest, for taste learning.
+  useEffect(() => {
+    if (dish) track('opened', dish);
+  }, [dish?.id]);
+
+  async function hide() {
+    setHiding(true);
+    try {
+      await notForMe(dish);
+      useChatStore.setState((s) => ({ picks: s.picks.filter((p) => p.id !== dish.id) }));
+      toast("Got it — I'll show this less", 'check');
+      router.canGoBack() ? router.back() : router.replace('/home');
+    } catch (err) {
+      setHiding(false);
+      notify("Couldn't save that", errorMessage(err));
+    }
+  }
 
   if (!dish) {
     return (
@@ -62,16 +90,22 @@ export default function Dish() {
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
             <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
-            <IconButton name="heart" label={saved ? 'Saved' : 'Save'} onDark onPress={() => setSaved((v) => !v)} />
+            <HeartButton pick={dish} onDark />
           </View>
           <Animated.View entering={appear(0, 100)} style={styles.hero}>
-            <PlateRing size={196} value={dish.match / 100} dark ticks>
-              <Text style={styles.bigMatch}>
-                {dish.match}
-                <Text style={styles.bigPercent}>%</Text>
-              </Text>
-              <Text style={styles.bigLabel}>match for you</Text>
-            </PlateRing>
+            {scored ? (
+              <PlateRing size={196} value={dish.match / 100} dark ticks>
+                <Text style={styles.bigMatch}>
+                  {dish.match}
+                  <Text style={styles.bigPercent}>%</Text>
+                </Text>
+                <Text style={styles.bigLabel}>match for you</Text>
+              </PlateRing>
+            ) : (
+              <View style={styles.badge}>
+                <Icon name="bowl" size={40} color={colors.gold} strokeWidth={1.6} />
+              </View>
+            )}
             <View style={styles.nameRow}>
               {place ? null : <DietMark type={dish.diet === 'veg' ? 'veg' : 'nonveg'} size={16} />}
               <Text style={styles.name} role="heading">
@@ -116,7 +150,7 @@ export default function Dish() {
 
         <View style={styles.why}>
           <Text style={type.head}>Why I picked this</Text>
-          {dish.reasons.map((r, i) => {
+          {(dish.reasons ?? [{ icon: 'heart', text: 'One of your picks from before' }]).map((r, i) => {
             const [tint, ink] = TILE[r.icon] ?? TILE.spark;
             return (
               <Animated.View key={r.text} entering={rise(i, 450)} style={styles.reason}>
@@ -133,10 +167,14 @@ export default function Dish() {
                 <Icon name="route" size={20} color={colors.muted} strokeWidth={1.9} />
               </View>
               <Text style={styles.reasonText}>
-                {dish.distanceKm} km away · {dish.cuisine} · {dish.spiceLabel} · sample dish
+                {[dish.distanceKm != null && `${dish.distanceKm} km away`, dish.cuisine, dish.spiceLabel, 'sample dish'].filter(Boolean).join(' · ')}
               </Text>
             </View>
           )}
+          <PressScale role="button" disabled={hiding} onPress={hide} style={styles.notForMe} aria-label="Not for me, show this less">
+            <Icon name="close" size={16} color={colors.muted} />
+            <Text style={styles.notForMeText}>Not for me — show this less</Text>
+          </PressScale>
         </View>
       </ScrollView>
 
@@ -185,5 +223,8 @@ const styles = StyleSheet.create({
   ideaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   idea: { paddingHorizontal: 14, height: 36, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.goldSoft },
   ideaText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.goldText },
+  badge: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(232,169,58,0.4)' },
+  notForMe: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, marginTop: space.sm, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair },
+  notForMeText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.muted },
   barPrice: { fontFamily: fonts.bold, fontSize: 18, color: colors.ink },
 });

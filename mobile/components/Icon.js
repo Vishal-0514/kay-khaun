@@ -41,9 +41,10 @@ const shapes = {
   basket: [['path', 'M3 10h18l-2 10H5z'], ['path', 'M8 10l3-6M16 10l-3-6M9 14v3M15 14v3']],
 };
 
-export default function Icon({ name, size = 20, color = '#2B0F0B', strokeWidth = 2 }) {
+// fill: colour the inside too (a filled ♡ for saved).
+export default function Icon({ name, size = 20, color = '#2B0F0B', strokeWidth = 2, fill = 'none' }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
       {shapes[name].map(([kind, d], i) => {
         if (kind === 'path') return <Path key={i} d={d} />;
         if (kind === 'rect') return <Rect key={i} {...d} />;

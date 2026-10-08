@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +11,7 @@ import { PressScale, rise, riseUp } from '../components/Motion';
 import { useChatStore } from '../store/useChatStore';
 import DishMeta, { isPlace, shortPrice } from '../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
+import HeartButton from '../components/HeartButton';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street: 'Street', sweet: 'Sweet' };
@@ -38,7 +38,6 @@ export default function Results() {
   const picks = useChatStore((s) => s.picks);
   const source = useChatStore((s) => s.picksSource);
   const slip = useChatStore((s) => s.conversation?.slip);
-  const [saved, setSaved] = useState(false);
   const bandHeight = 236 + insets.top;
   const [top, ...rest] = picks;
 
@@ -123,9 +122,7 @@ export default function Results() {
               ) : (
                 <Button title="See details" onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
               )}
-              <PressScale scaleTo={0.88} role="button" aria-label={saved ? 'Saved' : 'Save'} onPress={() => setSaved((v) => !v)} style={[styles.heart, saved && { backgroundColor: colors.redSoft, borderColor: colors.redSoft }]}>
-                <Icon name="heart" size={22} color={colors.red} strokeWidth={saved ? 2.6 : 2} />
-              </PressScale>
+              <HeartButton pick={top} />
             </View>
           </Animated.View>
 
@@ -192,7 +189,6 @@ const styles = StyleSheet.create({
   statValue: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
   reason: { marginTop: space.md, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.body },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.base },
-  heart: { width: 52, height: 52, borderRadius: radius.button, borderWidth: 1, borderColor: colors.hair, alignItems: 'center', justifyContent: 'center' },
   also: { marginHorizontal: space.lg, marginTop: space.lg },
   list: { marginHorizontal: 20, marginTop: space.xs },
   row: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 14, borderBottomWidth: 1, borderBottomColor: colors.hair, paddingHorizontal: 4 },
