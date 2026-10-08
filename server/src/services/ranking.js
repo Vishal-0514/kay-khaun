@@ -58,7 +58,8 @@ export function score(d, c) {
   const personal = Math.max(0, Math.min(1, (c.favCuisines.includes(d.cuisine) ? 1 : 0.5) + 0.4 * nudge.cuisineAff));
   const rating = Math.max(0, Math.min(1, (d.rating - 3.8) / 0.9));
 
-  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost;
+  // A dish they named still wins when the mood alone already maxes out taste.
+  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost + (nameHit ? 0.06 : 0);
   return { total, nameHit };
 }
 

@@ -52,6 +52,37 @@ function NavRow({ n = 0, icon, tint, ink, label, value, onPress }) {
   );
 }
 
+// "Your week in food": the last 7 days at a glance.
+function WeekCard({ week }) {
+  const stats = [
+    ['Orders', week.orders],
+    ['Cuisines', week.cuisines],
+    ['Saved', week.saved],
+    ['Days planned', week.daysPlanned],
+  ];
+  const quiet = !week.orders && !week.cuisines && !week.saved && !week.daysPlanned;
+  let line = 'A quiet week. Ask Chatora for something new!';
+  if (week.newCuisines.length) line = `New for you this week: ${week.newCuisines.join(', ')}`;
+  else if (week.topCuisine) line = `Your go-to this week: ${week.topCuisine}`;
+  if (week.homeCooked) line += ` · ${week.homeCooked} ${week.homeCooked === 1 ? 'meal' : 'meals'} cooked at home`;
+  return (
+    <Animated.View entering={rise(2, 300)} style={styles.week}>
+      <Text style={styles.weekTitle}>Your week in food</Text>
+      {quiet ? null : (
+        <View style={styles.weekStats}>
+          {stats.map(([label, n]) => (
+            <View key={label} style={styles.weekStat}>
+              <Text style={styles.weekNum}>{n}</Text>
+              <Text style={styles.weekLabel}>{label}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      <Text style={type.small}>{line}</Text>
+    </Animated.View>
+  );
+}
+
 export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -61,6 +92,8 @@ export default function Profile() {
   const savedCount = useMeStore((s) => s.saved.length);
   const learned = useMeStore((s) => s.learned);
   const loadLearned = useMeStore((s) => s.loadLearned);
+  const week = useMeStore((s) => s.week);
+  const loadWeek = useMeStore((s) => s.loadWeek);
   const loadSaved = useMeStore((s) => s.loadSaved);
   const clearLearned = useMeStore((s) => s.clearLearned);
   const memoryOn = Boolean(user?.memoryEnabled);
@@ -70,7 +103,8 @@ export default function Profile() {
     useCallback(() => {
       loadLearned().catch(() => {});
       loadSaved().catch(() => {});
-    }, [loadLearned, loadSaved])
+      loadWeek().catch(() => {});
+    }, [loadLearned, loadSaved, loadWeek])
   );
 
   async function forget() {
@@ -138,6 +172,8 @@ export default function Profile() {
         <NavRow n={0} icon="heart" tint="#FBE4EC" ink="#A92E5A" label="Saved" value={savedCount ? `${savedCount} ${savedCount === 1 ? 'pick' : 'picks'}` : 'None yet'} onPress={() => router.push('/saved')} />
         <NavRow n={1} icon="clock" tint={colors.goldSoft} ink={colors.goldText} label="History" value="Orders and saved days" onPress={() => router.push('/history')} />
       </View>
+
+      {memoryOn && week?.enabled ? <WeekCard week={week} /> : null}
 
       <Animated.View entering={rise(2, 350)} style={styles.learned}>
         <View style={styles.learnedHead}>
@@ -207,6 +243,12 @@ const styles = StyleSheet.create({
   rowLabel: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink, flex: 1 },
   rowValue: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, maxWidth: '50%', textAlign: 'right' },
   edit: { marginHorizontal: space.lg, marginTop: space.lg },
+  week: { marginHorizontal: space.lg, marginTop: space.base, padding: space.base, borderRadius: radius.card, backgroundColor: colors.surface, gap: space.md, ...shadow.card },
+  weekTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
+  weekStats: { flexDirection: 'row', gap: space.sm },
+  weekStat: { flex: 1, alignItems: 'center', paddingVertical: space.sm, borderRadius: 12, backgroundColor: colors.soft },
+  weekNum: { fontFamily: fonts.display, fontSize: 22, lineHeight: 26, color: colors.ink, fontVariant: ['tabular-nums'] },
+  weekLabel: { fontFamily: fonts.medium, fontSize: 11, color: colors.muted, textAlign: 'center' },
   learned: { marginHorizontal: space.lg, marginTop: space.base, padding: space.base, borderRadius: radius.card, backgroundColor: colors.goldSoft, gap: space.sm },
   learnedHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   learnedTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },

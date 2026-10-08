@@ -19,6 +19,7 @@ const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street:
 function subtitleFor(source, slip) {
   if (source?.kind === 'mood') return `${MOOD_TITLE[source.label]} picks near you`;
   if (source?.kind === 'pick') return 'Based on your taste profile';
+  if (source?.kind === 'occasion') return `${source.label} near you`;
   if (!slip) return 'Order in';
   return [slip.craving, slip.budget && `under ₹${slip.budget}`, slip.time && `${slip.time} min`].filter(Boolean).join(' · ');
 }

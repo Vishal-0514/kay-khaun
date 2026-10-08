@@ -10,6 +10,7 @@ import Button from '../../components/Button';
 import Animated from 'react-native-reanimated';
 import { appear, rise, riseUp, sheetUp } from '../../components/Motion';
 import { useCookStore } from '../../store/useCookStore';
+import { useMeStore } from '../../store/useMeStore';
 import { errorMessage } from '../../lib/api';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
@@ -53,6 +54,7 @@ export default function Recipe() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const openRecipe = useCookStore((s) => s.openRecipe);
+  const track = useMeStore((s) => s.track);
   const current = useCookStore((s) => s.current);
   const recipe = current?.id === id ? current : null;
   const [error, setError] = useState(null);
@@ -62,6 +64,11 @@ export default function Recipe() {
     setError(null);
     openRecipe(id).catch((err) => setError(errorMessage(err)));
   }, [id, openRecipe]);
+
+  // Looking at a recipe hints at the cuisines they like (taste learning).
+  useEffect(() => {
+    if (recipe) track('opened', { id: `recipe-${recipe.id}`, source: 'recipe', name: recipe.name, cuisine: recipe.cuisine, diet: recipe.diet });
+  }, [recipe?.id]);
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/home'));
 

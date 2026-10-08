@@ -1,6 +1,7 @@
 import { recipes, findRecipe } from '../data/recipes.js';
 import { BASICS, labelOf } from '../data/pantry.js';
 import { normalizeAvoid } from './ranking.js';
+import { learnedNudge } from './taste.js';
 
 // Picks recipes from what the user has at home. Like ranking.js it is
 // deterministic: names, times, ingredients and steps all come from the data.
@@ -40,6 +41,7 @@ export function suggestRecipes(slots, prefs = {}, { limit = 6 } = {}) {
     timeMax: slots.timeMax ?? null,
     spice: prefs.spice ?? 3,
     favCuisines: prefs.cuisines ?? [],
+    learned: prefs.learned ?? null,
   };
 
   const scored = [];
@@ -57,12 +59,15 @@ export function suggestRecipes(slots, prefs = {}, { limit = 6 } = {}) {
     const nameHit = c.dishWords.some((w) => r.name.toLowerCase().includes(w));
     if (nameHit) taste = Math.min(1, taste + 0.4);
     const time = c.timeMax ? (r.time <= c.timeMax ? 1 : 0.2) : 1 - Math.min(1, r.time / 90);
-    const personal = c.favCuisines.includes(r.cuisine) ? 1 : 0.5;
+    // Taste learning: cuisines they go for (from orders, saves and recipes they open).
+    const nudge = learnedNudge(c.learned, `recipe-${r.id}`, r.cuisine);
+    const personal = Math.max(0, Math.min(1, (c.favCuisines.includes(r.cuisine) ? 1 : 0.5) + 0.4 * nudge.cuisineAff));
 
     // A mood they asked for counts for more; missing the star of the dish counts against.
     const wT = c.moods.length || nameHit ? 0.3 : 0.2;
     let total = (0.55 - wT) * coverage + 0.15 * uses + wT * taste + 0.12 * time + 0.08 * personal + 0.1 * coverage;
     if (c.moods.some((m) => r.moods.includes(m))) total += 0.15;
+    total += nudge.boost;
     if (!have.has(r.core[0])) total *= 0.7;
     scored.push({ r, s, total });
   }

@@ -2,7 +2,7 @@ import { aiEnabled, scanKitchen } from '../services/ai.js';
 import { suggestRecipes, recipeDetail } from '../services/cooking.js';
 import { catalogue, normalizeAll } from '../data/pantry.js';
 
-const prefsOf = (user) => (user.memoryEnabled ? user.preferences?.toObject?.() ?? user.preferences ?? {} : {});
+import { tasteOf } from '../services/taste.js';
 
 // Names for the kitchen screen's quick-add chips and type-ahead.
 export function listIngredients(req, res) {
@@ -10,10 +10,10 @@ export function listIngredients(req, res) {
 }
 
 // "Here's what I have" -> recipes, straight from the kitchen screen.
-export function findRecipes(req, res) {
+export async function findRecipes(req, res) {
   const { ingredients, mood, timeMax } = req.body;
   const kitchen = normalizeAll(ingredients);
-  const recipes = suggestRecipes({ ingredients: kitchen.map((i) => i.id), moods: mood ? [mood] : [], timeMax }, prefsOf(req.user));
+  const recipes = suggestRecipes({ ingredients: kitchen.map((i) => i.id), moods: mood ? [mood] : [], timeMax }, await tasteOf(req.user));
   res.json({ success: true, kitchen, recipes });
 }
 

@@ -6,7 +6,7 @@ const url = z.string().url().max(500);
 // A pick as the app shows it. Unknown fields are dropped.
 export const foodItemSchema = z.object({
   id: text(200),
-  source: z.enum(['sample', 'places']).optional(),
+  source: z.enum(['sample', 'places', 'recipe']).optional(),
   name: text(150),
   restaurant: text(150).optional(),
   area: text(100).nullable().optional(),
@@ -32,6 +32,8 @@ export const activitySchema = z.object({
   app: z.enum(['zomato', 'swiggy']).optional(),
 });
 
+const recipeRef = z.object({ id: text(80), name: text(120), time: z.number().int().min(0).max(600), level: text(20) });
+
 export const savePlanSchema = z.object({
   budget: z.number().int().min(0).max(10000),
   total: z.number().int().min(0).max(40000).nullable(),
@@ -43,7 +45,9 @@ export const savePlanSchema = z.object({
         label: text(30),
         cook: z.boolean(),
         item: foodItemSchema,
-        recipe: z.object({ id: text(80), name: text(120), time: z.number().int().min(0).max(600), level: text(20) }).nullable().optional(),
+        recipe: recipeRef.nullable().optional(),
+        home: recipeRef.nullable().optional(),
+        options: z.array(z.object({ item: foodItemSchema, home: recipeRef.nullable().optional() })).max(3).optional(),
       })
     )
     .min(1)

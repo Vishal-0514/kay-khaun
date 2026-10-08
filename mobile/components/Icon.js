@@ -39,6 +39,7 @@ const shapes = {
   people: [['circle', { cx: 9, cy: 8, r: 3.5 }], ['path', 'M2.5 20c1-3.5 3.5-5.5 6.5-5.5s5.5 2 6.5 5.5'], ['path', 'M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.7.8 2.9 2.5 3.5 5.2']],
   restart: [['path', 'M4 12a8 8 0 1 0 2.3-5.7'], ['path', 'M4 4v4.5h4.5']],
   basket: [['path', 'M3 10h18l-2 10H5z'], ['path', 'M8 10l3-6M16 10l-3-6M9 14v3M15 14v3']],
+  share: [['path', 'M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6'], ['path', 'M12 3v12'], ['path', 'M7.5 7.5L12 3l4.5 4.5']],
 };
 
 // fill: colour the inside too (a filled ♡ for saved).

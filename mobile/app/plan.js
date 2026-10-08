@@ -12,6 +12,7 @@ import { toast } from '../components/Toast';
 import { MEAL_KEYS, dayTotal, shownPick, usePlanStore } from '../store/usePlanStore';
 import { errorMessage } from '../lib/api';
 import { notify } from '../lib/notify';
+import { planMessage, shareText } from '../lib/share';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 
 const BUDGETS = [500, 800, 1200, 2000];
@@ -263,6 +264,9 @@ export default function Plan() {
                   ? `${rupees(total - budget)} over — swap a meal or cook one`
                   : `${rupees(budget - total)} left for chai and extras`}
             </Text>
+            <PressScale scaleTo={0.9} role="button" aria-label="Share this day plan" disabled={loading} onPress={() => shareText(planMessage(plan, choice, cook))} style={styles.shareBtn}>
+              <Icon name="share" size={16} color={colors.ink} />
+            </PressScale>
             <PressScale role="button" disabled={saving || Boolean(savedAt) || loading} onPress={save} style={[styles.saveBtn, savedAt && styles.saveBtnDone]}>
               <Icon name={savedAt ? 'check' : 'heart'} size={15} color={savedAt ? colors.green : colors.red} />
               <Text style={[styles.saveText, savedAt && { color: colors.green }]}>{savedAt ? 'Saved' : 'Save this day'}</Text>
@@ -319,6 +323,7 @@ const styles = StyleSheet.create({
   barBottom: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   barNote: { flex: 1, fontFamily: fonts.medium, fontSize: 13, color: colors.muted },
   saveBtn: { height: 36, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.redSoft, backgroundColor: colors.redSoft, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  shareBtn: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: colors.hair, alignItems: 'center', justifyContent: 'center' },
   saveBtnDone: { backgroundColor: colors.greenSoft, borderColor: colors.greenSoft },
   saveText: { fontFamily: fonts.bold, fontSize: 13, color: colors.red },
 });

@@ -17,5 +17,6 @@ export const sendMessageSchema = z.object({
 
 export const quickPicksSchema = z.object({
   mood: z.enum(MOODS).optional(),
+  occasion: z.string().trim().max(40).optional(),
   location: locationSchema.optional(),
 });

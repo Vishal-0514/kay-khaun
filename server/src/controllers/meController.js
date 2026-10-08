@@ -76,6 +76,37 @@ export async function clearHistory(req, res) {
   res.json({ success: true });
 }
 
+// "Your week in food": the last 7 days against the 60 days before.
+export async function getWeek(req, res) {
+  if (!req.user.memoryEnabled) return res.json({ success: true, week: { enabled: false } });
+  const now = Date.now();
+  const weekStart = new Date(now - 7 * 864e5);
+  const [week, before, savedCount] = await Promise.all([
+    Activity.find({ user: req.user._id, createdAt: { $gte: weekStart } }).select('kind item.id item.cuisine item.source plan.meals.cook').lean(),
+    Activity.find({ user: req.user._id, kind: { $in: ['opened', 'ordered'] }, createdAt: { $gte: new Date(now - 67 * 864e5), $lt: weekStart } }).select('item.cuisine').lean(),
+    Saved.countDocuments({ user: req.user._id, createdAt: { $gte: weekStart } }),
+  ]);
+  const ordered = week.filter((a) => a.kind === 'ordered');
+  const tried = week.filter((a) => (a.kind === 'ordered' || a.kind === 'opened') && a.item?.cuisine && a.item.source !== 'recipe');
+  const cuisineCount = {};
+  for (const a of tried) cuisineCount[a.item.cuisine] = (cuisineCount[a.item.cuisine] ?? 0) + (a.kind === 'ordered' ? 2 : 1);
+  const seenBefore = new Set(before.map((a) => a.item?.cuisine).filter(Boolean));
+  const plans = week.filter((a) => a.kind === 'plan');
+  res.json({
+    success: true,
+    week: {
+      enabled: true,
+      orders: ordered.length,
+      cuisines: Object.keys(cuisineCount).length,
+      newCuisines: Object.keys(cuisineCount).filter((c) => !seenBefore.has(c)).slice(0, 3),
+      topCuisine: Object.entries(cuisineCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+      saved: savedCount,
+      daysPlanned: plans.length,
+      homeCooked: plans.reduce((n, p) => n + (p.plan?.meals ?? []).filter((m) => m.cook).length, 0),
+    },
+  });
+}
+
 export async function getLearned(req, res) {
   res.json({ success: true, learned: await learnedSummary(req.user) });
 }

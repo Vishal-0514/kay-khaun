@@ -51,6 +51,13 @@ export const useChatStore = create((set, get) => ({
     return data.picks;
   },
 
+  // The festival / season special on Home.
+  async occasionPicks(occasion) {
+    const { data } = await api.post('/chat/quick-picks', { occasion: occasion.id, location: where() });
+    set({ picks: data.picks, picksSource: { kind: 'occasion', label: occasion.title } });
+    return data.picks;
+  },
+
   newChat: () => set({ conversation: null }),
   clear: () => set({ conversation: null, picks: [], picksSource: null }),
 }));

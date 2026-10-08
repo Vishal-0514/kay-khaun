@@ -15,6 +15,7 @@ import { useChatStore } from '../../store/useChatStore';
 import { planDish, usePlanStore } from '../../store/usePlanStore';
 import { meDish, useMeStore } from '../../store/useMeStore';
 import { errorMessage } from '../../lib/api';
+import { pickMessage, shareText } from '../../lib/share';
 import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
@@ -90,7 +91,10 @@ export default function Dish() {
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
             <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
-            <HeartButton pick={dish} onDark />
+            <View style={styles.headerRight}>
+              <IconButton name="share" label={`Share ${dish.name}`} onDark onPress={() => shareText(pickMessage(dish))} />
+              <HeartButton pick={dish} onDark />
+            </View>
           </View>
           <Animated.View entering={appear(0, 100)} style={styles.hero}>
             {scored ? (
@@ -223,6 +227,7 @@ const styles = StyleSheet.create({
   ideaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   idea: { paddingHorizontal: 14, height: 36, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.goldSoft },
   ideaText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.goldText },
+  headerRight: { flexDirection: 'row', gap: space.sm },
   badge: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(232,169,58,0.4)' },
   notForMe: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, marginTop: space.sm, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair },
   notForMeText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.muted },

@@ -15,7 +15,7 @@ import { useChatStore } from '../../store/useChatStore';
 import { orderAgain, useMeStore } from '../../store/useMeStore';
 import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { dayLabel } from '../../lib/dates';
-import { errorMessage } from '../../lib/api';
+import { api, errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 
@@ -41,6 +41,9 @@ export default function Home() {
   const user = useAuthStore((s) => s.user);
   const slip = useChatStore((s) => s.conversation?.slip);
   const quickPicks = useChatStore((s) => s.quickPicks);
+  const occasionPicks = useChatStore((s) => s.occasionPicks);
+  const [occasion, setOccasion] = useState(null);
+  const [loadingOccasion, setLoadingOccasion] = useState(false);
   const [topPick, setTopPick] = useState(null);
   const [loadingMood, setLoadingMood] = useState(null);
   const { hello, when } = timeOfDay();
@@ -83,6 +86,23 @@ export default function Home() {
     }, [loadHistory, loadSaved])
   );
   const again = orderAgain(history);
+
+  // Today's festival or season special.
+  useEffect(() => {
+    api.get('/chat/occasion').then(({ data }) => setOccasion(data.occasion)).catch(() => {});
+  }, []);
+
+  async function openOccasion() {
+    setLoadingOccasion(true);
+    try {
+      await occasionPicks(occasion);
+      router.push('/results');
+    } catch (err) {
+      notify("Couldn't load picks", errorMessage(err));
+    } finally {
+      setLoadingOccasion(false);
+    }
+  }
 
   async function openMood(mood) {
     setLoadingMood(mood);
@@ -178,6 +198,24 @@ export default function Home() {
           </Animated.View>
         ))}
       </View>
+
+      {occasion ? (
+        <Animated.View entering={rise(0, 650)}>
+          <PressScale scaleTo={0.98} role="button" aria-label={`${occasion.title}: ${occasion.subtitle}`} onPress={openOccasion} style={styles.special}>
+            <View style={styles.specialIcon}>
+              {loadingOccasion ? <ActivityIndicator color={colors.red} /> : <Icon name={occasion.icon} size={22} color={colors.red} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.specialTag}>Season special</Text>
+              <Text style={styles.specialTitle}>{occasion.title}</Text>
+              <Text style={type.small} numberOfLines={1}>
+                {occasion.subtitle}
+              </Text>
+            </View>
+            <Icon name="chevron" color={colors.muted} />
+          </PressScale>
+        </Animated.View>
+      ) : null}
 
       <Animated.View entering={rise(0, 700)} style={styles.sectionHead}>
         <Text style={type.head}>Chatora's pick for you</Text>
@@ -311,6 +349,10 @@ const styles = StyleSheet.create({
   pickName: { flex: 1, fontFamily: fonts.semibold, fontSize: 17, color: colors.ink },
   matchValue: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, color: colors.ink },
   matchLabel: { fontFamily: fonts.semibold, fontSize: 10, color: colors.muted },
+  special: { marginHorizontal: space.base, marginTop: space.lg, padding: space.base, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, backgroundColor: colors.redSoft },
+  specialIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  specialTag: { ...type.label, fontSize: 11, color: colors.red },
+  specialTitle: { fontFamily: fonts.display, fontSize: 18, lineHeight: 22, color: colors.ink },
   againRow: { paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.xs, gap: space.md },
   againCard: { width: 200, padding: 14, gap: 2, borderRadius: radius.card, backgroundColor: colors.surface, ...shadow.card },
   againName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },

@@ -5,6 +5,7 @@ import { recommend } from '../services/ranking.js';
 import { nearbyPicks } from '../services/nearby.js';
 import { placesEnabled } from '../services/places.js';
 import { prefsOf, tasteOf } from '../services/taste.js';
+import { currentOccasion, findOccasion } from '../data/occasions.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 
@@ -173,7 +174,7 @@ export async function sendMessage(req, res) {
     if (!slots.ingredients?.length) {
       reply = { kind: 'question', text: intent.reply ?? backupText.askKitchen, options: [SCAN_OPTION] };
     } else {
-      const found = suggestRecipes(slots, prefsOf(req.user));
+      const found = suggestRecipes(slots, await tasteOf(req.user));
       if (!found.length) {
         reply = {
           kind: 'info',
@@ -224,15 +225,24 @@ export async function getConversation(req, res) {
   const lng = Number(req.query.lng);
   const location = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, city: String(req.query.city ?? '') } : null;
   const picks = slots.branch === 'order' ? (await findPicks(slots, req.user, location)).picks : [];
-  const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(slots, prefsOf(req.user)) : [];
+  const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(slots, await tasteOf(req.user)) : [];
   res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots) });
 }
 
 // One-tap picks without a chat: Home's mood circles and "Chatora's pick".
+// Home's mood circles, Chatora's pick, and the festival / season special.
 export async function quickPicks(req, res) {
-  const { mood, location } = req.body;
-  const result = await findPicks({ moods: mood ? [mood] : [], branch: 'order' }, req.user, location);
+  const { mood, occasion, location } = req.body;
+  const special = occasion ? findOccasion(occasion) : null;
+  const slots = special ? { ...special.slots, branch: 'order' } : { moods: mood ? [mood] : [], branch: 'order' };
+  const result = await findPicks(slots, req.user, location);
   res.json({ success: true, picks: result.picks, relaxed: result.relaxed });
+}
+
+// Today's festival or season special for Home, or null.
+export function occasionNow(req, res) {
+  const o = currentOccasion();
+  res.json({ success: true, occasion: o && { id: o.id, title: o.title, subtitle: o.subtitle, icon: o.icon } });
 }
 
 // Lets the app show whether Chatora is running on Claude.

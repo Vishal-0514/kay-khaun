@@ -6,6 +6,7 @@ import {
   clearHistory,
   clearLearned,
   getLearned,
+  getWeek,
   listHistory,
   listSaved,
   recordActivity,
@@ -30,6 +31,7 @@ router.delete('/history/:id', removeHistory);
 router.delete('/history', clearHistory);
 
 router.get('/learned', getLearned);
+router.get('/week', getWeek);
 router.delete('/learned', clearLearned);
 
 export default router;

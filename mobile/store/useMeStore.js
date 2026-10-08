@@ -20,6 +20,7 @@ export const useMeStore = create((set, get) => ({
   historyMore: false,
   historyLoaded: false,
   learned: null, // { enabled, cuisines: [{ name, strength }], signals, notForMe }
+  week: null, // "Your week in food" — see GET /me/week
 
   isSaved: (id) => get().saved.some((s) => s.id === id),
 
@@ -91,6 +92,11 @@ export const useMeStore = create((set, get) => ({
     set({ history: [], historyMore: false });
   },
 
+  async loadWeek() {
+    const { data } = await api.get('/me/week');
+    set({ week: data.week });
+  },
+
   async loadLearned() {
     const { data } = await api.get('/me/learned');
     set({ learned: data.learned });
@@ -102,7 +108,7 @@ export const useMeStore = create((set, get) => ({
     set((s) => ({ learned: data.learned, history: s.history.filter((e) => e.kind !== 'ordered') }));
   },
 
-  clear: () => set({ saved: [], history: [], historyMore: false, historyLoaded: false, learned: null }),
+  clear: () => set({ saved: [], history: [], historyMore: false, historyLoaded: false, learned: null, week: null }),
 }));
 
 // Last few different dishes they opened in an order app: Home's "Order again".

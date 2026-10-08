@@ -86,13 +86,23 @@ export const usePlanStore = create((set, get) => ({
     }, NOTE_DELAY_MS);
   },
 
-  // "Save this day" → History.
+  // "Save this day" → History, with each meal's swaps so it reopens fully.
   async saveDay() {
     const { plan, choice, cook } = get();
+    const ref = (h) => (h ? { id: h.id, name: h.name, time: h.time, level: h.level } : null);
     const meals = plan.meals.map((m) => {
       const pick = shownPick(m, choice);
       const cooking = Boolean(cook[m.meal] && pick.home);
-      return { meal: m.meal, label: m.label, cook: cooking, item: toItem(pick), recipe: cooking ? { id: pick.home.id, name: pick.home.name, time: pick.home.time, level: pick.home.level } : null };
+      const others = [m.pick, ...m.options].filter((o) => o.id !== pick.id).slice(0, 3);
+      return {
+        meal: m.meal,
+        label: m.label,
+        cook: cooking,
+        item: toItem(pick),
+        recipe: cooking ? ref(pick.home) : null,
+        home: ref(pick.home),
+        options: others.map((o) => ({ item: toItem(o), home: ref(o.home) })),
+      };
     });
     const entry = await useMeStore.getState().savePlan({ budget: plan.budget, total: dayTotal(plan, choice, cook), moodLabel: plan.moodLabel, meals });
     set({ savedAt: entry.at });
@@ -107,8 +117,8 @@ export const usePlanStore = create((set, get) => ({
       meal: m.meal,
       label: m.label,
       time: MEAL_INFO[m.meal]?.time ?? '',
-      pick: { ...m.item, home: m.recipe ?? null },
-      options: [],
+      pick: { ...m.item, home: m.home ?? m.recipe ?? null },
+      options: (m.options ?? []).map((o) => ({ ...o.item, home: o.home ?? null })),
     }));
     set({
       plan: { budget: p.budget, moodLabel: p.moodLabel, mood: null, meals, spent: p.total, overBudget: false },
