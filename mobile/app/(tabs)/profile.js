@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
@@ -14,6 +14,7 @@ import { toast } from '../../components/Toast';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useMeStore } from '../../store/useMeStore';
 import { readReminders } from '../../lib/reminders';
+import { useTips } from '../../lib/tips';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { LANGUAGES, t, useLang } from '../../lib/i18n';
 
@@ -103,15 +104,28 @@ export default function Profile() {
   const setLang = useLang((s) => s.setLang);
   const [reminderCount, setReminderCount] = useState(0);
 
-  // Fresh numbers each time Profile opens.
+  // Fresh numbers each time Profile opens, or when pulled down.
+  const reload = useCallback(
+    () =>
+      Promise.all([
+        loadLearned().catch(() => {}),
+        loadSaved().catch(() => {}),
+        loadWeek().catch(() => {}),
+        readReminders().then((r) => setReminderCount(Object.values(r).filter((x) => x.on).length)),
+      ]),
+    [loadLearned, loadSaved, loadWeek]
+  );
   useFocusEffect(
     useCallback(() => {
-      loadLearned().catch(() => {});
-      loadSaved().catch(() => {});
-      loadWeek().catch(() => {});
-      readReminders().then((r) => setReminderCount(Object.values(r).filter((x) => x.on).length));
-    }, [loadLearned, loadSaved, loadWeek])
+      reload();
+    }, [reload])
   );
+  const [refreshing, setRefreshing] = useState(false);
+  async function refresh() {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }
 
   async function forget() {
     const yes = await confirm(t("Clear what I've learned?"), t('I’ll forget what you opened, ordered and marked "Not for me". Your saved picks, saved days and taste settings stay.'), 'Clear');
@@ -143,7 +157,11 @@ export default function Profile() {
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: space.xl }}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={{ paddingBottom: space.xl }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.gold} progressViewOffset={insets.top} />}
+    >
       <MaroonBand height={bandHeight}>
         <View style={[styles.head, { marginTop: insets.top + 28 }]}>
           <Animated.View entering={appear(0, 100)} style={styles.avatar}>
@@ -173,11 +191,12 @@ export default function Profile() {
         />
       </Animated.View>
 
-      <Text style={[type.head, styles.section]}>{t("Your food")}</Text>
+      <Text style={[type.head, styles.section]} role="heading">{t("Your food")}</Text>
       <View style={styles.list}>
         <NavRow n={0} icon="heart" tint="#FBE4EC" ink="#A92E5A" label={t("Saved")} value={savedCount ? t(savedCount === 1 ? '{n} pick' : '{n} picks', { n: savedCount }) : t('None yet')} onPress={() => router.push('/saved')} />
         <NavRow n={1} icon="clock" tint={colors.goldSoft} ink={colors.goldText} label={t("History")} value={t('Orders and saved days')} onPress={() => router.push('/history')} />
         <NavRow n={2} icon="moon" tint="#E8EEF7" ink="#3A5A8C" label={t("Meal reminders")} value={reminderCount ? t('{n} on', { n: reminderCount }) : t('Off')} onPress={() => router.push('/reminders')} />
+        <NavRow n={3} icon="chat" tint={colors.redSoft} ink={colors.red} label={t('Recent chats')} value={t('Your chats with Chatora')} onPress={() => router.push('/chats')} />
       </View>
 
       {memoryOn && week?.enabled ? <WeekCard week={week} /> : null}
@@ -209,14 +228,14 @@ export default function Profile() {
               {t(learned.signals === 1 ? 'From {n} thing you opened, ordered or saved' : 'From {n} things you opened, ordered or saved', { n: learned.signals })}
               {learned.notForMe ? ' · ' + t('{n} marked "Not for me"', { n: learned.notForMe }) : ''}.
             </Text>
-            <Pressable onPress={forget} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
+            <Pressable role="button" onPress={forget} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
               <Text style={styles.learnedClear}>{t("Clear what I've learned")}</Text>
             </Pressable>
           </>
         ) : null}
       </Animated.View>
 
-      <Text style={[type.head, styles.section]}>{t("Preferences")}</Text>
+      <Text style={[type.head, styles.section]} role="heading">{t("Preferences")}</Text>
       <View style={styles.list}>
         <Animated.View entering={rise(0, 350)} style={styles.row}>
           <View style={[styles.rowIcon, { backgroundColor: '#E8EEF7' }]}>
@@ -239,6 +258,18 @@ export default function Profile() {
       </View>
       <Button variant="outline" title={t("Edit my taste")} onPress={() => router.push('/taste')} style={styles.edit} />
 
+      <Pressable
+        onPress={() => {
+          useTips.getState().reset();
+          toast(t('Tips will show again'), 'check');
+        }}
+        hitSlop={8}
+        role="button"
+        style={styles.tipsAgain}
+      >
+        <Text style={styles.learnedClear}>{t('Show tips again')}</Text>
+      </Pressable>
+
       <PressScale role="button" onPress={() => signOut().then(() => router.replace('/welcome'))} style={styles.signOut}>
         <Text style={styles.signOutText}>{user?.isGuest ? t('Leave test account') : t('Sign out')}</Text>
       </PressScale>
@@ -248,6 +279,7 @@ export default function Profile() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
+  tipsAgain: { alignSelf: 'center', marginTop: space.lg, minHeight: 32, justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.base, paddingHorizontal: space.lg },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: fonts.displayBold, fontSize: 28, lineHeight: 34, color: colors.maroon },

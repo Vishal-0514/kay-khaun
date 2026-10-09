@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
@@ -8,7 +8,10 @@ import Icon, { DietMark } from '../../components/Icon';
 import PlateRing from '../../components/PlateRing';
 import DishMeta, { isPlace } from '../../components/DishMeta';
 import { useLocationStore } from '../../store/useLocationStore';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { SkeletonCard } from '../../components/Skeleton';
+import { WelcomeTips } from '../../components/Tip';
+import { tap } from '../../lib/haptics';
 import { Glow, PressScale, Reveal, rise, riseUp } from '../../components/Motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useChatStore } from '../../store/useChatStore';
@@ -46,6 +49,9 @@ export default function Home() {
   const [occasion, setOccasion] = useState(null);
   const [loadingOccasion, setLoadingOccasion] = useState(false);
   const [topPick, setTopPick] = useState(null);
+  const [pickFailed, setPickFailed] = useState(false);
+  const [why, setWhy] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadingMood, setLoadingMood] = useState(null);
   const { hello, when } = timeOfDay();
   const bandHeight = 300 + insets.top;
@@ -67,14 +73,23 @@ export default function Home() {
     useCallback(() => {
       if (locationStatus === 'idle' || locationStatus === 'locating') return undefined;
       let alive = true;
-      quickPicks()
-        .then((picks) => alive && setTopPick(picks[0] ?? null))
-        .catch(() => {});
+      loadTopPick(() => alive);
       return () => {
         alive = false;
       };
     }, [quickPicks, user?.preferences, locationStatus])
   );
+
+  function loadTopPick(alive = () => true) {
+    setPickFailed(false);
+    return quickPicks()
+      .then((picks) => {
+        if (!alive()) return;
+        if (picks[0]?.id !== topPick?.id) setWhy(false);
+        setTopPick(picks[0] ?? null);
+      })
+      .catch(() => alive() && setPickFailed(true));
+  }
 
   // Saved hearts and "Order again" stay fresh whenever Home comes back.
   const history = useMeStore((s) => s.history);
@@ -89,9 +104,17 @@ export default function Home() {
   const again = orderAgain(history);
 
   // Today's festival or season special.
+  const loadOccasion = () => api.get('/chat/occasion').then(({ data }) => setOccasion(data.occasion)).catch(() => {});
   useEffect(() => {
-    api.get('/chat/occasion').then(({ data }) => setOccasion(data.occasion)).catch(() => {});
+    loadOccasion();
   }, []);
+
+  // Pull down to refresh everything on Home.
+  async function refresh() {
+    setRefreshing(true);
+    await Promise.all([loadTopPick(), loadOccasion(), loadHistory().catch(() => {}), loadSaved().catch(() => {})]);
+    setRefreshing(false);
+  }
 
   async function openOccasion() {
     setLoadingOccasion(true);
@@ -106,6 +129,7 @@ export default function Home() {
   }
 
   async function openMood(mood) {
+    tap();
     setLoadingMood(mood);
     try {
       await quickPicks(mood);
@@ -118,10 +142,14 @@ export default function Home() {
   }
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: space.xl }}>
+    <ScrollView
+      style={styles.root}
+      contentContainerStyle={{ paddingBottom: space.xl }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.gold} progressViewOffset={insets.top} />}
+    >
       <MaroonBand height={bandHeight}>
         <View style={[styles.topRow, { marginTop: insets.top + space.base }]}>
-          <Pressable style={styles.location} onPress={locate} aria-label={t("Update my location")} hitSlop={8}>
+          <Pressable role="button" style={styles.location} onPress={locate} aria-label={t("Update my location")} hitSlop={8}>
             <Icon name="pin" size={18} color={colors.gold} />
             <Text style={styles.locationText} numberOfLines={1}>
               {locationLabel}
@@ -147,7 +175,7 @@ export default function Home() {
 
       {/* The order slip: what Chatora needs, and the big talk button. */}
       <Animated.View entering={riseUp(0, 260)} style={[styles.slip, { marginTop: bandHeight - 104 }]}>
-        <Pressable style={styles.slipFields} onPress={() => router.push('/chat')} aria-label={t("Tell Chatora what you want")}>
+        <Pressable role="button" style={styles.slipFields} onPress={() => router.push('/chat')} aria-label={t("Tell Chatora what you want")}>
           <View style={[styles.field, styles.fieldTop]}>
             <Text style={styles.fieldLabel}>{t("Craving")}</Text>
             <Text style={[styles.fieldValue, !slip?.craving && styles.placeholder]} numberOfLines={1}>
@@ -187,6 +215,8 @@ export default function Home() {
         </PressScale>
       </Animated.View>
 
+      <WelcomeTips style={styles.welcome} />
+
       <View style={styles.moods}>
         {MOODS.map((m, i) => (
           <Animated.View key={m.id} entering={rise(i, 450)}>
@@ -219,8 +249,10 @@ export default function Home() {
       ) : null}
 
       <Animated.View entering={rise(0, 700)} style={styles.sectionHead}>
-        <Text style={type.head}>{t("Chatora's pick for you")}</Text>
+        <Text style={type.head} role="heading">{t("Chatora's pick for you")}</Text>
         <Pressable
+          role="button"
+          aria-label={t('See all 5 picks')}
           onPress={async () => {
             await quickPicks().catch(() => {});
             router.push('/results');
@@ -232,7 +264,7 @@ export default function Home() {
       </Animated.View>
       {topPick ? (
         <Animated.View entering={rise(0, 760)}>
-        <PressScale scaleTo={0.98} role="button" style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
+        <PressScale scaleTo={0.98} role="button" aria-label={t('{name}, {match}% match. Open details', { name: topPick.name, match: topPick.match })} style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
           <PlateRing size={72} value={topPick.match / 100}>
             <Text style={styles.matchValue}>{topPick.match}</Text>
             <Text style={styles.matchLabel}>{t("% match")}</Text>
@@ -251,18 +283,52 @@ export default function Home() {
           </View>
           <Icon name="chevron" color={colors.muted} />
         </PressScale>
+        {topPick.reasons?.length ? (
+          <View style={styles.whyWrap}>
+            <Pressable
+              onPress={() => {
+                tap();
+                setWhy(!why);
+              }}
+              hitSlop={8}
+              role="button"
+              aria-expanded={why}
+              style={styles.whyButton}
+            >
+              <Icon name="spark" size={14} color={colors.goldText} />
+              <Text style={styles.whyLabel}>{why ? t('Hide why') : t('Why this?')}</Text>
+            </Pressable>
+            {why ? (
+              <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.whyList}>
+                {topPick.reasons.map((r, i) => (
+                  <View key={i} style={styles.whyRow}>
+                    <View style={styles.whyIcon}>
+                      <Icon name={r.icon} size={14} color={colors.red} />
+                    </View>
+                    <Text style={styles.whyText}>{r.text}</Text>
+                  </View>
+                ))}
+              </Animated.View>
+            ) : null}
+          </View>
+        ) : null}
         </Animated.View>
-      ) : (
-        <View style={[styles.pick, { justifyContent: 'center' }]}>
-          <ActivityIndicator color={colors.red} />
+      ) : pickFailed ? (
+        <View style={[styles.pick, styles.pickError]}>
+          <Text style={[type.small, { flex: 1 }]}>{t("Couldn't load your pick.")}</Text>
+          <Pressable role="button" onPress={() => loadTopPick()} hitSlop={8} role="button">
+            <Text style={styles.link}>{t('Try again')}</Text>
+          </Pressable>
         </View>
+      ) : (
+        <SkeletonCard ring={72} style={styles.pickSkeleton} />
       )}
 
       {again.length ? (
         <Animated.View entering={rise(0, 800)}>
           <View style={styles.sectionHead}>
-            <Text style={type.head}>{t("Order again")}</Text>
-            <Pressable onPress={() => router.push('/history')} hitSlop={8}>
+            <Text style={type.head} role="heading">{t("Order again")}</Text>
+            <Pressable role="button" onPress={() => router.push('/history')} hitSlop={8}>
               <Text style={styles.link}>{t("History")}</Text>
             </Pressable>
           </View>
@@ -347,6 +413,16 @@ const styles = StyleSheet.create({
   link: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   pick: { marginHorizontal: space.base, marginTop: space.md, minHeight: 100, padding: space.base, flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderRadius: radius.card, ...shadow.card },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pickError: { minHeight: 64, justifyContent: 'space-between' },
+  pickSkeleton: { marginHorizontal: space.base, marginTop: space.md, minHeight: 100 },
+  whyWrap: { marginHorizontal: space.base, marginTop: space.sm, gap: space.sm },
+  whyButton: { alignSelf: 'flex-start', minHeight: 32, paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.goldSoft, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  whyLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.goldText },
+  whyList: { gap: space.sm, padding: space.base, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair },
+  whyRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  whyIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
+  whyText: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.ink },
+  welcome: { marginHorizontal: space.base, marginTop: space.lg },
   pickName: { flex: 1, fontFamily: fonts.semibold, fontSize: 17, color: colors.ink },
   matchValue: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, color: colors.ink },
   matchLabel: { fontFamily: fonts.semibold, fontSize: 10, color: colors.muted },

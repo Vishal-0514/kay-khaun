@@ -56,7 +56,7 @@ export default function Results() {
               {subtitleFor(source, slip)}
             </Text>
           </View>
-          <Pressable onPress={() => router.push('/chat')} hitSlop={8}>
+          <Pressable role="button" aria-label={t('Change what you asked for')} onPress={() => router.push('/chat')} hitSlop={8}>
             <Text style={styles.edit}>{t("Edit")}</Text>
           </Pressable>
         </View>
@@ -74,7 +74,7 @@ export default function Results() {
 
       {!top ? (
         <Animated.View entering={riseUp(0, 150)} style={[styles.card, { marginTop: bandHeight - 84, alignItems: 'center' }]}>
-          <Text style={type.head}>{t("Nothing to show yet")}</Text>
+          <Text style={type.head} role="heading">{t("Nothing to show yet")}</Text>
           <Text style={[type.small, { marginTop: space.sm, textAlign: 'center' }]}>{t("Tell Chatora what you feel like, and your picks will appear here.")}</Text>
           <Button title={t("Ask Chatora")} onPress={() => router.replace('/chat')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
         </Animated.View>

@@ -61,6 +61,17 @@ kya-khaun-app/
 - Profile → Language: English / हिंदी, remembered on the phone. Screens call `t('English text')` (`mobile/lib/i18n.js`); Hindi lives in `mobile/lib/i18n.hi.js`, keyed by the English text, so anything untranslated shows in English. New screen text needs a Hindi line there.
 - The app sends `Accept-Language: hi`; the server writes reasons, meal names, season specials and fallback replies in Hindi (`server/src/i18n.js`, `tr()`), and Claude writes day-plan notes in Hindi. Chat replies follow the language the person types in. Voice listens in Hindi when the interface is Hindi.
 
+## Experience polish
+
+- **Recent chats**: the list button in the chat header (and Profile → Recent chats) shows past chats by day with what each ended in; tap to pick up where you left off, 🗑 to delete one, or delete all. An empty chat shows the last three.
+- **Waking up Chatora**: the free server sleeps when idle. `mobile/lib/wake.js` checks `/api/health`; if the server is asleep it shows "Waking up Chatora…" (`components/WakingUp.js`), waits up to 75s, then retries the request once. Requests that fail while the server is awake are not retried. If it can't be reached on launch, it offers Try again.
+- **Icon and splash**: `mobile/assets/` (app icon, Android adaptive + themed icon, splash, notification icon, favicon), drawn as SVG — a plate with a red "?" on the maroon jaali.
+- **First-time tips**: a four-step guide on Home, and one-line hints on the dish and plan screens, each shown once (`lib/tips.js`); Profile → "Show tips again".
+- **Pull to refresh** on Home, Profile, Saved, History and Recent chats, with skeleton cards while lists load.
+- **Why this?** under Chatora's pick on Home lists the reasons.
+- **Haptics** (`lib/haptics.js`, `expo-haptics`): send, start listening, save, Not for me, swap, save a day.
+- **Accessibility**: every tappable has a role and label, section titles are headings, and toasts are read aloud by screen readers.
+
 ## Voice input
 
 - **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).
@@ -137,7 +148,8 @@ Email + password then works everywhere — Expo Go, the browser and app builds.
 | PATCH | `/api/profile` | `{ name?, preferences?, memoryEnabled?, onboarded? }` |
 | POST | `/api/auth/guest` | (testing only; needs `ALLOW_GUEST_LOGIN=true`) |
 | POST | `/api/chat/messages` | `{ conversationId?, text }` → `{ conversation, picks, recipes, kitchen }` |
-| GET | `/api/chat` | your recent chats |
+| GET | `/api/chat` | recent chats, 20 at a time (`?before=<date>` for more) |
+| DELETE | `/api/chat` | delete all your chats |
 | GET | `/api/cook/ingredients` | ingredient names for quick-add, and whether photo scan is on |
 | POST | `/api/cook/recipes` | `{ ingredients[], mood?, timeMax? }` → `{ kitchen, recipes }` |
 | GET | `/api/cook/recipes/:id?have=a,b` | full recipe marked against what you have |
@@ -150,6 +162,7 @@ Email + password then works everywhere — Expo Go, the browser and app builds.
 | POST | `/api/me/history/plan` | save a day plan |
 | GET / DELETE | `/api/me/learned` | what taste learning picked up; clear it |
 | GET | `/api/chat/:id` | one chat, with its picks re-ranked |
+| DELETE | `/api/chat/:id` | delete one chat |
 | POST | `/api/chat/quick-picks` | `{ mood? }` → 5 picks from your taste profile |
 
 Sign-in responses return `{ accessToken, refreshToken, isNew, user }`. Access tokens last 15 minutes; the app renews them automatically with the refresh token (valid 30 days, replaced on every use).

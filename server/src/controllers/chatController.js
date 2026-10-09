@@ -166,7 +166,7 @@ export async function sendMessage(req, res) {
   const intent = await readMessage(text, conv, req.user);
   conv.messages.push({ role: 'user', text });
   mergeSlots(conv.slots, intent);
-  if (conv.title === 'New chat' && conv.slots.craving) conv.title = conv.slots.craving.slice(0, 40);
+  if (conv.title === 'New chat' && conv.slots.craving) conv.title = conv.slots.craving.slice(0, 40).replace(/^\p{Ll}/u, (c) => c.toUpperCase());
   if (conv.title === 'New chat' && conv.slots.branch === 'cook') conv.title = 'Cooking at home';
 
   const slots = conv.slots.toObject();
@@ -220,9 +220,40 @@ export async function sendMessage(req, res) {
   res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots), understoodBy: intent.source });
 }
 
+// Recent chats, newest first: title, what Chatora last said and what it led to.
+// ?before=<ISO date> loads the next page.
 export async function listConversations(req, res) {
-  const list = await Conversation.find({ user: req.user._id }).sort({ updatedAt: -1 }).limit(30).select('title updatedAt');
-  res.json({ success: true, conversations: list.map((c) => ({ id: c._id, title: c.title, updatedAt: c.updatedAt })) });
+  const filter = { user: req.user._id, 'messages.0': { $exists: true } };
+  const before = new Date(String(req.query.before ?? ''));
+  if (!Number.isNaN(before.getTime())) filter.updatedAt = { $lt: before };
+  const PAGE = 20;
+  const list = await Conversation.find(filter)
+    .sort({ updatedAt: -1 })
+    .limit(PAGE + 1)
+    .select({ title: 1, updatedAt: 1, 'slots.branch': 1, messages: { $slice: -1 } })
+    .lean();
+  const conversations = list.slice(0, PAGE).map((c) => {
+    const last = c.messages[0];
+    return {
+      id: c._id,
+      title: c.title,
+      updatedAt: c.updatedAt,
+      branch: c.slots?.branch ?? null,
+      last: last ? { role: last.role, text: last.text.slice(0, 120), kind: last.kind, count: last.picks?.length || last.recipes?.length || 0 } : null,
+    };
+  });
+  res.json({ success: true, conversations, more: list.length > PAGE });
+}
+
+export async function deleteConversation(req, res) {
+  const ok = /^[a-f0-9]{24}$/.test(req.params.id) && (await Conversation.deleteOne({ _id: req.params.id, user: req.user._id })).deletedCount;
+  if (!ok) return res.status(404).json({ success: false, error: 'Chat not found' });
+  res.json({ success: true });
+}
+
+export async function clearConversations(req, res) {
+  const { deletedCount } = await Conversation.deleteMany({ user: req.user._id });
+  res.json({ success: true, deleted: deletedCount });
 }
 
 export async function getConversation(req, res) {

@@ -6,21 +6,33 @@ import { useMeStore } from '../store/useMeStore';
 import { usePlanStore } from '../store/usePlanStore';
 import { endFirebaseSession } from './firebase';
 import { signOutOfGoogle } from './googleSignIn';
+import { useWake, wakeServer, warmUp } from './wake';
 
 // On launch: load the saved tokens and fetch the profile. An expired access
 // token is refreshed by the API client; if that fails too, the user starts signed out.
 export async function restoreSession() {
   const saved = await readSession();
   const auth = useAuthStore.getState();
+  useWake.setState({ offline: false });
   try {
-    if (!saved?.refreshToken) return;
+    if (!saved?.refreshToken) {
+      // Signed out: quietly start waking the server, so signing in is quick.
+      warmUp();
+      return;
+    }
+    // Make sure the server is awake first (shows "Waking up Chatora…" if not).
+    if ((await wakeServer()) === 'offline') {
+      useWake.setState({ offline: true });
+      return;
+    }
     auth.setSession(saved);
     if (!saved.accessToken) await refreshSession();
     const { data } = await api.get('/profile');
     auth.setUser(data.user);
   } catch (err) {
-    // Offline: keep the saved session so the app can retry later. Rejected: sign out.
+    // Rejected: sign out. Unreachable: keep the session and offer Try again.
     if (err.response) auth.clear();
+    else useWake.setState({ offline: true });
   } finally {
     auth.setReady();
   }

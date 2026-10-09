@@ -10,6 +10,8 @@ import Button from '../../components/Button';
 import Animated from 'react-native-reanimated';
 import { PressScale, appear, rise, riseUp } from '../../components/Motion';
 import HeartButton from '../../components/HeartButton';
+import Tip from '../../components/Tip';
+import { tap } from '../../lib/haptics';
 import { toast } from '../../components/Toast';
 import { useChatStore } from '../../store/useChatStore';
 import { planDish, usePlanStore } from '../../store/usePlanStore';
@@ -65,6 +67,7 @@ export default function Dish() {
   }, [dish?.id]);
 
   async function hide() {
+    tap();
     setHiding(true);
     try {
       await notForMe(dish);
@@ -80,7 +83,7 @@ export default function Dish() {
   if (!dish) {
     return (
       <View style={[styles.root, { alignItems: 'center', justifyContent: 'center', padding: space.lg }]}>
-        <Text style={type.head}>{t("This pick isn't available any more")}</Text>
+        <Text style={type.head} role="heading">{t("This pick isn't available any more")}</Text>
         <Button title={t("Back to Home")} onPress={() => router.replace('/home')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
       </View>
     );
@@ -141,7 +144,7 @@ export default function Dish() {
 
         {place && dish.ideas?.length ? (
           <Animated.View entering={rise(0, 380)} style={styles.ideas}>
-            <Text style={type.head}>{t("Try here")}</Text>
+            <Text style={type.head} role="heading">{t("Try here")}</Text>
             <View style={styles.ideaRow}>
               {dish.ideas.map((idea) => (
                 <View key={idea} style={styles.idea}>
@@ -154,7 +157,7 @@ export default function Dish() {
         ) : null}
 
         <View style={styles.why}>
-          <Text style={type.head}>{t("Why I picked this")}</Text>
+          <Text style={type.head} role="heading">{t("Why I picked this")}</Text>
           {(dish.reasons ?? [{ icon: 'heart', text: 'One of your picks from before' }]).map((r, i) => {
             const [tint, ink] = TILE[r.icon] ?? TILE.spark;
             return (
@@ -176,6 +179,7 @@ export default function Dish() {
               </Text>
             </View>
           )}
+          <Tip id="dish-learn" icon="heart" text={t('♡ keeps a pick for later, and "Not for me" shows it less. Both teach Chatora your taste.')} />
           <PressScale role="button" disabled={hiding} onPress={hide} style={styles.notForMe} aria-label={t("Not for me, show this less")}>
             <Icon name="close" size={16} color={colors.muted} />
             <Text style={styles.notForMeText}>{t("Not for me — show this less")}</Text>

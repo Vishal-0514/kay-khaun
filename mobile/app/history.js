@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import MaroonBand from '../components/MaroonBand';
 import IconButton from '../components/IconButton';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
+import { SkeletonList } from '../components/Skeleton';
 import { PressScale, rise } from '../components/Motion';
 import { toast } from '../components/Toast';
 import { useMeStore } from '../store/useMeStore';
@@ -57,7 +58,7 @@ function OrderedRow({ e, onOpen, onRemove }) {
           <Icon name="restart" size={14} color="#FFFFFF" />
           <Text style={styles.againText}>{t("Again")}</Text>
         </PressScale>
-        <Pressable onPress={onRemove} hitSlop={10} aria-label={t('Remove {name} from history', { name: e.item.name })} style={styles.remove}>
+        <Pressable role="button" onPress={onRemove} hitSlop={10} aria-label={t('Remove {name} from history', { name: e.item.name })} style={styles.remove}>
           <Icon name="close" size={14} color={colors.muted} />
         </Pressable>
       </View>
@@ -92,7 +93,7 @@ function PlanRow({ e, onOpen, onRemove }) {
         <PressScale role="button" aria-label={t("Open this day plan")} onPress={onOpen} style={[styles.again, { backgroundColor: colors.maroon }]}>
           <Text style={[styles.againText, { color: colors.gold }]}>{t("Open")}</Text>
         </PressScale>
-        <Pressable onPress={onRemove} hitSlop={10} aria-label={t("Remove this day plan from history")} style={styles.remove}>
+        <Pressable role="button" onPress={onRemove} hitSlop={10} aria-label={t("Remove this day plan from history")} style={styles.remove}>
           <Icon name="close" size={14} color={colors.muted} />
         </Pressable>
       </View>
@@ -125,6 +126,13 @@ export default function History() {
       });
   }
   useEffect(load, [loadHistory]);
+
+  const [refreshing, setRefreshing] = useState(false);
+  async function refresh() {
+    setRefreshing(true);
+    await loadHistory().catch(() => {});
+    setRefreshing(false);
+  }
 
   async function remove(e) {
     try {
@@ -177,59 +185,62 @@ export default function History() {
       </MaroonBand>
 
       {state === 'loading' && !history.length ? (
-        <ActivityIndicator color={colors.red} style={{ marginTop: bandHeight + space.xl }} />
+        <SkeletonList style={{ marginTop: bandHeight }} />
       ) : state === 'error' && !history.length ? (
         <View style={[styles.empty, { marginTop: bandHeight }]}>
-          <Text style={type.head}>{t("Couldn't load your history")}</Text>
+          <Text style={type.head} role="heading">{t("Couldn't load your history")}</Text>
           <Text style={[type.small, { textAlign: 'center' }]}>{error}</Text>
           <Button title={t("Try again")} variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
         </View>
       ) : (
-        <SectionList
-          style={{ marginTop: bandHeight }}
-          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
-          sections={group(history)}
-          keyExtractor={(e) => String(e.id)}
-          stickySectionHeadersEnabled={false}
-          ListHeaderComponent={
-            memoryOn ? null : (
-              <View style={styles.notice}>
-                <Icon name="spark" size={16} color={colors.goldText} />
-                <Text style={styles.noticeText}>{t("\"Remember my taste\" is off, so new orders aren't added here. Days you save still are.")}</Text>
+        // The offset sits on a wrapper: on web, a list with pull-to-refresh applies its margin twice.
+        <View style={{ flex: 1, marginTop: bandHeight }}>
+          <SectionList
+            contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
+            sections={group(history)}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.red} />}
+            keyExtractor={(e) => String(e.id)}
+            stickySectionHeadersEnabled={false}
+            ListHeaderComponent={
+              memoryOn ? null : (
+                <View style={styles.notice}>
+                  <Icon name="spark" size={16} color={colors.goldText} />
+                  <Text style={styles.noticeText}>{t("\"Remember my taste\" is off, so new orders aren't added here. Days you save still are.")}</Text>
+                </View>
+              )
+            }
+            renderSectionHeader={({ section }) => <Text style={styles.day}>{t(section.title)}</Text>}
+            renderItem={({ item: e, index }) => (
+              <Animated.View entering={rise(Math.min(index, 5))}>
+                {e.kind === 'plan' ? (
+                  <PlanRow e={e} onOpen={() => openPlan(e)} onRemove={() => remove(e)} />
+                ) : (
+                  <OrderedRow e={e} onOpen={() => router.push(`/dish/${e.item.id}`)} onRemove={() => remove(e)} />
+                )}
+              </Animated.View>
+            )}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={styles.emptyIcon}>
+                  <Icon name="clock" size={30} color={colors.goldText} />
+                </View>
+                <Text style={type.head} role="heading">{t("No history yet")}</Text>
+                <Text style={[type.small, { textAlign: 'center' }]}>{t("When you open a pick in Zomato or Swiggy, or save a day plan, it shows up here so you can have it again in one tap.")}</Text>
+                <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
               </View>
-            )
-          }
-          renderSectionHeader={({ section }) => <Text style={styles.day}>{t(section.title)}</Text>}
-          renderItem={({ item: e, index }) => (
-            <Animated.View entering={rise(Math.min(index, 5))}>
-              {e.kind === 'plan' ? (
-                <PlanRow e={e} onOpen={() => openPlan(e)} onRemove={() => remove(e)} />
-              ) : (
-                <OrderedRow e={e} onOpen={() => router.push(`/dish/${e.item.id}`)} onRemove={() => remove(e)} />
-              )}
-            </Animated.View>
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
-                <Icon name="clock" size={30} color={colors.goldText} />
-              </View>
-              <Text style={type.head}>{t("No history yet")}</Text>
-              <Text style={[type.small, { textAlign: 'center' }]}>{t("When you open a pick in Zomato or Swiggy, or save a day plan, it shows up here so you can have it again in one tap.")}</Text>
-              <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
-            </View>
-          }
-          ListFooterComponent={
-            history.length ? (
-              <View style={styles.footer}>
-                {more ? <Button title={t("Show older")} variant="outline" loading={loadingMore} onPress={loadMore} style={{ alignSelf: 'stretch' }} /> : null}
-                <Pressable onPress={clearAll} hitSlop={8} style={styles.clear}>
-                  <Text style={styles.clearText}>{t("Clear history")}</Text>
-                </Pressable>
-              </View>
-            ) : null
-          }
-        />
+            }
+            ListFooterComponent={
+              history.length ? (
+                <View style={styles.footer}>
+                  {more ? <Button title={t("Show older")} variant="outline" loading={loadingMore} onPress={loadMore} style={{ alignSelf: 'stretch' }} /> : null}
+                  <Pressable role="button" onPress={clearAll} hitSlop={8} style={styles.clear}>
+                    <Text style={styles.clearText}>{t("Clear history")}</Text>
+                  </Pressable>
+                </View>
+              ) : null
+            }
+          />
+        </View>
       )}
     </View>
   );

@@ -126,14 +126,14 @@ export default function Recipe() {
         </Animated.View>
 
         <View style={styles.section}>
-          <Text style={type.head}>{t("Ingredients")}</Text>
+          <Text style={type.head} role="heading">{t("Ingredients")}</Text>
           {shown.map((i, n) => (
             <Ingredient key={i.id} item={i} n={Math.min(n, 10)} />
           ))}
         </View>
 
         <View style={styles.section}>
-          <Text style={type.head}>
+          <Text style={type.head} role="heading">
             {t('{n} steps · about {time} min', { n: recipe.steps.length, time: recipe.time })}
           </Text>
           {recipe.steps.map((s) => (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import MaroonBand from '../components/MaroonBand';
 import IconButton from '../components/IconButton';
 import Icon, { DietMark } from '../components/Icon';
 import Button from '../components/Button';
+import { SkeletonList } from '../components/Skeleton';
 import HeartButton from '../components/HeartButton';
 import DishMeta, { isPlace } from '../components/DishMeta';
 import { PressScale, rise } from '../components/Motion';
@@ -35,6 +36,13 @@ export default function Saved() {
   }
   useEffect(load, [loadSaved]);
 
+  const [refreshing, setRefreshing] = useState(false);
+  async function refresh() {
+    setRefreshing(true);
+    await loadSaved().catch(() => {});
+    setRefreshing(false);
+  }
+
   const header = (
     <MaroonBand height={bandHeight}>
       <View style={[styles.header, { marginTop: insets.top + space.base }]}>
@@ -53,47 +61,50 @@ export default function Saved() {
     <View style={styles.root}>
       {header}
       {state === 'loading' && !saved.length ? (
-        <ActivityIndicator color={colors.red} style={{ marginTop: bandHeight + space.xl }} />
+        <SkeletonList style={{ marginTop: bandHeight }} />
       ) : state === 'error' && !saved.length ? (
         <View style={[styles.empty, { marginTop: bandHeight }]}>
-          <Text style={type.head}>{t("Couldn't load your saved picks")}</Text>
+          <Text style={type.head} role="heading">{t("Couldn't load your saved picks")}</Text>
           <Text style={[type.small, { textAlign: 'center' }]}>{error}</Text>
           <Button title={t("Try again")} variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
         </View>
       ) : (
-        <FlatList
-          style={{ marginTop: bandHeight }}
-          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
-          data={saved}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
-                <Icon name="heart" size={30} color={colors.red} />
-              </View>
-              <Text style={type.head}>{t("Nothing saved yet")}</Text>
-              <Text style={[type.small, { textAlign: 'center' }]}>{t("Tap ♡ on any dish or place and it'll wait for you here.")}</Text>
-              <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
-            </View>
-          }
-          renderItem={({ item, index }) => (
-            <Animated.View entering={rise(Math.min(index, 6))} style={styles.card}>
-              <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: item.name })} onPress={() => router.push(`/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
-                <View style={styles.nameRow}>
-                  {isPlace(item) || !item.diet ? null : <DietMark type={item.diet === 'veg' ? 'veg' : 'nonveg'} />}
-                  <Text style={styles.name} numberOfLines={2}>
-                    {item.name}
-                  </Text>
+        // The offset sits on a wrapper: on web, a list with pull-to-refresh applies its margin twice.
+        <View style={{ flex: 1, marginTop: bandHeight }}>
+          <FlatList
+            contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
+            data={saved}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.red} />}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={styles.emptyIcon}>
+                  <Icon name="heart" size={30} color={colors.red} />
                 </View>
-                <Text style={type.small} numberOfLines={1}>
-                  {[item.restaurant, item.cuisine !== item.restaurant && item.cuisine].filter(Boolean).join(' · ')}
-                </Text>
-                {item.price != null || isPlace(item) ? <DishMeta pick={item} /> : null}
-              </PressScale>
-              <HeartButton pick={item} size={44} />
-            </Animated.View>
-          )}
-        />
+                <Text style={type.head} role="heading">{t("Nothing saved yet")}</Text>
+                <Text style={[type.small, { textAlign: 'center' }]}>{t("Tap ♡ on any dish or place and it'll wait for you here.")}</Text>
+                <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
+              </View>
+            }
+            renderItem={({ item, index }) => (
+              <Animated.View entering={rise(Math.min(index, 6))} style={styles.card}>
+                <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: item.name })} onPress={() => router.push(`/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
+                  <View style={styles.nameRow}>
+                    {isPlace(item) || !item.diet ? null : <DietMark type={item.diet === 'veg' ? 'veg' : 'nonveg'} />}
+                    <Text style={styles.name} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                  </View>
+                  <Text style={type.small} numberOfLines={1}>
+                    {[item.restaurant, item.cuisine !== item.restaurant && item.cuisine].filter(Boolean).join(' · ')}
+                  </Text>
+                  {item.price != null || isPlace(item) ? <DishMeta pick={item} /> : null}
+                </PressScale>
+                <HeartButton pick={item} size={44} />
+              </Animated.View>
+            )}
+          />
+        </View>
       )}
     </View>
   );

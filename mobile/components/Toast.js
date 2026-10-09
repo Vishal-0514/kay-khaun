@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { create } from 'zustand';
@@ -14,7 +14,11 @@ const useToastStore = create((set) => ({
   hide: () => set({ toast: null }),
 }));
 
-export const toast = (text, icon) => useToastStore.getState().show(text, icon);
+export const toast = (text, icon) => {
+  useToastStore.getState().show(text, icon);
+  // Screen readers say it out loud too (iOS doesn't read live regions reliably).
+  if (Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(text);
+};
 
 export function ToastHost() {
   const current = useToastStore((s) => s.toast);

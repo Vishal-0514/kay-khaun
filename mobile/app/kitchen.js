@@ -46,7 +46,7 @@ function Chip({ item, onRemove, onConfirm }) {
   const unsure = item.sure === false;
   return (
     <Animated.View entering={rise(0)} exiting={leave} layout={smoothLayout} style={[styles.chip, unsure && styles.chipUnsure]}>
-      <Pressable onPress={unsure ? onConfirm : undefined} disabled={!unsure} aria-label={unsure ? t('Confirm {name}', { name: t(item.label) }) : undefined} hitSlop={4}>
+      <Pressable role={unsure ? "button" : undefined} onPress={unsure ? onConfirm : undefined} disabled={!unsure} aria-label={unsure ? t('Confirm {name}', { name: t(item.label) }) : undefined} hitSlop={4}>
         <Text style={styles.chipText}>
           {t(item.label)}
           {unsure ? '?' : ''}

@@ -5,13 +5,19 @@
     "scheme": "kyakhaun",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FFFBF4",
     "android": {
       "package": "app.kyakhaun",
       "permissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-monochrome.png",
+        "backgroundColor": "#5C0A0F"
+      }
     },
     "ios": {
       "bundleIdentifier": "app.kyakhaun",
@@ -19,6 +25,15 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#5C0A0F"
+        }
+      ],
       "expo-status-bar",
       "expo-secure-store",
       "expo-web-browser",
@@ -49,6 +64,7 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/notification-icon.png",
           "color": "#C8161D"
         }
       ]
@@ -58,6 +74,9 @@
       "eas": {
         "projectId": "6ff91634-5a35-43b8-bdf4-94ad502c6ff2"
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

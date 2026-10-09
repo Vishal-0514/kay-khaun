@@ -7,6 +7,7 @@ import { errorMessage } from '../lib/api';
 import { notify } from '../lib/notify';
 import { colors, radius } from '../lib/theme';
 import { t } from '../lib/i18n';
+import { success, tap } from '../lib/haptics';
 
 // ♡ save / unsave a pick. onDark for the maroon band; otherwise a 52px tile.
 export default function HeartButton({ pick, onDark = false, size = onDark ? 44 : 52 }) {
@@ -16,6 +17,8 @@ export default function HeartButton({ pick, onDark = false, size = onDark ? 44 :
   async function press() {
     try {
       const now = await toggleSave(pick);
+      if (now) success();
+      else tap();
       toast(now ? t('Saved — find it in Profile → Saved') : t('Removed from Saved'), now ? 'heart' : 'check');
     } catch (err) {
       notify(t("Couldn't save"), errorMessage(err));

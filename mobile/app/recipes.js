@@ -36,7 +36,7 @@ export default function Recipes() {
             {t(count === 1 ? 'Using {n} thing from your kitchen' : 'Using {n} things from your kitchen', { n: count })}
           </Text>
         </View>
-        <Pressable onPress={() => router.push('/kitchen')} hitSlop={8}>
+        <Pressable role="button" aria-label={t('Edit what is in your kitchen')} onPress={() => router.push('/kitchen')} hitSlop={8}>
           <Text style={styles.edit}>{t("Edit")}</Text>
         </Pressable>
       </View>

@@ -8,6 +8,8 @@ import Icon from '../../components/Icon';
 import DishMeta from '../../components/DishMeta';
 import PlateRing from '../../components/PlateRing';
 import VoiceBars from '../../components/VoiceBars';
+import ChatRow, { useOpenChat } from '../../components/ChatRow';
+import { press, tap } from '../../lib/haptics';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { PressScale, TypingDots, fromRight, rise } from '../../components/Motion';
 import { useChatStore } from '../../store/useChatStore';
@@ -91,6 +93,9 @@ export default function Chat() {
   const sending = useChatStore((s) => s.sending);
   const send = useChatStore((s) => s.send);
   const newChat = useChatStore((s) => s.newChat);
+  const recent = useChatStore((s) => s.recent);
+  const loadRecent = useChatStore((s) => s.loadRecent);
+  const openChat = useOpenChat();
   const [text, setText] = useState('');
   const [hint, setHint] = useState(null);
   // Speak a craving: the live words show in the bar, and it sends when you stop.
@@ -101,6 +106,17 @@ export default function Chat() {
 
   const messages = conversation?.messages ?? [];
   const lastAi = [...messages].reverse().find((m) => m.role === 'ai');
+
+  // An empty chat shows the last few chats to pick up again.
+  const empty = !conversation;
+  useEffect(() => {
+    if (empty) loadRecent().catch(() => {});
+  }, [empty, loadRecent]);
+
+  function startNew() {
+    tap();
+    newChat();
+  }
 
   useEffect(() => {
     if (focus) setTimeout(() => inputRef.current?.focus(), 300);
@@ -127,6 +143,7 @@ export default function Chat() {
     }
     setHint(null);
     inputRef.current?.blur();
+    press();
     talk.start();
   }
 
@@ -138,6 +155,7 @@ export default function Chat() {
     const msg = (value ?? text).trim();
     if (!msg || sending) return;
     setText('');
+    press();
     try {
       await send(msg);
     } catch (err) {
@@ -244,7 +262,9 @@ export default function Chat() {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <MaroonBand height={92 + insets.top}>
         <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-          <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+          <View style={styles.headerSide}>
+            <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+          </View>
           <View style={{ alignItems: 'center' }}>
             <Text style={styles.headerTitle}>{t("Chatora")}</Text>
             <View style={styles.statusRow}>
@@ -252,7 +272,10 @@ export default function Chat() {
               <Text style={styles.status}>{t("Your food guide")}</Text>
             </View>
           </View>
-          <IconButton name="plus" label={t("New chat")} onDark onPress={newChat} />
+          <View style={[styles.headerSide, { justifyContent: 'flex-end' }]}>
+            <IconButton name="list" label={t('Recent chats')} onDark onPress={() => router.push('/chats')} />
+            <IconButton name="plus" label={t("New chat")} onDark onPress={startNew} />
+          </View>
         </View>
       </MaroonBand>
 
@@ -282,6 +305,19 @@ export default function Chat() {
                 </Animated.View>
               ))}
             </View>
+            {recent.length ? (
+              <Animated.View entering={rise(0, 450)} style={styles.recent}>
+                <View style={styles.recentHead}>
+                  <Text style={type.label}>{t('Recent chats')}</Text>
+                  <Pressable onPress={() => router.push('/chats')} hitSlop={8} role="link">
+                    <Text style={styles.recentLink}>{t('See all')}</Text>
+                  </Pressable>
+                </View>
+                {recent.slice(0, 3).map((c) => (
+                  <ChatRow key={c.id} chat={c} showDay onOpen={() => openChat(c.id)} />
+                ))}
+              </Animated.View>
+            ) : null}
           </View>
         }
         ListFooterComponent={
@@ -351,6 +387,10 @@ export default function Chat() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg },
+  headerSide: { width: 96, flexDirection: 'row', gap: space.sm },
+  recent: { gap: space.md, marginTop: space.sm },
+  recentHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  recentLink: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   headerTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.cream },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#5FD08A' },

@@ -11,6 +11,8 @@ import { colors } from '../lib/theme';
 import { ToastHost } from '../components/Toast';
 import { listenForReminders } from '../lib/reminders';
 import { useLang } from '../lib/i18n';
+import WakingUp from '../components/WakingUp';
+import { useWake } from '../lib/wake';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -26,6 +28,8 @@ export default function RootLayout() {
   const ready = useAuthStore((s) => s.ready);
   const lang = useLang((s) => s.lang);
   const langReady = useLang((s) => s.ready);
+  // On launch the server may be asleep: show "Waking up Chatora…" instead of a frozen splash.
+  const waiting = useWake((s) => s.waking || s.offline);
 
   useEffect(() => {
     useLang.getState().load();
@@ -34,11 +38,20 @@ export default function RootLayout() {
     return listenForReminders((url) => router.push(url));
   }, []);
 
+  const loaded = fontsLoaded && langReady;
   useEffect(() => {
-    if (fontsLoaded && ready && langReady) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded, ready, langReady]);
+    if (loaded && (ready || waiting)) SplashScreen.hideAsync().catch(() => {});
+  }, [loaded, ready, waiting]);
 
-  if (!fontsLoaded || !ready || !langReady) return null;
+  if (!loaded) return null;
+  if (!ready) {
+    return waiting ? (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <WakingUp />
+      </SafeAreaProvider>
+    ) : null;
+  }
 
   return (
     <SafeAreaProvider>
@@ -54,6 +67,7 @@ export default function RootLayout() {
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
+      <WakingUp />
       <ToastHost />
     </SafeAreaProvider>
   );

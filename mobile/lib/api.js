@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 import { t, currentLang } from './i18n';
+import { serverAway, wakeServer } from './wake';
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4100/api';
 
@@ -38,6 +39,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
+    // The server was asleep: wait for it to wake (showing "Waking up Chatora…"), then try once more.
+    if (original && serverAway(error) && !original._woken) {
+      original._woken = true;
+      if ((await wakeServer()) === 'woke') return api(original);
+      return Promise.reject(error);
+    }
     if (error.response?.data?.code === 'TOKEN_EXPIRED' && !original._retried) {
       original._retried = true;
       try {

@@ -15,6 +15,8 @@ import { notify } from '../lib/notify';
 import { planMessage, shareText } from '../lib/share';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
+import Tip from '../components/Tip';
+import { press, success, tap } from '../lib/haptics';
 
 const BUDGETS = [500, 800, 1200, 2000];
 const PEOPLE = [1, 2, 3, 4, 5, 6];
@@ -159,6 +161,7 @@ export default function Plan() {
     setSaving(true);
     try {
       await saveDay();
+      success();
       toast(t('Saved to your History'));
     } catch (err) {
       notify(t("Couldn't save this day"), errorMessage(err));
@@ -232,6 +235,8 @@ export default function Plan() {
           )}
         </View>
 
+        {plan?.meals.length ? <Tip id="plan-swap" icon="restart" style={styles.tip} text={t('Not feeling a meal? Tap Swap. Want to make it yourself? Tap \"or cook it at home\".')} /> : null}
+
         <View style={styles.timeline}>
           {plan?.meals.map((m, n) => (
             <MealCard
@@ -242,8 +247,14 @@ export default function Plan() {
               choice={choice}
               cooking={Boolean(cook[m.meal])}
               loading={loading}
-              onSwap={swap}
-              onCook={toggleCook}
+              onSwap={(meal) => {
+                press();
+                swap(meal);
+              }}
+              onCook={(meal) => {
+                tap();
+                toggleCook(meal);
+              }}
               onOpen={(p) => router.push(`/dish/${p.id}`)}
               onRecipe={(r) => router.push(`/recipe/${r.id}`)}
             />
@@ -304,6 +315,7 @@ const styles = StyleSheet.create({
   avatarText: { fontFamily: fonts.displayBold, fontSize: 14, lineHeight: 18, color: colors.gold },
   note: { flex: 1, ...type.body, color: colors.ink },
   noteStale: { opacity: 0.45 },
+  tip: { marginHorizontal: space.base, marginTop: space.base },
   typing: { alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, borderTopLeftRadius: 4, backgroundColor: colors.surface, ...shadow.card },
   timeline: { marginHorizontal: space.lg, marginTop: space.lg },
   mealRow: { flexDirection: 'row', gap: space.md },
