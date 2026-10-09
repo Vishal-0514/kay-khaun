@@ -15,6 +15,7 @@ import { errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { useVoice, voiceUnavailableReason } from '../../lib/voice';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
 const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
 const DIET = { veg: 'Veg', nonveg: 'Non-veg', egg: 'Egg' };
@@ -30,29 +31,29 @@ function Avatar() {
 
 // "Under ₹1200 for 4", "Under ₹300 each", "About ₹500".
 function budgetText(slip) {
-  const base = `${slip.budgetFromProfile ? 'About' : 'Under'} ₹${slip.budget}`;
+  const base = t(slip.budgetFromProfile ? 'About ₹{n}' : 'Under ₹{n}', { n: slip.budget });
   if (!slip.people) return base;
-  return slip.budgetPerPerson ? `${base} each` : `${base} for ${slip.people}`;
+  return slip.budgetPerPerson ? t('{budget} each', { budget: base }) : t('{budget} for {n}', { budget: base, n: slip.people });
 }
 
 // The "order slip": what Chatora has understood so far, ticked off line by line.
 function OrderSlip({ slip }) {
   const rows = [
     ['Craving', slip.craving],
-    ['Diet', DIET[slip.diet]],
-    ['People', slip.people ? `${slip.people} of you` : null],
+    ['Diet', t(DIET[slip.diet])],
+    ['People', slip.people ? t('{n} of you', { n: slip.people }) : null],
     ['Budget', slip.budget && slip.branch !== 'cook' ? budgetText(slip) : null],
-    ['Time', slip.time ? `${slip.time} min` : null],
+    ['Time', slip.time ? t('{n} min', { n: slip.time }) : null],
     ['Kitchen', slip.ingredients?.length ? slip.ingredients.slice(0, 3).join(', ') + (slip.ingredients.length > 3 ? ` +${slip.ingredients.length - 3}` : '') : null],
   ].filter(([, v]) => v);
   return (
     <View style={styles.slip}>
       <View style={[styles.notch, { left: -10 }]} />
       <View style={[styles.notch, { right: -10 }]} />
-      <Text style={styles.slipTitle}>Order slip</Text>
+      <Text style={styles.slipTitle}>{t("Order slip")}</Text>
       {rows.map(([k, v]) => (
         <View key={k} style={styles.slipRow}>
-          <Text style={styles.slipKey}>{k}</Text>
+          <Text style={styles.slipKey}>{t(k)}</Text>
           <View style={styles.slipValueRow}>
             <Text style={styles.slipValue}>{v}</Text>
             <View style={styles.tick}>
@@ -62,10 +63,10 @@ function OrderSlip({ slip }) {
         </View>
       ))}
       <View style={[styles.slipRow, { borderBottomWidth: 0 }]}>
-        <Text style={styles.slipKey}>Order or cook?</Text>
+        <Text style={styles.slipKey}>{t("Order or cook?")}</Text>
         <View style={styles.slipValueRow}>
           <Text style={[styles.slipValue, { color: slip.branch ? colors.ink : colors.red }]}>
-            {slip.branch === 'order' ? 'Order in' : slip.branch === 'cook' ? 'Cook at home' : 'Asking'}
+            {slip.branch === 'order' ? 'Order in' : slip.branch === 'cook' ? t('Cook at home') : t('Asking')}
           </Text>
           {slip.branch ? (
             <View style={styles.tick}>
@@ -134,14 +135,14 @@ export default function Chat() {
   }, [messages.length, sending]);
 
   async function submit(value) {
-    const t = (value ?? text).trim();
-    if (!t || sending) return;
+    const msg = (value ?? text).trim();
+    if (!msg || sending) return;
     setText('');
     try {
-      await send(t);
+      await send(msg);
     } catch (err) {
-      setText(t);
-      notify("Couldn't send", errorMessage(err));
+      setText(msg);
+      notify(t("Couldn't send"), errorMessage(err));
     }
   }
 
@@ -149,7 +150,7 @@ export default function Chat() {
     if (item.role === 'user') {
       return (
         <Animated.View entering={fromRight()} style={[styles.userBubble, item.pending && { opacity: 0.7 }]}>
-          <Text style={styles.userText}>{item.text}</Text>
+          <Text style={styles.userText}>{t(item.text)}</Text>
         </Animated.View>
       );
     }
@@ -158,7 +159,7 @@ export default function Chat() {
       <Animated.View entering={rise(0)} style={styles.aiRow}>
         <Avatar />
         <View style={styles.aiBody}>
-          <Text style={item.kind === 'question' && isLatest ? styles.aiQuestion : styles.aiText}>{item.text}</Text>
+          <Text style={item.kind === 'question' && isLatest ? styles.aiQuestion : styles.aiText}>{t(item.text)}</Text>
           {item.kind === 'question' && isLatest && conversation?.slip ? <OrderSlip slip={conversation.slip} /> : null}
           {item.kind === 'picks' && item.picks?.length ? (
             <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/results')}>
@@ -175,7 +176,7 @@ export default function Chat() {
                 <DishMeta pick={item.picks[0]} />
               </View>
               <View style={styles.seeAll}>
-                <Text style={styles.seeAllText}>See all {item.picks.length}</Text>
+                <Text style={styles.seeAllText}>{t('See all {n}', { n: item.picks.length })}</Text>
                 <Icon name="chevron" size={16} color={colors.red} />
               </View>
             </PressScale>
@@ -192,11 +193,11 @@ export default function Chat() {
                   {item.recipes[0].name}
                 </Text>
                 <Text style={type.small} numberOfLines={1}>
-                  {item.recipes[0].time} min · {item.recipes[0].level}
+                  {t('{n} min', { n: item.recipes[0].time })} · {t(item.recipes[0].level)}
                 </Text>
               </View>
               <View style={styles.seeAll}>
-                <Text style={styles.seeAllText}>See all {item.recipes.length}</Text>
+                <Text style={styles.seeAllText}>{t('See all {n}', { n: item.recipes.length })}</Text>
                 <Icon name="chevron" size={16} color={colors.red} />
               </View>
             </PressScale>
@@ -215,7 +216,7 @@ export default function Chat() {
                     style={[styles.pill, o.id === 'scan' && styles.pillMain]}
                   >
                     <Icon name={o.id === 'scan' ? 'camera' : o.id === 'order' ? 'bag' : 'pot'} size={18} color={o.id === 'scan' ? '#FFFFFF' : colors.ink} />
-                    <Text style={[styles.pillText, o.id === 'scan' && { color: '#FFFFFF' }]}>{o.id === 'scan' ? 'Scan or pick ingredients' : o.label}</Text>
+                    <Text style={[styles.pillText, o.id === 'scan' && { color: '#FFFFFF' }]}>{o.id === 'scan' ? t('Scan or pick ingredients') : t(o.label)}</Text>
                   </PressScale>
                 ))}
             </View>
@@ -227,8 +228,8 @@ export default function Chat() {
                   <View style={[styles.choiceIcon, { backgroundColor: o.id === 'order' ? colors.redSoft : colors.goldSoft }]}>
                     <Icon name={o.id === 'order' ? 'bag' : 'pot'} size={24} color={o.id === 'order' ? colors.red : colors.goldText} />
                   </View>
-                  <Text style={styles.choiceTitle}>{o.label}</Text>
-                  <Text style={styles.choiceSub}>{o.id === 'order' ? 'Delivered in ~25 min' : 'From your fridge'}</Text>
+                  <Text style={styles.choiceTitle}>{t(o.label)}</Text>
+                  <Text style={styles.choiceSub}>{o.id === 'order' ? t('Delivered in ~25 min') : t('From your fridge')}</Text>
                 </PressScale>
                 </Animated.View>
               ))}
@@ -243,15 +244,15 @@ export default function Chat() {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <MaroonBand height={92 + insets.top}>
         <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-          <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+          <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
           <View style={{ alignItems: 'center' }}>
-            <Text style={styles.headerTitle}>Chatora</Text>
+            <Text style={styles.headerTitle}>{t("Chatora")}</Text>
             <View style={styles.statusRow}>
               <View style={styles.statusDot} />
-              <Text style={styles.status}>Your food guide</Text>
+              <Text style={styles.status}>{t("Your food guide")}</Text>
             </View>
           </View>
-          <IconButton name="plus" label="New chat" onDark onPress={newChat} />
+          <IconButton name="plus" label={t("New chat")} onDark onPress={newChat} />
         </View>
       </MaroonBand>
 
@@ -268,8 +269,8 @@ export default function Chat() {
             <View style={styles.aiRow}>
               <Avatar />
               <View style={styles.aiBody}>
-                <Text style={styles.aiQuestion}>Hi! What are you in the mood for?</Text>
-                <Text style={styles.aiText}>Tell me a craving, a budget or how quickly you need it. Any language is fine.</Text>
+                <Text style={styles.aiQuestion}>{t("Hi! What are you in the mood for?")}</Text>
+                <Text style={styles.aiText}>{t("Tell me a craving, a budget or how quickly you need it. Any language is fine.")}</Text>
               </View>
             </View>
             <View style={styles.suggestions}>
@@ -287,7 +288,7 @@ export default function Chat() {
           sending ? (
             <Animated.View entering={rise(0)} style={styles.aiRow}>
               <Avatar />
-              <View style={styles.typing} aria-label="Chatora is thinking">
+              <View style={styles.typing} aria-label={t("Chatora is thinking")}>
                 <TypingDots color={colors.red} />
               </View>
             </Animated.View>
@@ -304,13 +305,13 @@ export default function Chat() {
 
       {talk.listening ? (
         <Animated.View key="listening" entering={FadeIn.duration(220)} style={[styles.inputBar, styles.listenBar, { marginBottom: space.md }]}>
-          <PressScale scaleTo={0.88} role="button" aria-label="Cancel" onPress={talk.cancel} style={styles.cancelBtn}>
+          <PressScale scaleTo={0.88} role="button" aria-label={t("Cancel")} onPress={talk.cancel} style={styles.cancelBtn}>
             <Icon name="close" size={18} color={colors.muted} />
           </PressScale>
           <Text style={[styles.heard, !talk.heard && styles.heardWaiting]} numberOfLines={2} aria-live="polite">
-            {talk.heard || 'Listening… bolo, kya khaane ka mood hai?'}
+            {talk.heard || t('Listening… bolo, kya khaane ka mood hai?')}
           </Text>
-          <PressScale scaleTo={0.88} role="button" aria-label="Done speaking" onPress={talk.stop} style={styles.sendBtn}>
+          <PressScale scaleTo={0.88} role="button" aria-label={t("Done speaking")} onPress={talk.stop} style={styles.sendBtn}>
             <VoiceBars level={talk.level} color="#FFFFFF" height={22} />
           </PressScale>
         </Animated.View>
@@ -323,20 +324,20 @@ export default function Chat() {
           placeholder='Try "kuch teekha, 400 ke andar"'
           placeholderTextColor="#B3A196"
           style={styles.input}
-          aria-label="Message Chatora"
+          aria-label={t("Message Chatora")}
           returnKeyType="send"
           onSubmitEditing={() => submit()}
           maxLength={500}
         />
         {text.trim() ? (
           <Animated.View key="send" entering={FadeIn.duration(220)}>
-            <PressScale scaleTo={0.88} role="button" aria-label="Send" onPress={() => submit()} disabled={sending} style={styles.sendBtn}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t("Send")} onPress={() => submit()} disabled={sending} style={styles.sendBtn}>
               <Icon name="send" size={20} color="#FFFFFF" />
             </PressScale>
           </Animated.View>
         ) : (
           <Animated.View key="mic" entering={FadeIn.duration(220)}>
-            <PressScale scaleTo={0.88} role="button" aria-label="Speak" onPress={listen} disabled={sending} style={styles.sendBtn}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t("Speak")} onPress={listen} disabled={sending} style={styles.sendBtn}>
               <Icon name="mic" size={22} color="#FFFFFF" />
             </PressScale>
           </Animated.View>

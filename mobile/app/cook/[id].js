@@ -13,6 +13,7 @@ import { PressScale, appear, fromRight, leave, rise } from '../../components/Mot
 import { useCookStore } from '../../store/useCookStore';
 import { errorMessage } from '../../lib/api';
 import { colors, fonts, radius, space } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
 // Step-by-step cooking with big text, timers, and the screen kept awake. Design: V5Cook.
 const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -110,12 +111,12 @@ export default function Cook() {
     <View style={styles.root}>
       <MaroonBand height="100%" rounded={false} />
       <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-        <IconButton name="close" label="Exit cook mode" onDark onPress={exit} />
+        <IconButton name="close" label={t("Exit cook mode")} onDark onPress={exit} />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={styles.title} numberOfLines={1}>
             {recipe.name}
           </Text>
-          <Text style={styles.stepCount}>{done ? 'All done' : `Step ${index + 1} of ${total}`}</Text>
+          <Text style={styles.stepCount}>{done ? t('All done') : t('Step {n} of {total}', { n: index + 1, total })}</Text>
         </View>
         <View style={{ width: 44 }} />
       </View>
@@ -135,13 +136,13 @@ export default function Cook() {
             </PlateRing>
           </Animated.View>
           <Animated.Text entering={rise(0, 500)} style={styles.doneTitle}>
-            Enjoy your {recipe.name}!
+            {t('Enjoy your {name}!', { name: recipe.name })}
           </Animated.Text>
-          <Text style={styles.doneText}>Cooked from your own kitchen — nice work.</Text>
+          <Text style={styles.doneText}>{t("Cooked from your own kitchen — nice work.")}</Text>
           <View style={{ alignSelf: 'stretch', gap: space.sm, marginTop: space.lg }}>
-            <Button title="Back to Home" variant="gold" onPress={() => router.replace('/home')} />
+            <Button title={t("Back to Home")} variant="gold" onPress={() => router.replace('/home')} />
             <Pressable role="button" onPress={() => router.replace('/recipes')} style={styles.again}>
-              <Text style={styles.againText}>Cook something else</Text>
+              <Text style={styles.againText}>{t("Cook something else")}</Text>
             </Pressable>
           </View>
         </View>
@@ -154,28 +155,28 @@ export default function Cook() {
                 <>
                   <PlateRing size={210} value={timer.left / Math.max(step.timer, timer.left)} dark ticks instant={timer.running}>
                     <Text style={[styles.time, timeUp && { color: colors.gold }]}>{timeUp ? "Time's up" : clock(timer.left)}</Text>
-                    <Text style={styles.timeLabel}>{timeUp ? 'Check and move on' : timer.running ? 'left on timer' : timer.left === step.timer ? 'timer ready' : 'paused'}</Text>
+                    <Text style={styles.timeLabel}>{timeUp ? t('Check and move on') : timer.running ? t('left on timer') : timer.left === step.timer ? t('timer ready') : t('paused')}</Text>
                   </PlateRing>
                   <View style={styles.pills}>
                     {timeUp ? (
-                      <Pill icon="restart" label="Restart" onPress={timer.reset} />
+                      <Pill icon="restart" label={t("Restart")} onPress={timer.reset} />
                     ) : timer.running ? (
-                      <Pill icon="pause" label="Pause" onPress={timer.pause} />
+                      <Pill icon="pause" label={t("Pause")} onPress={timer.pause} />
                     ) : (
-                      <Pill icon="play" label={timer.left === step.timer ? 'Start timer' : 'Resume'} onPress={timer.start} />
+                      <Pill icon="play" label={timer.left === step.timer ? t('Start timer') : t('Resume')} onPress={timer.start} />
                     )}
-                    <Pill icon="plus" label="1 min" onPress={timer.addMinute} />
+                    <Pill icon="plus" label={t("1 min")} onPress={timer.addMinute} />
                   </View>
                 </>
               ) : (
                 <PlateRing size={170} value={(index + 1) / total} dark ticks>
                   <Text style={styles.time}>{index + 1}</Text>
-                  <Text style={styles.timeLabel}>of {total} steps</Text>
+                  <Text style={styles.timeLabel}>{t('of {total} steps', { total })}</Text>
                 </PlateRing>
               )}
             </View>
 
-            <Text style={styles.stepText}>{step.text}</Text>
+            <Text style={styles.stepText}>{t(step.text)}</Text>
             {step.uses.length ? (
               <View style={styles.uses}>
                 {step.uses.map((u) => (
@@ -189,7 +190,7 @@ export default function Cook() {
               <View style={styles.tip}>
                 <Icon name="spark" size={18} color={colors.gold} />
                 <Text style={styles.tipText}>
-                  <Text style={{ fontFamily: fonts.bold, color: colors.cream }}>Tip: </Text>
+                  <Text style={{ fontFamily: fonts.bold, color: colors.cream }}>{t("Tip:")}</Text>
                   {step.tip}
                 </Text>
               </View>
@@ -198,11 +199,11 @@ export default function Cook() {
           </ScrollView>
 
           <View style={[styles.nav, { paddingBottom: insets.bottom + space.lg }]}>
-            <PressScale scaleTo={0.9} role="button" aria-label="Previous step" disabled={index === 0} onPress={() => setIndex((i) => i - 1)} style={[styles.prev, index === 0 && { opacity: 0.35 }]}>
+            <PressScale scaleTo={0.9} role="button" aria-label={t("Previous step")} disabled={index === 0} onPress={() => setIndex((i) => i - 1)} style={[styles.prev, index === 0 && { opacity: 0.35 }]}>
               <Icon name="back" size={22} color={colors.cream} />
             </PressScale>
             <Button
-              title={last ? "I'm done" : 'Next step'}
+              title={last ? t("I'm done") : t('Next step')}
               variant="gold"
               icon={<Icon name={last ? 'check' : 'arrow'} size={18} color={colors.maroon} />}
               onPress={() => (last ? setDone(true) : setIndex((i) => i + 1))}

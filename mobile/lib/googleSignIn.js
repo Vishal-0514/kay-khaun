@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { t } from './i18n';
 
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
@@ -20,8 +21,8 @@ let configured = false;
 
 // Why Google can't be used right now, or null when it can.
 export function googleUnavailableReason() {
-  if (!native) return 'Google sign-in works in the installed Kya Khaun app. For now, please continue with email.';
-  if (!WEB_CLIENT_ID) return "Google sign-in isn't set up yet. Please continue with email.";
+  if (!native) return t('Google sign-in works in the installed Kya Khaun app. For now, please continue with email.');
+  if (!WEB_CLIENT_ID) return t("Google sign-in isn't set up yet. Please continue with email.");
   return null;
 }
 

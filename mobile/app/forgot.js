@@ -8,6 +8,7 @@ import Icon from '../components/Icon';
 import { fromRight, leave, rise } from '../components/Motion';
 import { sendPasswordReset } from '../lib/firebase';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // Forgot password: Firebase emails a link to set a new password; then they log in.
 export default function Forgot() {
@@ -39,24 +40,24 @@ export default function Forgot() {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <BandHeader
         height={bandHeight}
-        title={sent ? 'Check your email' : 'Forgot your password?'}
-        subtitle={sent ? 'Follow the link to choose a new password.' : "We'll email you a link to set a new one."}
+        title={sent ? t('Check your email') : t('Forgot your password?')}
+        subtitle={sent ? t('Follow the link to choose a new password.') : t("We'll email you a link to set a new one.")}
       />
       <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 28, paddingBottom: space.xl }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={rise(0, 120)} style={styles.card}>
           {!sent ? (
             <Animated.View key="email" exiting={leave}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t("Email")}</Text>
               <View style={styles.field}>
                 <TextInput
-                  aria-label="Email"
+                  aria-label={t("Email")}
                   style={styles.input}
                   value={email}
                   onChangeText={(v) => {
                     setEmail(v);
                     setError('');
                   }}
-                  placeholder="you@example.com"
+                  placeholder={t("you@example.com")}
                   placeholderTextColor="#B3A196"
                   keyboardType="email-address"
                   autoComplete="email"
@@ -72,7 +73,7 @@ export default function Forgot() {
                   {error}
                 </Animated.Text>
               ) : null}
-              <Button sheen title="Email me a reset link" onPress={send} loading={busy} disabled={!emailOk} style={{ marginTop: space.lg }} />
+              <Button sheen title={t("Email me a reset link")} onPress={send} loading={busy} disabled={!emailOk} style={{ marginTop: space.lg }} />
             </Animated.View>
           ) : (
             <Animated.View key="sent" entering={fromRight()} style={{ alignItems: 'center' }}>
@@ -82,8 +83,8 @@ export default function Forgot() {
               <Text style={styles.text}>
                 If <Text style={styles.email}>{email.trim()}</Text> has an account, a reset link is on its way. Check your spam folder too.
               </Text>
-              <Button title="Back to log in" onPress={() => router.back()} style={{ alignSelf: 'stretch', marginTop: space.lg }} />
-              <Button variant="link" title="Send it again" onPress={send} loading={busy} />
+              <Button title={t("Back to log in")} onPress={() => router.back()} style={{ alignSelf: 'stretch', marginTop: space.lg }} />
+              <Button variant="link" title={t("Send it again")} onPress={send} loading={busy} />
             </Animated.View>
           )}
         </Animated.View>

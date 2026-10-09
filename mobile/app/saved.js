@@ -13,6 +13,7 @@ import { PressScale, rise } from '../components/Motion';
 import { useMeStore } from '../store/useMeStore';
 import { errorMessage } from '../lib/api';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 export default function Saved() {
   const router = useRouter();
@@ -37,12 +38,12 @@ export default function Saved() {
   const header = (
     <MaroonBand height={bandHeight}>
       <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-        <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
+        <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title} role="heading">
-            Saved
+            {t("Saved")}
           </Text>
-          <Text style={styles.subtitle}>{saved.length ? `${saved.length} ${saved.length === 1 ? 'pick' : 'picks'} you loved` : 'Dishes and places you ♡'}</Text>
+          <Text style={styles.subtitle}>{saved.length ? t(saved.length === 1 ? '{n} pick you loved' : '{n} picks you loved', { n: saved.length }) : t('Dishes and places you ♡')}</Text>
         </View>
       </View>
     </MaroonBand>
@@ -55,9 +56,9 @@ export default function Saved() {
         <ActivityIndicator color={colors.red} style={{ marginTop: bandHeight + space.xl }} />
       ) : state === 'error' && !saved.length ? (
         <View style={[styles.empty, { marginTop: bandHeight }]}>
-          <Text style={type.head}>Couldn't load your saved picks</Text>
+          <Text style={type.head}>{t("Couldn't load your saved picks")}</Text>
           <Text style={[type.small, { textAlign: 'center' }]}>{error}</Text>
-          <Button title="Try again" variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
+          <Button title={t("Try again")} variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
         </View>
       ) : (
         <FlatList
@@ -70,14 +71,14 @@ export default function Saved() {
               <View style={styles.emptyIcon}>
                 <Icon name="heart" size={30} color={colors.red} />
               </View>
-              <Text style={type.head}>Nothing saved yet</Text>
-              <Text style={[type.small, { textAlign: 'center' }]}>Tap ♡ on any dish or place and it'll wait for you here.</Text>
-              <Button title="Find something to eat" onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
+              <Text style={type.head}>{t("Nothing saved yet")}</Text>
+              <Text style={[type.small, { textAlign: 'center' }]}>{t("Tap ♡ on any dish or place and it'll wait for you here.")}</Text>
+              <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
             </View>
           }
           renderItem={({ item, index }) => (
             <Animated.View entering={rise(Math.min(index, 6))} style={styles.card}>
-              <PressScale scaleTo={0.98} role="button" aria-label={`Open ${item.name}`} onPress={() => router.push(`/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
+              <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: item.name })} onPress={() => router.push(`/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
                 <View style={styles.nameRow}>
                   {isPlace(item) || !item.diet ? null : <DietMark type={item.diet === 'veg' ? 'veg' : 'nonveg'} />}
                   <Text style={styles.name} numberOfLines={2}>

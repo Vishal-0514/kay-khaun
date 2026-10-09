@@ -48,6 +48,19 @@ kya-khaun-app/
 - **Saved** (Profile → Saved), **History** (Profile → History: orders grouped by day with "Again", saved days to reopen, remove one or clear all) and **Order again** on Home (last few distinct orders, one tap to the same app).
 - Profile → **What I've learned** shows the cuisines picked up, with **Clear what I've learned**.
 
+## Phase 1 extras
+
+- **Share** a pick or a day plan through the phone's share sheet (`mobile/lib/share.js`).
+- **Season specials** on Home from `server/src/data/occasions.js`. Festival dates follow the lunar calendar, so check and extend that list every year.
+- **Your week in food** on Profile (`GET /api/me/week`).
+- **Meal reminders**: opt-in daily local notifications, set on the phone only (`mobile/lib/reminders.js`, Profile → Meal reminders).
+- **Group mode**: chat understands "hum 4 log", "for two", "300 per person". A group budget is split per person unless they say per person; shareable dishes get a lift. Plan my whole day has "Who's eating" and "All veg".
+
+## Hindi interface
+
+- Profile → Language: English / हिंदी, remembered on the phone. Screens call `t('English text')` (`mobile/lib/i18n.js`); Hindi lives in `mobile/lib/i18n.hi.js`, keyed by the English text, so anything untranslated shows in English. New screen text needs a Hindi line there.
+- The app sends `Accept-Language: hi`; the server writes reasons, meal names, season specials and fallback replies in Hindi (`server/src/i18n.js`, `tr()`), and Claude writes day-plan notes in Hindi. Chat replies follow the language the person types in. Voice listens in Hindi when the interface is Hindi.
+
 ## Voice input
 
 - **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).

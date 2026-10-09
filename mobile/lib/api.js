@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
+import { t, currentLang } from './i18n';
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4100/api';
 
@@ -9,6 +10,8 @@ export const api = axios.create({ baseURL, timeout: 15000 });
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // The server writes reasons, notes and meal names in this language.
+  config.headers['Accept-Language'] = currentLang();
   return config;
 });
 
@@ -53,8 +56,8 @@ api.interceptors.response.use(
 
 // The server's own message when it sent one, otherwise a plain explanation.
 export function errorMessage(error) {
-  if (error.response?.data?.error) return error.response.data.error;
+  if (error.response?.data?.error) return t(error.response.data.error);
   // No answer, or the tunnel/proxy answered because the server is down.
-  if (error.code === 'ECONNABORTED' || !error.response || [502, 503, 504].includes(error.response.status)) return "Can't reach Kya Khaun right now. Check your internet and try again.";
-  return 'Something went wrong. Please try again.';
+  if (error.code === 'ECONNABORTED' || !error.response || [502, 503, 504].includes(error.response.status)) return t("Can't reach Kya Khaun right now. Check your internet and try again.");
+  return t('Something went wrong. Please try again.');
 }

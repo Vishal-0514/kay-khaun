@@ -11,6 +11,7 @@ import { toast } from '../components/Toast';
 import { REMINDER_MEALS, allowNotifications, applyReminders, readReminders, remindersSupported, timeLabel } from '../lib/reminders';
 import { notify } from '../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const ICON = { breakfast: 'spark', lunch: 'pot', snack: 'sweet', dinner: 'moon' };
 
@@ -27,15 +28,15 @@ export default function Reminders() {
   async function update(meal, change) {
     const next = { ...settings, [meal]: { ...settings[meal], ...change } };
     if (change.on && !(await allowNotifications())) {
-      notify('Notifications are off', 'Allow notifications for Kya Khaun in your phone settings, then turn the reminder on again.');
+      notify(t('Notifications are off'), t('Allow notifications for Kya Khaun in your phone settings, then turn the reminder on again.'));
       return;
     }
     setSettings(next);
     try {
       await applyReminders(next);
-      if (change.on) toast(`${REMINDER_MEALS.find((r) => r.meal === meal).label} reminder at ${timeLabel(next[meal].time)}`, 'clock');
+      if (change.on) toast(t('{meal} reminder at {time}', { meal: t(REMINDER_MEALS.find((r) => r.meal === meal).label), time: timeLabel(next[meal].time) }), 'clock');
     } catch {
-      notify("Couldn't set the reminder", 'Please try again.');
+      notify(t("Couldn't set the reminder"), t('Please try again.'));
     }
   }
 
@@ -43,12 +44,12 @@ export default function Reminders() {
     <View style={styles.root}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-          <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
+          <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
           <View style={{ flex: 1 }}>
             <Text style={styles.title} role="heading">
-              Meal reminders
+              {t("Meal reminders")}
             </Text>
-            <Text style={styles.subtitle}>A gentle nudge when it's time to eat</Text>
+            <Text style={styles.subtitle}>{t("A gentle nudge when it's time to eat")}</Text>
           </View>
         </View>
       </MaroonBand>
@@ -57,7 +58,7 @@ export default function Reminders() {
         {!remindersSupported ? (
           <View style={styles.notice}>
             <Icon name="clock" size={18} color={colors.goldText} />
-            <Text style={styles.noticeText}>Reminders work in the installed Kya Khaun app on your phone.</Text>
+            <Text style={styles.noticeText}>{t("Reminders work in the installed Kya Khaun app on your phone.")}</Text>
           </View>
         ) : null}
 
@@ -71,8 +72,8 @@ export default function Reminders() {
                       <Icon name={ICON[r.meal]} size={18} color={colors.red} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.meal}>{r.label}</Text>
-                      <Text style={type.small}>{s.on ? `Every day at ${timeLabel(s.time)}` : 'Off'}</Text>
+                      <Text style={styles.meal}>{t(r.label)}</Text>
+                      <Text style={type.small}>{s.on ? t('Every day at {time}', { time: timeLabel(s.time) }) : t('Off')}</Text>
                     </View>
                     <Switch
                       value={s.on}
@@ -80,14 +81,14 @@ export default function Reminders() {
                       disabled={!remindersSupported}
                       trackColor={{ true: colors.green, false: '#C9B9A6' }}
                       thumbColor="#FFFFFF"
-                      aria-label={`${r.label} reminder`}
+                      aria-label={t('{meal} reminder', { meal: t(r.label) })}
                     />
                   </View>
                   {s.on ? (
                     <View style={styles.times}>
-                      {r.times.map((t) => (
-                        <PressScale key={t} role="button" aria-selected={s.time === t} onPress={() => update(r.meal, { time: t })} style={[styles.time, s.time === t && styles.timeOn]}>
-                          <Text style={[styles.timeText, s.time === t && styles.timeTextOn]}>{timeLabel(t)}</Text>
+                      {r.times.map((time) => (
+                        <PressScale key={time} role="button" aria-selected={s.time === time} onPress={() => update(r.meal, { time })} style={[styles.time, s.time === time && styles.timeOn]}>
+                          <Text style={[styles.timeText, s.time === time && styles.timeTextOn]}>{timeLabel(time)}</Text>
                         </PressScale>
                       ))}
                     </View>
@@ -97,7 +98,7 @@ export default function Reminders() {
             })
           : null}
 
-        <Text style={styles.foot}>Reminders are set on this phone only. Nothing about them is sent to Kya Khaun, and you can turn them off any time.</Text>
+        <Text style={styles.foot}>{t("Reminders are set on this phone only. Nothing about them is sent to Kya Khaun, and you can turn them off any time.")}</Text>
       </ScrollView>
     </View>
   );

@@ -13,8 +13,9 @@ import { useCookStore } from '../../store/useCookStore';
 import { useMeStore } from '../../store/useMeStore';
 import { errorMessage } from '../../lib/api';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
-const fmtTimer = (s) => (s >= 60 ? `${Math.round(s / 60)} min` : `${s} sec`);
+const fmtTimer = (s) => (s >= 60 ? t('{n} min', { n: Math.round(s / 60) }) : t('{n} sec', { n: s }));
 
 function Fact({ icon, value }) {
   return (
@@ -33,7 +34,7 @@ function Ingredient({ item, n }) {
     optional: { bg: colors.soft, icon: null },
     basic: { bg: colors.soft, icon: null },
   }[item.status];
-  const note = { missing: 'You need this', optional: 'Optional', basic: 'Pantry' }[item.status];
+  const note = t({ missing: 'You need this', optional: 'Optional', basic: 'Pantry' }[item.status]);
   return (
     <Animated.View entering={rise(n, 350)} style={styles.ing}>
       <View style={[styles.ingMark, { backgroundColor: mark.bg }]}>{mark.icon ? <Icon name={mark.icon} size={12} color={mark.color} strokeWidth={3} /> : <View style={styles.ingDot} />}</View>
@@ -78,8 +79,8 @@ export default function Recipe() {
         {error ? (
           <>
             <Text style={[type.head, { textAlign: 'center' }]}>{error}</Text>
-            <Button title="Try again" onPress={() => openRecipe(id).catch((err) => setError(errorMessage(err)))} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
-            <Button title="Go back" variant="link" onPress={back} />
+            <Button title={t("Try again")} onPress={() => openRecipe(id).catch((err) => setError(errorMessage(err)))} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
+            <Button title={t("Go back")} variant="link" onPress={back} />
           </>
         ) : (
           <ActivityIndicator color={colors.red} size="large" />
@@ -95,7 +96,7 @@ export default function Recipe() {
       <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-            <IconButton name="back" label="Back" onDark onPress={back} />
+            <IconButton name="back" label={t("Back")} onDark onPress={back} />
           </View>
           <Animated.View entering={appear(0, 100)} style={styles.hero}>
             <PlateRing size={150} value={recipe.have / recipe.total} dark ticks>
@@ -103,7 +104,7 @@ export default function Recipe() {
                 {recipe.have}
                 <Text style={styles.ringTotal}>/{recipe.total}</Text>
               </Text>
-              <Text style={styles.ringLabel}>you have</Text>
+              <Text style={styles.ringLabel}>{t("you have")}</Text>
             </PlateRing>
             <View style={styles.nameRow}>
               <DietMark type={recipe.diet === 'veg' ? 'veg' : 'nonveg'} size={16} />
@@ -112,20 +113,20 @@ export default function Recipe() {
               </Text>
             </View>
             <View style={styles.facts}>
-              <Fact icon="clock" value={`${recipe.time} min`} />
+              <Fact icon="clock" value={t('{n} min', { n: recipe.time })} />
               <Fact icon="flame" value={recipe.level} />
-              <Fact icon="people" value={`Serves ${recipe.serves}`} />
+              <Fact icon="people" value={t('Serves {n}', { n: recipe.serves })} />
             </View>
           </Animated.View>
         </MaroonBand>
 
         <Animated.View entering={riseUp(0, 280)} style={[styles.card, { marginTop: bandHeight - 36 }]}>
           <Icon name="spark" size={18} color={colors.goldText} />
-          <Text style={styles.cardText}>{recipe.missing.length ? `You'll need ${recipe.missing.map((m) => m.label.toLowerCase()).join(' and ')}. ${recipe.reason}.` : `${recipe.reason}.`}</Text>
+          <Text style={styles.cardText}>{recipe.missing.length ? t("You'll need {list}.", { list: recipe.missing.map((m) => t(m.label).toLowerCase()).join(t(' and ')) }) + ` ${recipe.reason}.` : `${recipe.reason}.`}</Text>
         </Animated.View>
 
         <View style={styles.section}>
-          <Text style={type.head}>Ingredients</Text>
+          <Text style={type.head}>{t("Ingredients")}</Text>
           {shown.map((i, n) => (
             <Ingredient key={i.id} item={i} n={Math.min(n, 10)} />
           ))}
@@ -133,7 +134,7 @@ export default function Recipe() {
 
         <View style={styles.section}>
           <Text style={type.head}>
-            {recipe.steps.length} steps · about {recipe.time} min
+            {t('{n} steps · about {time} min', { n: recipe.steps.length, time: recipe.time })}
           </Text>
           {recipe.steps.map((s) => (
             <View key={s.n} style={styles.step}>
@@ -141,11 +142,11 @@ export default function Recipe() {
                 <Text style={styles.stepNumText}>{s.n}</Text>
               </View>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={styles.stepText}>{s.text}</Text>
+                <Text style={styles.stepText}>{t(s.text)}</Text>
                 {s.timer ? (
                   <View style={styles.stepTimer}>
                     <Icon name="clock" size={13} color={colors.goldText} />
-                    <Text style={styles.stepTimerText}>{fmtTimer(s.timer)} timer</Text>
+                    <Text style={styles.stepTimerText}>{t('{time} timer', { time: fmtTimer(s.timer) })}</Text>
                   </View>
                 ) : null}
               </View>
@@ -155,7 +156,7 @@ export default function Recipe() {
       </ScrollView>
 
       <Animated.View entering={sheetUp(300)} style={[styles.bar, { paddingBottom: insets.bottom + space.md }]}>
-        <Button title="Start cooking" icon={<Icon name="play" size={16} color="#FFFFFF" />} onPress={() => router.push(`/cook/${recipe.id}`)} style={{ flex: 1 }} />
+        <Button title={t("Start cooking")} icon={<Icon name="play" size={16} color="#FFFFFF" />} onPress={() => router.push(`/cook/${recipe.id}`)} style={{ flex: 1 }} />
       </Animated.View>
     </View>
   );

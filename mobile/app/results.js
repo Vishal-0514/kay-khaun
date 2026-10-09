@@ -13,15 +13,16 @@ import DishMeta, { isPlace, shortPrice } from '../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
 import HeartButton from '../components/HeartButton';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street: 'Street', sweet: 'Sweet' };
 
 function subtitleFor(source, slip) {
-  if (source?.kind === 'mood') return `${MOOD_TITLE[source.label]} picks near you`;
-  if (source?.kind === 'pick') return 'Based on your taste profile';
-  if (source?.kind === 'occasion') return `${source.label} near you`;
-  if (!slip) return 'Order in';
-  return [slip.craving, slip.budget && `under ₹${slip.budget}`, slip.time && `${slip.time} min`].filter(Boolean).join(' · ');
+  if (source?.kind === 'mood') return t('{mood} picks near you', { mood: t(MOOD_TITLE[source.label]) });
+  if (source?.kind === 'pick') return t('Based on your taste profile');
+  if (source?.kind === 'occasion') return t('{name} near you', { name: source.label });
+  if (!slip) return t('Order in');
+  return [slip.craving, slip.budget && t('under ₹{n}', { n: slip.budget }), slip.time && t('{n} min', { n: slip.time })].filter(Boolean).join(' · ');
 }
 
 function Stat({ label, value }) {
@@ -46,36 +47,36 @@ export default function Results() {
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: insets.bottom + space.xl }}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-          <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+          <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
           <View style={{ flex: 1 }}>
             <Text style={styles.title} role="heading">
-              Top {picks.length || 5} for you
+              {t('Top {n} for you', { n: picks.length || 5 })}
             </Text>
             <Text style={styles.subtitle} numberOfLines={1}>
               {subtitleFor(source, slip)}
             </Text>
           </View>
           <Pressable onPress={() => router.push('/chat')} hitSlop={8}>
-            <Text style={styles.edit}>Edit</Text>
+            <Text style={styles.edit}>{t("Edit")}</Text>
           </Pressable>
         </View>
         <View style={styles.segment}>
           <View style={[styles.segItem, styles.segOn]}>
             <Icon name="bag" size={16} color={colors.maroon} />
-            <Text style={[styles.segText, { color: colors.maroon, fontFamily: fonts.bold }]}>Order in</Text>
+            <Text style={[styles.segText, { color: colors.maroon, fontFamily: fonts.bold }]}>{t("Order in")}</Text>
           </View>
           <PressScale role="button" style={styles.segItem} onPress={() => router.push('/kitchen')}>
             <Icon name="pot" size={16} color={colors.cream} />
-            <Text style={styles.segText}>Cook at home</Text>
+            <Text style={styles.segText}>{t("Cook at home")}</Text>
           </PressScale>
         </View>
       </MaroonBand>
 
       {!top ? (
         <Animated.View entering={riseUp(0, 150)} style={[styles.card, { marginTop: bandHeight - 84, alignItems: 'center' }]}>
-          <Text style={type.head}>Nothing to show yet</Text>
-          <Text style={[type.small, { marginTop: space.sm, textAlign: 'center' }]}>Tell Chatora what you feel like, and your picks will appear here.</Text>
-          <Button title="Ask Chatora" onPress={() => router.replace('/chat')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
+          <Text style={type.head}>{t("Nothing to show yet")}</Text>
+          <Text style={[type.small, { marginTop: space.sm, textAlign: 'center' }]}>{t("Tell Chatora what you feel like, and your picks will appear here.")}</Text>
+          <Button title={t("Ask Chatora")} onPress={() => router.replace('/chat')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
         </Animated.View>
       ) : (
         <>
@@ -83,12 +84,12 @@ export default function Results() {
             <View style={styles.topRow}>
               <PlateRing size={84} value={top.match / 100}>
                 <Text style={styles.match}>{top.match}</Text>
-                <Text style={styles.matchLabel}>% match</Text>
+                <Text style={styles.matchLabel}>{t("% match")}</Text>
               </PlateRing>
               <View style={{ flex: 1, gap: 4 }}>
                 <View style={styles.badge}>
                   <Icon name="spark" size={12} color={colors.gold} />
-                  <Text style={styles.badgeText}>Chatora's pick</Text>
+                  <Text style={styles.badgeText}>{t("Chatora's pick")}</Text>
                 </View>
                 <View style={styles.nameRow}>
                   {isPlace(top) ? null : <DietMark type={top.diet === 'veg' ? 'veg' : 'nonveg'} />}
@@ -102,15 +103,15 @@ export default function Results() {
             <View style={styles.stats}>
               {isPlace(top) ? (
                 <>
-                  <Stat label="Rating" value={top.rating ? `${top.rating.toFixed(1)} ★` : '—'} />
-                  <Stat label="Distance" value={`${top.distanceKm} km`} />
-                  <Stat label="For one" value={shortPrice(top.priceLabel) ?? '—'} />
+                  <Stat label={t("Rating")} value={top.rating ? `${top.rating.toFixed(1)} ★` : '—'} />
+                  <Stat label={t("Distance")} value={t('{n} km', { n: top.distanceKm })} />
+                  <Stat label={t("For one")} value={shortPrice(top.priceLabel) ?? '—'} />
                 </>
               ) : (
                 <>
-                  {top.people > 1 ? <Stat label={`For ${top.people} (₹${top.price} each)`} value={`₹${top.groupPrice}`} /> : <Stat label="Price" value={`₹${top.price}`} />}
-                  <Stat label="Arrives in" value={`${top.eta} min`} />
-                  <Stat label="Rating" value={`${top.rating} ★`} />
+                  {top.people > 1 ? <Stat label={t('For {n} (₹{price} each)', { n: top.people, price: top.price })} value={`₹${top.groupPrice}`} /> : <Stat label={t("Price")} value={`₹${top.price}`} />}
+                  <Stat label={t("Arrives in")} value={t('{n} min', { n: top.eta })} />
+                  <Stat label={t("Rating")} value={`${top.rating} ★`} />
                 </>
               )}
             </View>
@@ -118,10 +119,10 @@ export default function Results() {
             <View style={styles.actions}>
               {isPlace(top) ? (
                 Object.entries(ORDER_APPS).map(([app, a]) => (
-                  <Button key={app} title={a.label} onPress={() => openOrderApp(top, app)} style={{ flex: 1, backgroundColor: a.color, shadowColor: a.color }} />
+                  <Button key={app} title={t(a.label)} onPress={() => openOrderApp(top, app)} style={{ flex: 1, backgroundColor: a.color, shadowColor: a.color }} />
                 ))
               ) : (
-                <Button title="See details" onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
+                <Button title={t("See details")} onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
               )}
               <HeartButton pick={top} />
             </View>
@@ -130,7 +131,7 @@ export default function Results() {
           {rest.length ? (
             <>
               <Animated.Text entering={rise(0, 350)} style={[type.head, styles.also]}>
-                Also good
+                {t("Also good")}
               </Animated.Text>
               <View style={styles.list}>
                 {rest.map((p, i) => (
@@ -147,7 +148,7 @@ export default function Results() {
                         </Text>
                       </View>
                       <Text style={type.small} numberOfLines={1}>
-                        {isPlace(p) ? `${p.restaurant} · ${p.distanceKm} km` : `${p.restaurant} · ${p.eta} min`}
+                        {isPlace(p) ? `${p.restaurant} · ${t('{n} km', { n: p.distanceKm })}` : `${p.restaurant} · ${t('{n} min', { n: p.eta })}`}
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 2 }}>

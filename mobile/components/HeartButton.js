@@ -6,6 +6,7 @@ import { useMeStore } from '../store/useMeStore';
 import { errorMessage } from '../lib/api';
 import { notify } from '../lib/notify';
 import { colors, radius } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // ♡ save / unsave a pick. onDark for the maroon band; otherwise a 52px tile.
 export default function HeartButton({ pick, onDark = false, size = onDark ? 44 : 52 }) {
@@ -15,9 +16,9 @@ export default function HeartButton({ pick, onDark = false, size = onDark ? 44 :
   async function press() {
     try {
       const now = await toggleSave(pick);
-      toast(now ? 'Saved — find it in Profile → Saved' : 'Removed from Saved', now ? 'heart' : 'check');
+      toast(now ? t('Saved — find it in Profile → Saved') : t('Removed from Saved'), now ? 'heart' : 'check');
     } catch (err) {
-      notify("Couldn't save", errorMessage(err));
+      notify(t("Couldn't save"), errorMessage(err));
     }
   }
 
@@ -26,7 +27,7 @@ export default function HeartButton({ pick, onDark = false, size = onDark ? 44 :
     <PressScale
       scaleTo={0.88}
       role="button"
-      aria-label={saved ? `Remove ${pick?.name} from Saved` : `Save ${pick?.name}`}
+      aria-label={saved ? t('Remove {name} from Saved', { name: pick?.name }) : t('Save {name}', { name: pick?.name })}
       aria-pressed={saved}
       onPress={press}
       hitSlop={4}

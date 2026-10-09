@@ -206,10 +206,10 @@ export async function explainRecipes({ text, language, haveLabels, recipes, user
 
 const PLAN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already planned the user's meals for the day; you only introduce the plan.
 Use ONLY the facts given (meal, dish or place name, restaurant, price or price range, cuisine, and whether they cook it at home). Never invent dishes, prices or places.
-- message: at most two short, warm sentences in simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening); mention any meal they cook at home. If totalPerPerson and budgetPerPerson are given, say the total against the budget exactly as given; if people is more than 1, say it is per person and also give groupTotal for everyone.`;
+- message: at most two short, warm sentences. If appLanguage is "hindi", write in simple Hindi (Devanagari script), keeping dish and restaurant names as given; otherwise simple English with a light Hinglish touch. Describe the shape of the day (e.g. a light start, a filling lunch, a treat in the evening); mention any meal they cook at home. If totalPerPerson and budgetPerPerson are given, say the total against the budget exactly as given; if people is more than 1, say it is per person and also give groupTotal for everyone.`;
 
 // meals: [{ label, cook, name, restaurant?, price?, priceLabel?, cuisine? }] — what's showing now.
-export async function explainPlan({ meals, budget, total, moodLabel, people = 1, userName, taste }) {
+export async function explainPlan({ meals, budget, total, moodLabel, people = 1, userName, taste, appLanguage = 'english' }) {
   const facts = meals.map((m) => ({
     meal: m.label,
     cookAtHome: Boolean(m.cook),
@@ -221,7 +221,7 @@ export async function explainPlan({ meals, budget, total, moodLabel, people = 1,
   }));
   const out = await callJson({
     system: PLAN_SYSTEM,
-    content: JSON.stringify({ userName: userName || null, dayMood: moodLabel, budgetPerPerson: budget, totalPerPerson: total, people, groupTotal: total != null && people > 1 ? total * people : null, savedTaste: taste, meals: facts }),
+    content: JSON.stringify({ appLanguage, userName: userName || null, dayMood: moodLabel, budgetPerPerson: budget, totalPerPerson: total, people, groupTotal: total != null && people > 1 ? total * people : null, savedTaste: taste, meals: facts }),
     schema: strictObject({ message: { type: 'string' } }),
     maxTokens: 800,
   });

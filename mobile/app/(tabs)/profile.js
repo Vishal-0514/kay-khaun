@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useMeStore } from '../../store/useMeStore';
 import { readReminders } from '../../lib/reminders';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
+import { LANGUAGES, t, useLang } from '../../lib/i18n';
 
 const SPICE = ['Mild', 'Light', 'Medium', 'Hot', 'Extra hot'];
 const BUDGET = { low: 'Under ₹300', mid: '₹300–500', high: '₹500+' };
@@ -56,19 +57,19 @@ function NavRow({ n = 0, icon, tint, ink, label, value, onPress }) {
 // "Your week in food": the last 7 days at a glance.
 function WeekCard({ week }) {
   const stats = [
-    ['Orders', week.orders],
-    ['Cuisines', week.cuisines],
-    ['Saved', week.saved],
-    ['Days planned', week.daysPlanned],
+    [t('Orders'), week.orders],
+    [t('Cuisines'), week.cuisines],
+    [t('Saved'), week.saved],
+    [t('Days planned'), week.daysPlanned],
   ];
   const quiet = !week.orders && !week.cuisines && !week.saved && !week.daysPlanned;
-  let line = 'A quiet week. Ask Chatora for something new!';
-  if (week.newCuisines.length) line = `New for you this week: ${week.newCuisines.join(', ')}`;
-  else if (week.topCuisine) line = `Your go-to this week: ${week.topCuisine}`;
-  if (week.homeCooked) line += ` · ${week.homeCooked} ${week.homeCooked === 1 ? 'meal' : 'meals'} cooked at home`;
+  let line = t('A quiet week. Ask Chatora for something new!');
+  if (week.newCuisines.length) line = t('New for you this week: {list}', { list: week.newCuisines.map((c) => t(c)).join(', ') });
+  else if (week.topCuisine) line = t('Your go-to this week: {name}', { name: t(week.topCuisine) });
+  if (week.homeCooked) line += ' · ' + t(week.homeCooked === 1 ? '{n} meal cooked at home' : '{n} meals cooked at home', { n: week.homeCooked });
   return (
     <Animated.View entering={rise(2, 300)} style={styles.week}>
-      <Text style={styles.weekTitle}>Your week in food</Text>
+      <Text style={styles.weekTitle}>{t("Your week in food")}</Text>
       {quiet ? null : (
         <View style={styles.weekStats}>
           {stats.map(([label, n]) => (
@@ -98,6 +99,8 @@ export default function Profile() {
   const loadSaved = useMeStore((s) => s.loadSaved);
   const clearLearned = useMeStore((s) => s.clearLearned);
   const memoryOn = Boolean(user?.memoryEnabled);
+  const lang = useLang((s) => s.lang);
+  const setLang = useLang((s) => s.setLang);
   const [reminderCount, setReminderCount] = useState(0);
 
   // Fresh numbers each time Profile opens.
@@ -111,13 +114,13 @@ export default function Profile() {
   );
 
   async function forget() {
-    const yes = await confirm("Clear what I've learned?", 'I’ll forget what you opened, ordered and marked "Not for me". Your saved picks, saved days and taste settings stay.', 'Clear');
+    const yes = await confirm(t("Clear what I've learned?"), t('I’ll forget what you opened, ordered and marked "Not for me". Your saved picks, saved days and taste settings stay.'), 'Clear');
     if (!yes) return;
     try {
       await clearLearned();
-      toast('Done — starting fresh');
+      toast(t('Done — starting fresh'));
     } catch (err) {
-      notify("Couldn't clear it", errorMessage(err));
+      notify(t("Couldn't clear it"), errorMessage(err));
     }
   }
   const p = user?.preferences ?? {};
@@ -133,7 +136,7 @@ export default function Profile() {
       loadLearned().catch(() => {});
     } catch (err) {
       setUser({ ...user, memoryEnabled: !on });
-      notify("Couldn't save", errorMessage(err));
+      notify(t("Couldn't save"), errorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -148,17 +151,17 @@ export default function Profile() {
           </Animated.View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name} role="heading">
-              {user?.name || 'Your profile'}
+              {user?.name || t('Your profile')}
             </Text>
-            <Text style={styles.sub}>{user?.isGuest ? 'Test account (skipped login)' : user?.phone ? `+91 ${user.phone}` : user?.email ?? 'Your food profile'}</Text>
+            <Text style={styles.sub}>{user?.isGuest ? t('Test account (skipped login)') : user?.phone ? `+91 ${user.phone}` : user?.email ?? t('Your food profile')}</Text>
           </View>
         </View>
       </MaroonBand>
 
       <Animated.View entering={riseUp(0, 200)} style={[styles.card, styles.memory, { marginTop: bandHeight - 68 }]}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.memoryTitle}>Remember my taste</Text>
-          <Text style={type.small}>{memoryOn ? 'Learns from what you open, order and save' : 'Off. Picks ignore your taste, and nothing new is learned'}</Text>
+          <Text style={styles.memoryTitle}>{t("Remember my taste")}</Text>
+          <Text style={type.small}>{memoryOn ? t('Learns from what you open, order and save') : t('Off. Picks ignore your taste, and nothing new is learned')}</Text>
         </View>
         <Switch
           value={Boolean(user?.memoryEnabled)}
@@ -166,15 +169,15 @@ export default function Profile() {
           disabled={saving}
           trackColor={{ true: colors.green, false: '#C9B9A6' }}
           thumbColor="#FFFFFF"
-          aria-label="Remember my taste"
+          aria-label={t("Remember my taste")}
         />
       </Animated.View>
 
-      <Text style={[type.head, styles.section]}>Your food</Text>
+      <Text style={[type.head, styles.section]}>{t("Your food")}</Text>
       <View style={styles.list}>
-        <NavRow n={0} icon="heart" tint="#FBE4EC" ink="#A92E5A" label="Saved" value={savedCount ? `${savedCount} ${savedCount === 1 ? 'pick' : 'picks'}` : 'None yet'} onPress={() => router.push('/saved')} />
-        <NavRow n={1} icon="clock" tint={colors.goldSoft} ink={colors.goldText} label="History" value="Orders and saved days" onPress={() => router.push('/history')} />
-        <NavRow n={2} icon="moon" tint="#E8EEF7" ink="#3A5A8C" label="Meal reminders" value={reminderCount ? `${reminderCount} on` : 'Off'} onPress={() => router.push('/reminders')} />
+        <NavRow n={0} icon="heart" tint="#FBE4EC" ink="#A92E5A" label={t("Saved")} value={savedCount ? t(savedCount === 1 ? '{n} pick' : '{n} picks', { n: savedCount }) : t('None yet')} onPress={() => router.push('/saved')} />
+        <NavRow n={1} icon="clock" tint={colors.goldSoft} ink={colors.goldText} label={t("History")} value={t('Orders and saved days')} onPress={() => router.push('/history')} />
+        <NavRow n={2} icon="moon" tint="#E8EEF7" ink="#3A5A8C" label={t("Meal reminders")} value={reminderCount ? t('{n} on', { n: reminderCount }) : t('Off')} onPress={() => router.push('/reminders')} />
       </View>
 
       {memoryOn && week?.enabled ? <WeekCard week={week} /> : null}
@@ -182,49 +185,62 @@ export default function Profile() {
       <Animated.View entering={rise(2, 350)} style={styles.learned}>
         <View style={styles.learnedHead}>
           <Icon name="spark" size={18} color={colors.goldText} />
-          <Text style={styles.learnedTitle}>What I've learned</Text>
+          <Text style={styles.learnedTitle}>{t("What I've learned")}</Text>
         </View>
         {!memoryOn ? (
-          <Text style={type.small}>Turn on "Remember my taste" and I'll learn what you like from what you open, order and save.</Text>
+          <Text style={type.small}>{t("Turn on \"Remember my taste\" and I'll learn what you like from what you open, order and save.")}</Text>
         ) : learned?.cuisines?.length ? (
           <>
-            <Text style={type.small}>You often go for</Text>
+            <Text style={type.small}>{t("You often go for")}</Text>
             <View style={styles.learnedChips}>
               {learned.cuisines.map((c) => (
                 <View key={c.name} style={styles.learnedChip}>
-                  <Text style={styles.learnedChipText}>{c.name}</Text>
+                  <Text style={styles.learnedChipText}>{t(c.name)}</Text>
                 </View>
               ))}
             </View>
           </>
         ) : (
-          <Text style={type.small}>Nothing yet. I learn from what you open, order, save and mark "Not for me".</Text>
+          <Text style={type.small}>{t("Nothing yet. I learn from what you open, order, save and mark \"Not for me\".")}</Text>
         )}
         {memoryOn && learned?.signals ? (
           <>
             <Text style={styles.learnedFoot}>
-              From {learned.signals} {learned.signals === 1 ? 'thing' : 'things'} you opened, ordered or saved
-              {learned.notForMe ? ` · ${learned.notForMe} marked "Not for me"` : ''}.
+              {t(learned.signals === 1 ? 'From {n} thing you opened, ordered or saved' : 'From {n} things you opened, ordered or saved', { n: learned.signals })}
+              {learned.notForMe ? ' · ' + t('{n} marked "Not for me"', { n: learned.notForMe }) : ''}.
             </Text>
             <Pressable onPress={forget} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
-              <Text style={styles.learnedClear}>Clear what I've learned</Text>
+              <Text style={styles.learnedClear}>{t("Clear what I've learned")}</Text>
             </Pressable>
           </>
         ) : null}
       </Animated.View>
 
-      <Text style={[type.head, styles.section]}>Preferences</Text>
+      <Text style={[type.head, styles.section]}>{t("Preferences")}</Text>
       <View style={styles.list}>
-        <Row n={0} icon="leaf" tint="#E3F2E7" ink={colors.green} label="Diet" value={DIET[p.diet] ?? 'Not set'} lead={p.diet && p.diet !== 'egg' ? <DietMark type={p.diet} /> : null} />
-        <Row n={1} icon="flame" tint="#FDE3E1" ink={colors.red} label="Spice level" value={SPICE[(p.spice ?? 3) - 1]} />
-        <Row n={2} icon="rupee" tint="#FCEBD0" ink="#A8670F" label="Budget per meal" value={BUDGET[p.budget] ?? 'Not set'} />
-        <Row n={3} icon="bowl" tint="#FDE8D6" ink="#B8501A" label="Favourites" value={p.cuisines?.length ? p.cuisines.join(', ') : 'None yet'} />
-        <Row n={4} icon="close" tint="#FBE4EC" ink="#A92E5A" label="Avoid" value={p.avoid?.length ? p.avoid.join(', ') : 'Nothing'} />
+        <Animated.View entering={rise(0, 350)} style={styles.row}>
+          <View style={[styles.rowIcon, { backgroundColor: '#E8EEF7' }]}>
+            <Icon name="chat" size={18} color="#3A5A8C" strokeWidth={1.9} />
+          </View>
+          <Text style={styles.rowLabel}>{t('Language')}</Text>
+          <View style={styles.langs} role="radiogroup" aria-label={t('Language')}>
+            {LANGUAGES.map((l) => (
+              <PressScale key={l.id} role="radio" aria-checked={lang === l.id} onPress={() => setLang(l.id)} style={[styles.lang, lang === l.id && styles.langOn]}>
+                <Text style={[styles.langText, lang === l.id && styles.langTextOn]}>{l.label}</Text>
+              </PressScale>
+            ))}
+          </View>
+        </Animated.View>
+        <Row n={0} icon="leaf" tint="#E3F2E7" ink={colors.green} label={t("Diet")} value={t(DIET[p.diet] ?? 'Not set')} lead={p.diet && p.diet !== 'egg' ? <DietMark type={p.diet} /> : null} />
+        <Row n={1} icon="flame" tint="#FDE3E1" ink={colors.red} label={t("Spice level")} value={t(SPICE[(p.spice ?? 3) - 1])} />
+        <Row n={2} icon="rupee" tint="#FCEBD0" ink="#A8670F" label={t("Budget per meal")} value={t(BUDGET[p.budget] ?? 'Not set')} />
+        <Row n={3} icon="bowl" tint="#FDE8D6" ink="#B8501A" label={t("Favourites")} value={p.cuisines?.length ? p.cuisines.map((c) => t(c)).join(', ') : t('None yet')} />
+        <Row n={4} icon="close" tint="#FBE4EC" ink="#A92E5A" label={t("Avoid")} value={p.avoid?.length ? p.avoid.map((a) => t(a)).join(', ') : t('Nothing')} />
       </View>
-      <Button variant="outline" title="Edit my taste" onPress={() => router.push('/taste')} style={styles.edit} />
+      <Button variant="outline" title={t("Edit my taste")} onPress={() => router.push('/taste')} style={styles.edit} />
 
       <PressScale role="button" onPress={() => signOut().then(() => router.replace('/welcome'))} style={styles.signOut}>
-        <Text style={styles.signOutText}>{user?.isGuest ? 'Leave test account' : 'Sign out'}</Text>
+        <Text style={styles.signOutText}>{user?.isGuest ? t('Leave test account') : t('Sign out')}</Text>
       </PressScale>
     </ScrollView>
   );
@@ -247,6 +263,11 @@ const styles = StyleSheet.create({
   rowLabel: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink, flex: 1 },
   rowValue: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, maxWidth: '50%', textAlign: 'right' },
   edit: { marginHorizontal: space.lg, marginTop: space.lg },
+  langs: { flexDirection: 'row', gap: 6 },
+  lang: { height: 32, paddingHorizontal: 12, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair, justifyContent: 'center' },
+  langOn: { backgroundColor: colors.maroon, borderColor: colors.maroon },
+  langText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
+  langTextOn: { color: colors.gold },
   week: { marginHorizontal: space.lg, marginTop: space.base, padding: space.base, borderRadius: radius.card, backgroundColor: colors.surface, gap: space.md, ...shadow.card },
   weekTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
   weekStats: { flexDirection: 'row', gap: space.sm },

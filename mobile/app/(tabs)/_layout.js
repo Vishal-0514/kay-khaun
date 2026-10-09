@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import Icon from '../../components/Icon';
 import { glideTo } from '../../components/Motion';
 import { colors, fonts } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
 const TABS = {
   home: { label: 'Home', icon: 'home' },
@@ -39,7 +40,7 @@ function TabBar({ state, navigation }) {
             key={route.key}
             role="tab"
             aria-selected={focused}
-            aria-label={tab.label}
+            aria-label={t(tab.label)}
             onPress={() => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
               if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
@@ -48,7 +49,7 @@ function TabBar({ state, navigation }) {
           >
             <TabMark focused={focused} />
             <Icon name={tab.icon} size={24} color={color} strokeWidth={focused ? 2.2 : 1.8} />
-            <Text style={[styles.label, { color, fontFamily: focused ? fonts.bold : fonts.medium }]}>{tab.label}</Text>
+            <Text style={[styles.label, { color, fontFamily: focused ? fonts.bold : fonts.medium }]}>{t(tab.label)}</Text>
           </Pressable>
         );
       })}

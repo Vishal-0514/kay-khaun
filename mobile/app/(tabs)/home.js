@@ -18,6 +18,7 @@ import { dayLabel } from '../../lib/dates';
 import { api, errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
 const MOODS = [
   { id: 'spicy', label: 'Spicy', icon: 'flame', tint: '#FDE3E1', ink: colors.red },
@@ -30,9 +31,9 @@ const BUDGET = { low: 300, mid: 500, high: 900 };
 
 function timeOfDay() {
   const h = new Date().getHours();
-  if (h < 12) return { hello: 'Good morning', when: 'this morning?' };
-  if (h < 17) return { hello: 'Good afternoon', when: 'this afternoon?' };
-  return { hello: 'Good evening', when: 'tonight?' };
+  if (h < 12) return { hello: t('Good morning'), when: t('this morning?') };
+  if (h < 17) return { hello: t('Good afternoon'), when: t('this afternoon?') };
+  return { hello: t('Good evening'), when: t('tonight?') };
 }
 
 export default function Home() {
@@ -50,7 +51,7 @@ export default function Home() {
   const bandHeight = 300 + insets.top;
 
   const prefBudget = BUDGET[user?.preferences?.budget];
-  const craving = slip?.craving ?? 'Tell me what you feel like';
+  const craving = slip?.craving ?? t('Tell me what you feel like');
   const budget = slip?.budget ?? prefBudget;
 
   // Where they are, so picks are real places nearby.
@@ -98,7 +99,7 @@ export default function Home() {
       await occasionPicks(occasion);
       router.push('/results');
     } catch (err) {
-      notify("Couldn't load picks", errorMessage(err));
+      notify(t("Couldn't load picks"), errorMessage(err));
     } finally {
       setLoadingOccasion(false);
     }
@@ -110,7 +111,7 @@ export default function Home() {
       await quickPicks(mood);
       router.push('/results');
     } catch (err) {
-      notify("Couldn't load picks", errorMessage(err));
+      notify(t("Couldn't load picks"), errorMessage(err));
     } finally {
       setLoadingMood(null);
     }
@@ -120,13 +121,13 @@ export default function Home() {
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: space.xl }}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.topRow, { marginTop: insets.top + space.base }]}>
-          <Pressable style={styles.location} onPress={locate} aria-label="Update my location" hitSlop={8}>
+          <Pressable style={styles.location} onPress={locate} aria-label={t("Update my location")} hitSlop={8}>
             <Icon name="pin" size={18} color={colors.gold} />
             <Text style={styles.locationText} numberOfLines={1}>
               {locationLabel}
             </Text>
           </Pressable>
-          <IconButton name="user" label="Profile" onDark onPress={() => router.push('/profile')} />
+          <IconButton name="user" label={t("Profile")} onDark onPress={() => router.push('/profile')} />
         </View>
         <View style={styles.greeting}>
           <Animated.View entering={rise(0, 100)} style={styles.helloRow}>
@@ -138,7 +139,7 @@ export default function Home() {
           </Animated.View>
           <Reveal delay={150}>
             <Text style={styles.title} role="heading">
-              What are you in the{'\n'}mood for <Text style={{ color: colors.gold }}>{when}</Text>
+              {t('What are you in the')}{'\n'}{t('mood for')} <Text style={{ color: colors.gold }}>{when}</Text>
             </Text>
           </Reveal>
         </View>
@@ -146,54 +147,54 @@ export default function Home() {
 
       {/* The order slip: what Chatora needs, and the big talk button. */}
       <Animated.View entering={riseUp(0, 260)} style={[styles.slip, { marginTop: bandHeight - 104 }]}>
-        <Pressable style={styles.slipFields} onPress={() => router.push('/chat')} aria-label="Tell Chatora what you want">
+        <Pressable style={styles.slipFields} onPress={() => router.push('/chat')} aria-label={t("Tell Chatora what you want")}>
           <View style={[styles.field, styles.fieldTop]}>
-            <Text style={styles.fieldLabel}>Craving</Text>
+            <Text style={styles.fieldLabel}>{t("Craving")}</Text>
             <Text style={[styles.fieldValue, !slip?.craving && styles.placeholder]} numberOfLines={1}>
               {craving}
             </Text>
           </View>
           <View style={styles.fieldRow}>
             <View style={[styles.field, styles.fieldLeft]}>
-              <Text style={styles.fieldLabel}>Budget</Text>
-              <Text style={styles.fieldValue}>{budget ? `₹${budget}` : 'Any'}</Text>
+              <Text style={styles.fieldLabel}>{t("Budget")}</Text>
+              <Text style={styles.fieldValue}>{budget ? `₹${budget}` : t('Any')}</Text>
             </View>
             <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Time</Text>
-              <Text style={styles.fieldValue}>{slip?.time ? `${slip.time} min` : 'Any'}</Text>
+              <Text style={styles.fieldLabel}>{t("Time")}</Text>
+              <Text style={styles.fieldValue}>{slip?.time ? t('{n} min', { n: slip.time }) : t('Any')}</Text>
             </View>
           </View>
         </Pressable>
         <View style={styles.talk}>
           <View style={styles.micWrap}>
             <Glow size={84} color={colors.red} />
-            <PressScale scaleTo={0.9} role="button" aria-label="Talk to Chatora" onPress={() => router.push({ pathname: '/chat', params: { voice: String(Date.now()) } })} style={styles.mic}>
+            <PressScale scaleTo={0.9} role="button" aria-label={t("Talk to Chatora")} onPress={() => router.push({ pathname: '/chat', params: { voice: String(Date.now()) } })} style={styles.mic}>
               <Icon name="mic" size={26} color="#FFFFFF" />
             </PressScale>
           </View>
-          <Text style={styles.talkText}>Tap to talk</Text>
+          <Text style={styles.talkText}>{t("Tap to talk")}</Text>
         </View>
       </Animated.View>
 
       <Animated.View entering={rise(0, 400)} style={styles.actions}>
         <PressScale role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
           <Icon name="type" size={18} />
-          <Text style={styles.actionText}>Type instead</Text>
+          <Text style={styles.actionText}>{t("Type instead")}</Text>
         </PressScale>
         <PressScale role="button" style={styles.action} onPress={() => router.push('/kitchen')}>
           <Icon name="camera" size={18} />
-          <Text style={styles.actionText}>Scan my fridge</Text>
+          <Text style={styles.actionText}>{t("Scan my fridge")}</Text>
         </PressScale>
       </Animated.View>
 
       <View style={styles.moods}>
         {MOODS.map((m, i) => (
           <Animated.View key={m.id} entering={rise(i, 450)}>
-            <PressScale scaleTo={0.88} role="button" aria-label={`${m.label} picks`} onPress={() => openMood(m.id)} style={styles.mood}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t('{mood} picks', { mood: t(m.label) })} onPress={() => openMood(m.id)} style={styles.mood}>
               <View style={[styles.moodCircle, { backgroundColor: m.tint }]}>
                 {loadingMood === m.id ? <ActivityIndicator color={m.ink} /> : <Icon name={m.icon} size={26} color={m.ink} strokeWidth={1.9} />}
               </View>
-              <Text style={styles.moodLabel}>{m.label}</Text>
+              <Text style={styles.moodLabel}>{t(m.label)}</Text>
             </PressScale>
           </Animated.View>
         ))}
@@ -206,10 +207,10 @@ export default function Home() {
               {loadingOccasion ? <ActivityIndicator color={colors.red} /> : <Icon name={occasion.icon} size={22} color={colors.red} />}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.specialTag}>Season special</Text>
-              <Text style={styles.specialTitle}>{occasion.title}</Text>
+              <Text style={styles.specialTag}>{t("Season special")}</Text>
+              <Text style={styles.specialTitle}>{t(occasion.title)}</Text>
               <Text style={type.small} numberOfLines={1}>
-                {occasion.subtitle}
+                {t(occasion.subtitle)}
               </Text>
             </View>
             <Icon name="chevron" color={colors.muted} />
@@ -218,7 +219,7 @@ export default function Home() {
       ) : null}
 
       <Animated.View entering={rise(0, 700)} style={styles.sectionHead}>
-        <Text style={type.head}>Chatora's pick for you</Text>
+        <Text style={type.head}>{t("Chatora's pick for you")}</Text>
         <Pressable
           onPress={async () => {
             await quickPicks().catch(() => {});
@@ -226,7 +227,7 @@ export default function Home() {
           }}
           hitSlop={8}
         >
-          <Text style={styles.link}>See all 5</Text>
+          <Text style={styles.link}>{t("See all 5")}</Text>
         </Pressable>
       </Animated.View>
       {topPick ? (
@@ -234,7 +235,7 @@ export default function Home() {
         <PressScale scaleTo={0.98} role="button" style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
           <PlateRing size={72} value={topPick.match / 100}>
             <Text style={styles.matchValue}>{topPick.match}</Text>
-            <Text style={styles.matchLabel}>% match</Text>
+            <Text style={styles.matchLabel}>{t("% match")}</Text>
           </PlateRing>
           <View style={{ flex: 1, gap: 2 }}>
             <View style={styles.nameRow}>
@@ -260,9 +261,9 @@ export default function Home() {
       {again.length ? (
         <Animated.View entering={rise(0, 800)}>
           <View style={styles.sectionHead}>
-            <Text style={type.head}>Order again</Text>
+            <Text style={type.head}>{t("Order again")}</Text>
             <Pressable onPress={() => router.push('/history')} hitSlop={8}>
-              <Text style={styles.link}>History</Text>
+              <Text style={styles.link}>{t("History")}</Text>
             </Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.againRow}>
@@ -273,7 +274,7 @@ export default function Home() {
                   key={e.item.id}
                   scaleTo={0.97}
                   role="button"
-                  aria-label={`Order ${e.item.name} again on ${app.label}`}
+                  aria-label={t('Order {name} again on {app}', { name: e.item.name, app: app.label })}
                   onPress={() => openOrderApp(e.item, e.app ?? 'zomato')}
                   onLongPress={() => router.push(`/dish/${e.item.id}`)}
                   style={styles.againCard}
@@ -288,7 +289,7 @@ export default function Home() {
                     <Text style={styles.againWhen}>{dayLabel(e.at)}</Text>
                     <View style={[styles.againApp, { backgroundColor: app.color }]}>
                       <Icon name="restart" size={12} color="#FFFFFF" />
-                      <Text style={styles.againAppText}>{app.label}</Text>
+                      <Text style={styles.againAppText}>{t(app.label)}</Text>
                     </View>
                   </View>
                 </PressScale>
@@ -301,8 +302,8 @@ export default function Home() {
       <Animated.View entering={rise(0, 840)}>
         <PressScale scaleTo={0.98} role="button" style={styles.plan} onPress={() => router.push('/plan')}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.planTitle}>Plan my whole day</Text>
-            <Text style={styles.planText}>Breakfast to dinner, within your budget</Text>
+            <Text style={styles.planTitle}>{t("Plan my whole day")}</Text>
+            <Text style={styles.planText}>{t("Breakfast to dinner, within your budget")}</Text>
           </View>
           <View style={styles.planArrow}>
             <Icon name="arrow" size={18} color={colors.gold} />

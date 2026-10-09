@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { t, currentLang } from './i18n';
 
 // Speech-to-text uses the phone's own recogniser (Google on Android, Apple on
 // iPhone, the browser's on web), so it's free and fast. Expo Go doesn't ship the
@@ -18,7 +19,8 @@ const speech = loadSpeech();
 
 // Indian English hears Hinglish ("kuch teekha 400 ke andar") as Latin text,
 // which is what both Claude and the keyword parser expect.
-const LANG = 'en-IN';
+// Hindi interface listens for Hindi; otherwise Indian English (Hinglish).
+const LANG = () => (currentLang() === 'hi' ? 'hi-IN' : 'en-IN');
 const FOOD_WORDS = [
   'biryani', 'pav bhaji', 'vada pav', 'paneer', 'chaat', 'pani puri', 'momos', 'dosa', 'idli', 'thali', 'misal',
   'chole bhature', 'rasmalai', 'gulab jamun', 'jalebi', 'kulfi', 'falooda', 'teekha', 'meetha', 'halka', 'ke andar', 'rupaye',
@@ -36,9 +38,9 @@ const NOTHING_HEARD = "I didn't catch that. Tap the mic and say something like \
 
 // Why voice can't be used right now, or null when it can.
 export function voiceUnavailableReason() {
-  if (!speech) return 'Voice works in the installed Kya Khaun app. In Expo Go, please type your craving.';
+  if (!speech) return t('Voice works in the installed Kya Khaun app. In Expo Go, please type your craving.');
   try {
-    if (!speech.isRecognitionAvailable()) return "This phone doesn't have speech recognition. You can type instead.";
+    if (!speech.isRecognitionAvailable()) return t("This phone doesn't have speech recognition. You can type instead.");
   } catch {
     // Older recognisers don't report availability; just try.
   }
@@ -77,7 +79,7 @@ export function useVoice({ onFinal, onError }) {
       const why = failure.current;
       reset();
       if (said) handlers.current.onFinal?.(said);
-      else if (why !== 'aborted') handlers.current.onError?.(ERRORS[why] ?? NOTHING_HEARD);
+      else if (why !== 'aborted') handlers.current.onError?.(t(ERRORS[why] ?? NOTHING_HEARD));
     };
     const subs = [
       speech.addListener('result', (e) => {
@@ -113,7 +115,7 @@ export function useVoice({ onFinal, onError }) {
     }
     const permission = await speech.requestPermissionsAsync();
     if (!permission.granted) {
-      handlers.current.onError?.(ERRORS['not-allowed']);
+      handlers.current.onError?.(t(ERRORS['not-allowed']));
       return;
     }
     reset();
@@ -121,7 +123,7 @@ export function useVoice({ onFinal, onError }) {
     setListening(true);
     try {
       speech.start({
-        lang: LANG,
+        lang: LANG(),
         interimResults: true,
         continuous: false,
         maxAlternatives: 1,
@@ -131,7 +133,7 @@ export function useVoice({ onFinal, onError }) {
       });
     } catch {
       reset();
-      handlers.current.onError?.(ERRORS['service-not-allowed']);
+      handlers.current.onError?.(t(ERRORS['service-not-allowed']));
     }
   }, [reset]);
 

@@ -11,6 +11,7 @@ import { api, errorMessage } from '../lib/api';
 import { signOut } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const DIETS = [
   { id: 'veg', label: 'Veg' },
@@ -76,59 +77,59 @@ export default function Taste() {
     <View style={styles.root}>
       <BandHeader
         height={bandHeight}
-        title="What do you like to eat?"
+        title={t("What do you like to eat?")}
         subtitle="The more I know, the fewer questions I'll ask."
         onBack={user?.onboarded ? undefined : () => signOut().then(() => router.replace('/welcome'))}
       />
       <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 32, paddingBottom: 120 + insets.bottom }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={riseUp(0, 150)} style={styles.card}>
-          <Text style={styles.section} nativeID="name-label">What should I call you?</Text>
+          <Text style={styles.section} nativeID="name-label">{t("What should I call you?")}</Text>
           <TextInput
             aria-labelledby="name-label"
-            aria-label="Your name"
+            aria-label={t("Your name")}
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Your first name"
+            placeholder={t("Your first name")}
             placeholderTextColor="#B3A196"
             autoComplete="given-name"
             textContentType="givenName"
             maxLength={60}
           />
 
-          <Text style={[styles.section, styles.gap]}>Diet</Text>
+          <Text style={[styles.section, styles.gap]}>{t("Diet")}</Text>
           <View style={styles.row}>
             {DIETS.map((d) => {
               const on = diet === d.id;
               return (
                 <PressScale scaleTo={0.92} key={d.id} role="radio" aria-checked={on} onPress={() => setDiet(d.id)} style={[styles.pill, on && styles.pillOn]}>
                   {d.id !== 'egg' && <DietMark type={d.id} />}
-                  <Text style={[styles.pillText, on && styles.pillTextOn]}>{d.label}</Text>
+                  <Text style={[styles.pillText, on && styles.pillTextOn]}>{t(d.label)}</Text>
                 </PressScale>
               );
             })}
           </View>
 
           <View style={[styles.spaceBetween, styles.gap]}>
-            <Text style={styles.section}>Spice level</Text>
+            <Text style={styles.section}>{t("Spice level")}</Text>
             <Text style={styles.spiceLabel}>{SPICE[spice - 1]}</Text>
           </View>
           <View style={styles.spiceRow}>
             {SPICE.map((label, i) => {
               const n = i + 1;
               return (
-                <PressScale scaleTo={0.92} key={label} role="radio" aria-label={`Spice: ${label}`} aria-checked={n === spice} onPress={() => setSpice(n)} style={styles.spiceHit}>
+                <PressScale scaleTo={0.92} key={label} role="radio" aria-label={t('Spice: {level}', { level: t(label) })} aria-checked={n === spice} onPress={() => setSpice(n)} style={styles.spiceHit}>
                   <View style={[styles.spiceBar, { height: 12 + n * 6, backgroundColor: n <= spice ? HEAT[i] : colors.hair }]} />
                 </PressScale>
               );
             })}
           </View>
           <View style={styles.spaceBetween}>
-            <Text style={styles.scaleText}>Mild</Text>
-            <Text style={styles.scaleText}>Extra hot</Text>
+            <Text style={styles.scaleText}>{t("Mild")}</Text>
+            <Text style={styles.scaleText}>{t("Extra hot")}</Text>
           </View>
 
-          <Text style={[styles.section, styles.gap]}>Favourite cuisines</Text>
+          <Text style={[styles.section, styles.gap]}>{t("Favourite cuisines")}</Text>
           <View style={styles.wrap}>
             {CUISINES.map((c) => {
               const on = cuisines.includes(c.name);
@@ -140,32 +141,32 @@ export default function Taste() {
                   onPress={() => setCuisines(toggle(cuisines, c.name))}
                   style={[styles.chip, on && { backgroundColor: c.tint, borderColor: c.ink, borderWidth: 1.5 }]}
                 >
-                  <Text style={[styles.chipText, on && { color: c.ink, fontFamily: fonts.bold }]}>{c.name}</Text>
+                  <Text style={[styles.chipText, on && { color: c.ink, fontFamily: fonts.bold }]}>{t(c.name)}</Text>
                 </PressScale>
               );
             })}
           </View>
 
-          <Text style={[styles.section, styles.gap]}>Budget per meal</Text>
+          <Text style={[styles.section, styles.gap]}>{t("Budget per meal")}</Text>
           <View style={styles.row}>
             {BUDGETS.map((b) => {
               const on = budget === b.id;
               return (
                 <PressScale scaleTo={0.92} key={b.id} role="radio" aria-checked={on} onPress={() => setBudget(b.id)} style={[styles.budget, on && styles.budgetOn]}>
-                  <Text style={[styles.budgetText, on && { color: colors.goldText }]}>{b.label}</Text>
+                  <Text style={[styles.budgetText, on && { color: colors.goldText }]}>{t(b.label)}</Text>
                 </PressScale>
               );
             })}
           </View>
 
-          <Text style={[styles.section, styles.gap]}>Foods you avoid</Text>
+          <Text style={[styles.section, styles.gap]}>{t("Foods you avoid")}</Text>
           <View style={styles.wrap}>
             {AVOID.map((item) => {
               const on = avoid.includes(item);
               return (
                 <PressScale scaleTo={0.92} key={item} role="checkbox" aria-checked={on} onPress={() => setAvoid(toggle(avoid, item))} style={[styles.chip, on && styles.avoidOn]}>
                   {on && <Icon name="close" size={14} color={colors.cream} strokeWidth={2.4} />}
-                  <Text style={[styles.chipText, on && { color: colors.cream }]}>{item}</Text>
+                  <Text style={[styles.chipText, on && { color: colors.cream }]}>{t(item)}</Text>
                 </PressScale>
               );
             })}
@@ -175,7 +176,7 @@ export default function Taste() {
 
       <Animated.View entering={sheetUp(350)} style={[styles.footer, { paddingBottom: insets.bottom + space.base }]}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Button title="Continue" icon={null} onPress={save} loading={busy} disabled={!name.trim()} />
+        <Button title={t("Continue")} icon={null} onPress={save} loading={busy} disabled={!name.trim()} />
       </Animated.View>
     </View>
   );

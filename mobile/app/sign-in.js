@@ -10,6 +10,7 @@ import { signInWithEmail, signUpWithEmail } from '../lib/firebase';
 import { homeRouteFor } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const COPY = {
   login: { title: 'Welcome back', subtitle: 'Log in with your email and password.', cta: 'Log in' },
@@ -25,7 +26,7 @@ function ModeSwitch({ mode, onChange }) {
       {width ? <Animated.View style={[styles.switchPill, { width: width / 2 }, pill]} /> : null}
       {['login', 'signup'].map((m) => (
         <Pressable key={m} role="tab" aria-selected={mode === m} onPress={() => onChange(m)} style={styles.switchItem}>
-          <Text style={[styles.switchText, mode === m && styles.switchTextOn]}>{m === 'login' ? 'Log in' : 'Create account'}</Text>
+          <Text style={[styles.switchText, mode === m && styles.switchTextOn]}>{m === 'login' ? t('Log in') : t('Create account')}</Text>
         </Pressable>
       ))}
     </View>
@@ -61,7 +62,7 @@ export default function SignIn() {
   const [error, setError] = useState('');
 
   const signup = mode === 'signup';
-  const t = COPY[mode];
+  const copy = COPY[mode];
   const emailOk = /^\S+@\S+\.\S+$/.test(email.trim());
   const passwordOk = signup ? password.length >= 8 : password.length > 0;
   const valid = emailOk && passwordOk && (!signup || name.trim());
@@ -100,20 +101,20 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <BandHeader height={bandHeight} title={t.title} subtitle={t.subtitle} />
+      <BandHeader height={bandHeight} title={t(copy.title)} subtitle={t(copy.subtitle)} />
       <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 28, paddingBottom: space.xl }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={rise(0, 120)} layout={smoothLayout} style={styles.card}>
           <ModeSwitch mode={mode} onChange={switchMode} />
 
           {signup ? (
             <Animated.View entering={rise(0)} exiting={leave}>
-              <Field label="Your name">
+              <Field label={t("Your name")}>
                 <TextInput
-                  aria-label="Your name"
+                  aria-label={t("Your name")}
                   style={styles.input}
                   value={name}
                   onChangeText={setName}
-                  placeholder="What should Chatora call you?"
+                  placeholder={t("What should Chatora call you?")}
                   placeholderTextColor="#B3A196"
                   autoComplete="name"
                   textContentType="name"
@@ -126,17 +127,17 @@ export default function SignIn() {
           ) : null}
 
           <Animated.View layout={smoothLayout}>
-            <Field label="Email">
+            <Field label={t("Email")}>
               <TextInput
                 ref={emailRef}
-                aria-label="Email"
+                aria-label={t("Email")}
                 style={styles.input}
                 value={email}
                 onChangeText={(v) => {
                   setEmail(v);
                   setError('');
                 }}
-                placeholder="you@example.com"
+                placeholder={t("you@example.com")}
                 placeholderTextColor="#B3A196"
                 keyboardType="email-address"
                 textContentType="emailAddress"
@@ -150,23 +151,23 @@ export default function SignIn() {
             </Field>
 
             <Field
-              label="Password"
+              label={t("Password")}
               right={
-                <Pressable role="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onPress={() => setShowPassword((v) => !v)} hitSlop={8} style={styles.eye}>
-                  <Text style={styles.eyeText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                <Pressable role="button" aria-label={showPassword ? t('Hide password') : t('Show password')} onPress={() => setShowPassword((v) => !v)} hitSlop={8} style={styles.eye}>
+                  <Text style={styles.eyeText}>{showPassword ? t('Hide') : t('Show')}</Text>
                 </Pressable>
               }
             >
               <TextInput
                 ref={passwordRef}
-                aria-label="Password"
+                aria-label={t("Password")}
                 style={styles.input}
                 value={password}
                 onChangeText={(v) => {
                   setPassword(v);
                   setError('');
                 }}
-                placeholder={signup ? 'At least 8 characters' : 'Your password'}
+                placeholder={signup ? t('At least 8 characters') : t('Your password')}
                 placeholderTextColor="#B3A196"
                 secureTextEntry={!showPassword}
                 textContentType={signup ? 'newPassword' : 'password'}
@@ -178,7 +179,7 @@ export default function SignIn() {
                 onSubmitEditing={submit}
               />
             </Field>
-            {signup && password.length > 0 && password.length < 8 ? <Text style={styles.hint}>{8 - password.length} more characters</Text> : null}
+            {signup && password.length > 0 && password.length < 8 ? <Text style={styles.hint}>{t('{n} more characters', { n: 8 - password.length })}</Text> : null}
 
             {error ? (
               <Animated.View entering={rise(0)} style={styles.errorBox} aria-live="polite">
@@ -187,11 +188,11 @@ export default function SignIn() {
               </Animated.View>
             ) : null}
 
-            <Button sheen title={t.cta} onPress={submit} loading={busy} disabled={!valid} style={{ marginTop: space.lg }} />
+            <Button sheen title={t(copy.cta)} onPress={submit} loading={busy} disabled={!valid} style={{ marginTop: space.lg }} />
             {!signup ? (
-              <Button variant="link" title="Forgot password?" onPress={() => router.push({ pathname: '/forgot', params: { email: email.trim() } })} />
+              <Button variant="link" title={t("Forgot password?")} onPress={() => router.push({ pathname: '/forgot', params: { email: email.trim() } })} />
             ) : (
-              <Text style={styles.small}>By creating an account you agree to our Terms and Privacy Policy.</Text>
+              <Text style={styles.small}>{t("By creating an account you agree to our Terms and Privacy Policy.")}</Text>
             )}
           </Animated.View>
         </Animated.View>

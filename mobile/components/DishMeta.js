@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Icon from './Icon';
 import { colors, fonts } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // One line of facts under a pick.
 //   Real nearby place: "★ 4.5 · 1.2 km · ₹100–300"
@@ -20,7 +21,7 @@ export default function DishMeta({ pick, price, eta, rating, color = colors.ink 
         ) : null}
         <View style={styles.item}>
           <Icon name="pin" size={13} color={colors.muted} />
-          <Text style={[styles.text, { color }]}>{pick.distanceKm} km</Text>
+          <Text style={[styles.text, { color }]}>{t('{n} km', { n: pick.distanceKm })}</Text>
         </View>
         {pick.priceLabel ? <Text style={[styles.price, { color: colors.red }]}>{shortPrice(pick.priceLabel)}</Text> : null}
       </View>
@@ -31,11 +32,11 @@ export default function DishMeta({ pick, price, eta, rating, color = colors.ink 
     <View style={styles.row}>
       <Text style={[styles.price, { color: colors.red }]}>
         ₹{p.price}
-        {p.people > 1 ? <Text style={styles.group}> · ₹{p.groupPrice} for {p.people}</Text> : null}
+        {p.people > 1 ? <Text style={styles.group}> · {t('₹{price} for {n}', { price: p.groupPrice, n: p.people })}</Text> : null}
       </Text>
       <View style={styles.item}>
         <Icon name="clock" size={14} color={colors.muted} />
-        <Text style={[styles.text, { color }]}>{p.eta} min</Text>
+        <Text style={[styles.text, { color }]}>{t('{n} min', { n: p.eta })}</Text>
       </View>
       {p.rating ? (
         <View style={styles.item}>

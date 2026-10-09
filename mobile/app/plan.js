@@ -14,6 +14,7 @@ import { errorMessage } from '../lib/api';
 import { notify } from '../lib/notify';
 import { planMessage, shareText } from '../lib/share';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const BUDGETS = [500, 800, 1200, 2000];
 const PEOPLE = [1, 2, 3, 4, 5, 6];
@@ -56,25 +57,25 @@ function MealCard({ m, n, last, choice, cooking, loading, onSwap, onCook, onOpen
       </View>
       <View style={{ flex: 1, gap: space.sm }}>
         <View style={styles.mealHead}>
-          <Text style={styles.mealLabel}>{m.label}</Text>
+          <Text style={styles.mealLabel}>{t(m.label)}</Text>
           <Text style={styles.mealTime}>{m.time}</Text>
         </View>
         <View style={[styles.card, atHome && styles.cardHome, loading && { opacity: 0.5 }]}>
           {/* key = what's showing, so a swap or a switch to cooking fades in. */}
           {atHome ? (
-            <PressScale scaleTo={0.98} role="button" aria-label={`Open recipe ${home.name}`} onPress={() => onRecipe(home)}>
+            <PressScale scaleTo={0.98} role="button" aria-label={t('Open recipe {name}', { name: home.name })} onPress={() => onRecipe(home)}>
               <Animated.View key={`home-${home.id}`} entering={FadeIn.duration(260)} style={{ gap: 4 }}>
-                <Text style={styles.homeTag}>Cook at home</Text>
+                <Text style={styles.homeTag}>{t("Cook at home")}</Text>
                 <Text style={[styles.name, styles.nameWithSwap]} numberOfLines={2}>
                   {home.name}
                 </Text>
                 <Text style={type.small}>
-                  {home.time} min · {home.level} · ₹0, from your kitchen
+                  {t('{n} min · {level} · ₹0, from your kitchen', { n: home.time, level: t(home.level) })}
                 </Text>
               </Animated.View>
             </PressScale>
           ) : (
-            <PressScale scaleTo={0.98} role="button" aria-label={`Open ${pick.name}`} onPress={() => onOpen(pick)}>
+            <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: pick.name })} onPress={() => onOpen(pick)}>
               <Animated.View key={pick.id} entering={FadeIn.duration(260)} style={{ gap: 4 }}>
                 <View style={[styles.nameRow, styles.nameWithSwap]}>
                   {isPlace(pick) ? null : <DietMark type={pick.diet === 'veg' ? 'veg' : 'nonveg'} />}
@@ -97,16 +98,16 @@ function MealCard({ m, n, last, choice, cooking, loading, onSwap, onCook, onOpen
             <PressScale role="button" onPress={() => onCook(m.meal)} style={styles.switchRow}>
               <Icon name={atHome ? 'bag' : 'pot'} size={16} color={colors.goldText} />
               <Text style={styles.switchText} numberOfLines={1}>
-                {atHome ? `Order ${pick.name} instead` : `or cook ${home.name} at home`}
+                {atHome ? t('Order {name} instead', { name: pick.name }) : t('or cook {name} at home', { name: home.name })}
               </Text>
               <Icon name="chevron" size={14} color={colors.goldText} />
             </PressScale>
           ) : null}
 
           {m.options.length ? (
-            <PressScale scaleTo={0.92} role="button" aria-label={`Swap ${look.name.toLowerCase()}`} onPress={() => onSwap(m.meal)} hitSlop={6} style={styles.swap}>
+            <PressScale scaleTo={0.92} role="button" aria-label={t('Swap {meal}', { meal: t(look.name) })} onPress={() => onSwap(m.meal)} hitSlop={6} style={styles.swap}>
               <Icon name="restart" size={15} color={colors.red} />
-              <Text style={styles.swapText}>Swap</Text>
+              <Text style={styles.swapText}>{t("Swap")}</Text>
             </PressScale>
           ) : null}
         </View>
@@ -137,7 +138,7 @@ export default function Plan() {
     try {
       await make(changes);
     } catch (err) {
-      notify("Couldn't plan your day", errorMessage(err));
+      notify(t("Couldn't plan your day"), errorMessage(err));
     }
   }
 
@@ -158,9 +159,9 @@ export default function Plan() {
     setSaving(true);
     try {
       await saveDay();
-      toast('Saved to your History');
+      toast(t('Saved to your History'));
     } catch (err) {
-      notify("Couldn't save this day", errorMessage(err));
+      notify(t("Couldn't save this day"), errorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -177,41 +178,41 @@ export default function Plan() {
       <ScrollView contentContainerStyle={{ paddingBottom: 150 + insets.bottom }}>
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-            <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+            <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
             <View style={{ flex: 1 }}>
               <Text style={styles.title} role="heading">
-                Plan my whole day
+                {t("Plan my whole day")}
               </Text>
-              <Text style={styles.subtitle}>Breakfast to dinner, within your budget</Text>
+              <Text style={styles.subtitle}>{t("Breakfast to dinner, within your budget")}</Text>
             </View>
           </View>
         </MaroonBand>
 
         <Animated.View entering={rise(0)} style={[styles.settings, { marginTop: bandHeight - 44 }]}>
-          <Text style={type.label}>Who's eating</Text>
+          <Text style={type.label}>{t("Who's eating")}</Text>
           <View style={styles.chips}>
             {PEOPLE.map((n) => (
-              <Chip key={n} label={n === 1 ? 'Just me' : n === 6 ? '6+' : String(n)} on={(settings.people ?? 1) === n} disabled={loading} onPress={() => remake({ people: n })} />
+              <Chip key={n} label={n === 1 ? t('Just me') : n === 6 ? '6+' : String(n)} on={(settings.people ?? 1) === n} disabled={loading} onPress={() => remake({ people: n })} />
             ))}
-            <Chip label="All veg" on={Boolean(settings.veg)} disabled={loading} onPress={() => remake({ veg: !settings.veg })} />
+            <Chip label={t("All veg")} on={Boolean(settings.veg)} disabled={loading} onPress={() => remake({ veg: !settings.veg })} />
           </View>
-          <Text style={[type.label, { marginTop: space.base }]}>{settings.people > 1 ? 'Day budget per person' : 'Day budget'}</Text>
+          <Text style={[type.label, { marginTop: space.base }]}>{settings.people > 1 ? t('Day budget per person') : t('Day budget')}</Text>
           <View style={styles.chips}>
             {/* The budget from their taste profile joins the list in order. */}
             {[...new Set([...BUDGETS, ...(budget ? [budget] : [])])].sort((a, b) => a - b).map((b) => (
               <Chip key={b} label={rupees(b)} on={budget === b} disabled={loading} onPress={() => remake({ budget: b })} />
             ))}
           </View>
-          <Text style={[type.label, { marginTop: space.base }]}>Mood of the day</Text>
+          <Text style={[type.label, { marginTop: space.base }]}>{t("Mood of the day")}</Text>
           <View style={styles.chips}>
             {MOODS.map(([key, label]) => (
-              <Chip key={key} label={label} on={settings.mood === key} disabled={loading} onPress={() => remake({ mood: key })} />
+              <Chip key={key} label={t(label)} on={settings.mood === key} disabled={loading} onPress={() => remake({ mood: key })} />
             ))}
           </View>
-          <Text style={[type.label, { marginTop: space.base }]}>Meals</Text>
+          <Text style={[type.label, { marginTop: space.base }]}>{t("Meals")}</Text>
           <View style={styles.chips}>
             {MEAL_KEYS.map((key) => (
-              <Chip key={key} label={MEAL_LOOK[key].name} on={settings.meals.includes(key)} disabled={loading} onPress={() => toggleMeal(key)} />
+              <Chip key={key} label={t(MEAL_LOOK[key].name)} on={settings.meals.includes(key)} disabled={loading} onPress={() => toggleMeal(key)} />
             ))}
           </View>
         </Animated.View>
@@ -221,7 +222,7 @@ export default function Plan() {
             <Text style={styles.avatarText}>K</Text>
           </View>
           {loading || !plan ? (
-            <View style={styles.typing} aria-label="Chatora is planning">
+            <View style={styles.typing} aria-label={t("Chatora is planning")}>
               <TypingDots color={colors.red} />
             </View>
           ) : (
@@ -255,9 +256,9 @@ export default function Plan() {
           {total != null ? (
             <>
               <View style={styles.barTop}>
-                <Text style={styles.barLabel}>{people > 1 ? `Per person · ${rupees(total * people)} for ${people}` : 'Day total'}</Text>
+                <Text style={styles.barLabel}>{people > 1 ? t('Per person · {total} for {n}', { total: rupees(total * people), n: people }) : t('Day total')}</Text>
                 <Text style={[styles.barTotal, over && { color: colors.red }]}>
-                  {rupees(total)} <Text style={styles.barOf}>of {rupees(budget)}</Text>
+                  {rupees(total)} <Text style={styles.barOf}>{t('of {amount}', { amount: rupees(budget) })}</Text>
                 </Text>
               </View>
               <View style={styles.track}>
@@ -270,15 +271,15 @@ export default function Plan() {
               {total == null
                 ? 'Tap a meal to order on Zomato or Swiggy.'
                 : over
-                  ? `${rupees(total - budget)} over — swap a meal or cook one`
-                  : `${rupees(budget - total)} left for chai and extras`}
+                  ? t('{amount} over — swap a meal or cook one', { amount: rupees(total - budget) })
+                  : t('{amount} left for chai and extras', { amount: rupees(budget - total) })}
             </Text>
-            <PressScale scaleTo={0.9} role="button" aria-label="Share this day plan" disabled={loading} onPress={() => shareText(planMessage(plan, choice, cook))} style={styles.shareBtn}>
+            <PressScale scaleTo={0.9} role="button" aria-label={t("Share this day plan")} disabled={loading} onPress={() => shareText(planMessage(plan, choice, cook))} style={styles.shareBtn}>
               <Icon name="share" size={16} color={colors.ink} />
             </PressScale>
             <PressScale role="button" disabled={saving || Boolean(savedAt) || loading} onPress={save} style={[styles.saveBtn, savedAt && styles.saveBtnDone]}>
               <Icon name={savedAt ? 'check' : 'heart'} size={15} color={savedAt ? colors.green : colors.red} />
-              <Text style={[styles.saveText, savedAt && { color: colors.green }]}>{savedAt ? 'Saved' : 'Save this day'}</Text>
+              <Text style={[styles.saveText, savedAt && { color: colors.green }]}>{savedAt ? t('Saved') : t('Save this day')}</Text>
             </PressScale>
           </View>
         </View>

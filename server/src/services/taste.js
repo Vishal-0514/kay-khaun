@@ -1,5 +1,6 @@
 import Activity from '../models/Activity.js';
 import Saved from '../models/Saved.js';
+import { tr } from '../i18n.js';
 
 // Taste learning. What someone opens, orders, saves or marks "Not for me"
 // becomes a gentle nudge in the ranking: liked dishes and cuisines rise,
@@ -73,9 +74,9 @@ export function learnedNudge(learned, id, cuisine) {
   let boost = 0.1 * itemAff;
   if (learned.notForMe.has(id) && !learned.saved.has(id)) boost -= 0.5;
   let reason = null;
-  if (learned.saved.has(id)) reason = { icon: 'heart', text: 'You saved this' };
-  else if (learned.ordered.has(id)) reason = { icon: 'restart', text: 'You ordered this before' };
-  else if (cuisineAff >= 0.45 && cuisine) reason = { icon: 'heart', text: `You often go for ${cuisine}` };
+  if (learned.saved.has(id)) reason = { icon: 'heart', text: tr('You saved this') };
+  else if (learned.ordered.has(id)) reason = { icon: 'restart', text: tr('You ordered this before') };
+  else if (cuisineAff >= 0.45 && cuisine) reason = { icon: 'heart', kind: 'cuisine', text: tr('You often go for {cuisine}', { cuisine: tr(cuisine) }) };
   return { boost, cuisineAff, reason };
 }
 

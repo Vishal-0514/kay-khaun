@@ -17,6 +17,7 @@ import { errorMessage } from '../lib/api';
 import { confirm, notify } from '../lib/notify';
 import { dayLabel, timeOf } from '../lib/dates';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const rupees = (n) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -35,7 +36,7 @@ function OrderedRow({ e, onOpen, onRemove }) {
   const app = ORDER_APPS[e.app] ?? ORDER_APPS.zomato;
   return (
     <View style={styles.card}>
-      <PressScale scaleTo={0.98} role="button" aria-label={`Open ${e.item.name}`} onPress={onOpen} style={styles.cardMain}>
+      <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: e.item.name })} onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.tile, { backgroundColor: colors.redSoft }]}>
           <Icon name="bag" size={18} color={colors.red} />
         </View>
@@ -47,16 +48,16 @@ function OrderedRow({ e, onOpen, onRemove }) {
             {e.item.restaurant}
           </Text>
           <Text style={styles.meta}>
-            Opened in {app.label} · {timeOf(e.at)}
+            {t('Opened in {app} · {time}', { app: app.label, time: timeOf(e.at) })}
           </Text>
         </View>
       </PressScale>
       <View style={styles.side}>
-        <PressScale role="button" aria-label={`Order ${e.item.name} again on ${app.label}`} onPress={() => openOrderApp(e.item, e.app ?? 'zomato')} style={styles.again}>
+        <PressScale role="button" aria-label={t('Order {name} again on {app}', { name: e.item.name, app: app.label })} onPress={() => openOrderApp(e.item, e.app ?? 'zomato')} style={styles.again}>
           <Icon name="restart" size={14} color="#FFFFFF" />
-          <Text style={styles.againText}>Again</Text>
+          <Text style={styles.againText}>{t("Again")}</Text>
         </PressScale>
-        <Pressable onPress={onRemove} hitSlop={10} aria-label={`Remove ${e.item.name} from history`} style={styles.remove}>
+        <Pressable onPress={onRemove} hitSlop={10} aria-label={t('Remove {name} from history', { name: e.item.name })} style={styles.remove}>
           <Icon name="close" size={14} color={colors.muted} />
         </Pressable>
       </View>
@@ -68,30 +69,30 @@ function PlanRow({ e, onOpen, onRemove }) {
   const p = e.plan;
   return (
     <View style={styles.card}>
-      <PressScale scaleTo={0.98} role="button" aria-label="Open this day plan" onPress={onOpen} style={styles.cardMain}>
+      <PressScale scaleTo={0.98} role="button" aria-label={t("Open this day plan")} onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.tile, { backgroundColor: colors.goldSoft }]}>
           <Icon name="clock" size={18} color={colors.goldText} />
         </View>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={styles.name}>
-            Day plan · {p.moodLabel}
+            {t('Day plan · {mood}', { mood: p.moodLabel })}
           </Text>
           {p.meals.map((m) => (
             <Text key={m.meal} style={type.small} numberOfLines={1}>
-              <Text style={styles.mealKey}>{m.label}: </Text>
-              {m.cook ? `${m.recipe?.name ?? m.item.name} (cook at home)` : m.item.name}
+              <Text style={styles.mealKey}>{t(m.label)}: </Text>
+              {m.cook ? t('{name} (cook at home)', { name: m.recipe?.name ?? m.item.name }) : m.item.name}
             </Text>
           ))}
           <Text style={styles.meta}>
-            {p.total != null ? `${rupees(p.total)} of ${rupees(p.budget)} · ` : ''}saved {timeOf(e.at)}
+            {p.total != null ? t('{total} of {budget}', { total: rupees(p.total), budget: rupees(p.budget) }) + ' · ' : ''}{t('saved {time}', { time: timeOf(e.at) })}
           </Text>
         </View>
       </PressScale>
       <View style={styles.side}>
-        <PressScale role="button" aria-label="Open this day plan" onPress={onOpen} style={[styles.again, { backgroundColor: colors.maroon }]}>
-          <Text style={[styles.againText, { color: colors.gold }]}>Open</Text>
+        <PressScale role="button" aria-label={t("Open this day plan")} onPress={onOpen} style={[styles.again, { backgroundColor: colors.maroon }]}>
+          <Text style={[styles.againText, { color: colors.gold }]}>{t("Open")}</Text>
         </PressScale>
-        <Pressable onPress={onRemove} hitSlop={10} aria-label="Remove this day plan from history" style={styles.remove}>
+        <Pressable onPress={onRemove} hitSlop={10} aria-label={t("Remove this day plan from history")} style={styles.remove}>
           <Icon name="close" size={14} color={colors.muted} />
         </Pressable>
       </View>
@@ -128,20 +129,20 @@ export default function History() {
   async function remove(e) {
     try {
       await removeHistory(e.id);
-      toast('Removed from history');
+      toast(t('Removed from history'));
     } catch (err) {
-      notify("Couldn't remove it", errorMessage(err));
+      notify(t("Couldn't remove it"), errorMessage(err));
     }
   }
 
   async function clearAll() {
-    const yes = await confirm('Clear your history?', 'Orders and saved days will be removed. What I learned from your orders goes too. This can’t be undone.', 'Clear');
+    const yes = await confirm(t('Clear your history?'), t('Orders and saved days will be removed. What I learned from your orders goes too. This can’t be undone.'), 'Clear');
     if (!yes) return;
     try {
       await clearHistory();
-      toast('History cleared');
+      toast(t('History cleared'));
     } catch (err) {
-      notify("Couldn't clear history", errorMessage(err));
+      notify(t("Couldn't clear history"), errorMessage(err));
     }
   }
 
@@ -150,7 +151,7 @@ export default function History() {
     try {
       await loadHistory({ more: true });
     } catch (err) {
-      notify("Couldn't load more", errorMessage(err));
+      notify(t("Couldn't load more"), errorMessage(err));
     } finally {
       setLoadingMore(false);
     }
@@ -165,12 +166,12 @@ export default function History() {
     <View style={styles.root}>
       <MaroonBand height={bandHeight}>
         <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-          <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
+          <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
           <View style={{ flex: 1 }}>
             <Text style={styles.title} role="heading">
-              Your food history
+              {t("Your food history")}
             </Text>
-            <Text style={styles.subtitle}>What you opened to order, and days you saved</Text>
+            <Text style={styles.subtitle}>{t("What you opened to order, and days you saved")}</Text>
           </View>
         </View>
       </MaroonBand>
@@ -179,9 +180,9 @@ export default function History() {
         <ActivityIndicator color={colors.red} style={{ marginTop: bandHeight + space.xl }} />
       ) : state === 'error' && !history.length ? (
         <View style={[styles.empty, { marginTop: bandHeight }]}>
-          <Text style={type.head}>Couldn't load your history</Text>
+          <Text style={type.head}>{t("Couldn't load your history")}</Text>
           <Text style={[type.small, { textAlign: 'center' }]}>{error}</Text>
-          <Button title="Try again" variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
+          <Button title={t("Try again")} variant="outline" onPress={load} style={{ alignSelf: 'stretch' }} />
         </View>
       ) : (
         <SectionList
@@ -194,11 +195,11 @@ export default function History() {
             memoryOn ? null : (
               <View style={styles.notice}>
                 <Icon name="spark" size={16} color={colors.goldText} />
-                <Text style={styles.noticeText}>"Remember my taste" is off, so new orders aren't added here. Days you save still are.</Text>
+                <Text style={styles.noticeText}>{t("\"Remember my taste\" is off, so new orders aren't added here. Days you save still are.")}</Text>
               </View>
             )
           }
-          renderSectionHeader={({ section }) => <Text style={styles.day}>{section.title}</Text>}
+          renderSectionHeader={({ section }) => <Text style={styles.day}>{t(section.title)}</Text>}
           renderItem={({ item: e, index }) => (
             <Animated.View entering={rise(Math.min(index, 5))}>
               {e.kind === 'plan' ? (
@@ -213,17 +214,17 @@ export default function History() {
               <View style={styles.emptyIcon}>
                 <Icon name="clock" size={30} color={colors.goldText} />
               </View>
-              <Text style={type.head}>No history yet</Text>
-              <Text style={[type.small, { textAlign: 'center' }]}>When you open a pick in Zomato or Swiggy, or save a day plan, it shows up here so you can have it again in one tap.</Text>
-              <Button title="Find something to eat" onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
+              <Text style={type.head}>{t("No history yet")}</Text>
+              <Text style={[type.small, { textAlign: 'center' }]}>{t("When you open a pick in Zomato or Swiggy, or save a day plan, it shows up here so you can have it again in one tap.")}</Text>
+              <Button title={t("Find something to eat")} onPress={() => router.replace('/home')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
             </View>
           }
           ListFooterComponent={
             history.length ? (
               <View style={styles.footer}>
-                {more ? <Button title="Show older" variant="outline" loading={loadingMore} onPress={loadMore} style={{ alignSelf: 'stretch' }} /> : null}
+                {more ? <Button title={t("Show older")} variant="outline" loading={loadingMore} onPress={loadMore} style={{ alignSelf: 'stretch' }} /> : null}
                 <Pressable onPress={clearAll} hitSlop={8} style={styles.clear}>
-                  <Text style={styles.clearText}>Clear history</Text>
+                  <Text style={styles.clearText}>{t("Clear history")}</Text>
                 </Pressable>
               </View>
             ) : null

@@ -10,9 +10,10 @@ import Animated from 'react-native-reanimated';
 import { PressScale, rise, riseUp } from '../components/Motion';
 import { useCookStore } from '../store/useCookStore';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // What you can cook with what you have. Design: V5Recipes.
-const missingText = (r) => (r.missing.length ? `Missing: ${r.missing.map((m) => m.label.toLowerCase()).join(', ')}` : 'You have everything');
+const missingText = (r) => (r.missing.length ? t('Missing: {list}', { list: r.missing.map((m) => t(m.label).toLowerCase()).join(', ') }) : t('You have everything'));
 
 export default function Recipes() {
   const router = useRouter();
@@ -26,17 +27,17 @@ export default function Recipes() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingTop: insets.top + space.base, paddingBottom: insets.bottom + space.xl }}>
       <View style={styles.header}>
-        <IconButton name="back" label="Back" onPress={back} />
+        <IconButton name="back" label={t("Back")} onPress={back} />
         <View style={{ flex: 1 }}>
           <Text style={type.title} role="heading">
-            Cook at home
+            {t("Cook at home")}
           </Text>
           <Text style={styles.sub}>
-            Using {count} {count === 1 ? 'thing' : 'things'} from your kitchen
+            {t(count === 1 ? 'Using {n} thing from your kitchen' : 'Using {n} things from your kitchen', { n: count })}
           </Text>
         </View>
         <Pressable onPress={() => router.push('/kitchen')} hitSlop={8}>
-          <Text style={styles.edit}>Edit</Text>
+          <Text style={styles.edit}>{t("Edit")}</Text>
         </Pressable>
       </View>
 
@@ -45,10 +46,10 @@ export default function Recipes() {
           <View style={styles.emptyIcon}>
             <Icon name="basket" size={28} color={colors.goldText} />
           </View>
-          <Text style={[type.head, { textAlign: 'center' }]}>Nothing to cook with that yet</Text>
-          <Text style={[type.small, { textAlign: 'center' }]}>Add a few more things you have — even onion, tomato or rice open up lots of recipes.</Text>
-          <Button title="Add ingredients" onPress={() => router.push('/kitchen')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
-          <Button title="Order in instead" variant="link" onPress={() => router.push('/chat')} />
+          <Text style={[type.head, { textAlign: 'center' }]}>{t("Nothing to cook with that yet")}</Text>
+          <Text style={[type.small, { textAlign: 'center' }]}>{t("Add a few more things you have — even onion, tomato or rice open up lots of recipes.")}</Text>
+          <Button title={t("Add ingredients")} onPress={() => router.push('/kitchen')} style={{ alignSelf: 'stretch', marginTop: space.sm }} />
+          <Button title={t("Order in instead")} variant="link" onPress={() => router.push('/chat')} />
         </Animated.View>
       ) : (
         <>
@@ -60,26 +61,26 @@ export default function Recipes() {
                   <Text style={styles.ringValue}>
                     {best.have}/{best.total}
                   </Text>
-                  <Text style={styles.ringLabel}>you have</Text>
+                  <Text style={styles.ringLabel}>{t("you have")}</Text>
                 </PlateRing>
               </View>
               <View style={styles.heroText}>
                 <View style={styles.badge}>
                   <Icon name="spark" size={12} color={colors.maroon} />
-                  <Text style={styles.badgeText}>Best match</Text>
+                  <Text style={styles.badgeText}>{t("Best match")}</Text>
                 </View>
                 <Text style={styles.heroName} numberOfLines={2}>
                   {best.name}
                 </Text>
                 <Text style={styles.heroMeta}>
-                  {best.time} min · {best.level} · Serves {best.serves}
+                  {t('{n} min', { n: best.time })} · {t(best.level)} · {t('Serves {n}', { n: best.serves })}
                 </Text>
                 <Text style={styles.heroReason} numberOfLines={2}>
                   {best.missing.length ? missingText(best) : best.reason}
                 </Text>
               </View>
               <View style={styles.heroCta}>
-                <Text style={styles.heroCtaText}>See recipe</Text>
+                <Text style={styles.heroCtaText}>{t("See recipe")}</Text>
                 <Icon name="arrow" size={18} color={colors.maroon} />
               </View>
             </MaroonBand>
@@ -89,7 +90,7 @@ export default function Recipes() {
           {more.length ? (
             <>
               <Animated.Text entering={rise(0, 320)} style={[type.head, styles.moreTitle]}>
-                More you can make
+                {t("More you can make")}
               </Animated.Text>
               <View style={styles.list}>
                 {more.map((r, i) => (
@@ -108,7 +109,7 @@ export default function Recipes() {
                         </Text>
                       </View>
                       <Text style={styles.rowMeta}>
-                        {r.time} min · {r.level}
+                        {t('{n} min', { n: r.time })} · {t(r.level)}
                       </Text>
                       <Text style={[styles.rowStatus, { color: r.missing.length ? colors.goldText : colors.green }]} numberOfLines={1}>
                         {missingText(r)}

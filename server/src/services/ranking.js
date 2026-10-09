@@ -1,5 +1,6 @@
 import { dishes } from '../data/mumbaiMenu.js';
 import { learnedNudge } from './taste.js';
+import { tr } from '../i18n.js';
 
 // Deterministic picker (PRD §8): hard filters first, then a weighted score.
 // Everything shown to the user — dish, price, time — comes from the data,
@@ -79,22 +80,22 @@ export function score(d, c) {
 
 export function reasonsFor(d, c, nameHit) {
   const r = [];
-  if (nameHit) r.push({ icon: 'spark', text: 'Exactly what you asked for' });
+  if (nameHit) r.push({ icon: 'spark', text: tr('Exactly what you asked for') });
   const learnedReason = learnedNudge(c.learned, d.id, d.cuisine).reason;
   if (learnedReason) r.push(learnedReason);
-  if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: `${d.spice === 5 ? 'Fiery' : 'Properly spicy'}, just like you asked` });
+  if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: tr(d.spice === 5 ? 'Fiery, just like you asked' : 'Properly spicy, just like you asked') });
   else {
     const mood = c.moods.find((m) => d.moods.includes(m));
-    if (mood) r.push({ icon: 'bowl', text: { comfort: 'Warm, filling comfort food', light: 'Light and easy on the stomach', street: 'Proper Mumbai street style', sweet: 'Something sweet, as you wanted' }[mood] });
+    if (mood) r.push({ icon: 'bowl', text: tr({ comfort: 'Warm, filling comfort food', light: 'Light and easy on the stomach', street: 'Proper Mumbai street style', sweet: 'Something sweet, as you wanted' }[mood]) });
   }
-  if (c.people > 1) r.push({ icon: 'bowl', text: `₹${d.price * c.people} for ${c.people} of you${SHAREABLE.has(d.id) && c.people >= 3 ? ', good for sharing' : ''}` });
+  if (c.people > 1) r.push({ icon: 'bowl', text: tr(SHAREABLE.has(d.id) && c.people >= 3 ? '₹{total} for {n} of you, good for sharing' : '₹{total} for {n} of you', { total: d.price * c.people, n: c.people }) });
   if (c.budgetMax && d.price <= c.budgetMax) {
     const left = c.budgetMax - d.price;
-    r.push({ icon: 'rupee', text: c.people > 1 ? `Fits ₹${c.budgetMax} per person` : left >= 20 ? `₹${left} under your budget` : 'Right on your budget' });
-  } else if (c.budgetMax) r.push({ icon: 'rupee', text: `₹${d.price - c.budgetMax} over budget — worth a look` });
-  if (c.timeMax && d.eta <= c.timeMax) r.push({ icon: 'clock', text: c.timeMax - d.eta >= 5 ? `Arrives ${c.timeMax - d.eta} min before your limit` : `Arrives in about ${d.eta} min` });
-  if (c.favCuisines.includes(d.cuisine) && !learnedReason?.text.includes(d.cuisine)) r.push({ icon: 'heart', text: `You love ${d.cuisine}` });
-  if (d.rating >= 4.5) r.push({ icon: 'star', text: `Rated ${d.rating} by diners` });
+    r.push({ icon: 'rupee', text: c.people > 1 ? tr('Fits ₹{n} per person', { n: c.budgetMax }) : left >= 20 ? tr('₹{n} under your budget', { n: left }) : tr('Right on your budget') });
+  } else if (c.budgetMax) r.push({ icon: 'rupee', text: tr('₹{n} over budget — worth a look', { n: d.price - c.budgetMax }) });
+  if (c.timeMax && d.eta <= c.timeMax) r.push({ icon: 'clock', text: c.timeMax - d.eta >= 5 ? tr('Arrives {n} min before your limit', { n: c.timeMax - d.eta }) : tr('Arrives in about {n} min', { n: d.eta }) });
+  if (c.favCuisines.includes(d.cuisine) && learnedReason?.kind !== 'cuisine') r.push({ icon: 'heart', text: tr('You love {cuisine}', { cuisine: tr(d.cuisine) }) });
+  if (d.rating >= 4.5) r.push({ icon: 'star', text: tr('Rated {n} by diners', { n: d.rating }) });
   return r.slice(0, 4);
 }
 

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { t } from './i18n';
 
 // Opt-in meal reminders: daily notifications scheduled on the phone itself,
 // so nothing is sent to our server. Settings stay on this device.
@@ -70,7 +71,7 @@ export async function applyReminders(settings) {
   await writeReminders(settings);
   if (!N) return;
   if (Platform.OS === 'android') {
-    await N.setNotificationChannelAsync(CHANNEL, { name: 'Meal reminders', importance: N.AndroidImportance.DEFAULT });
+    await N.setNotificationChannelAsync(CHANNEL, { name: t('Meal reminders'), importance: N.AndroidImportance.DEFAULT });
   }
   for (const { meal, route } of REMINDER_MEALS) {
     await N.cancelScheduledNotificationAsync(ID(meal)).catch(() => {});
@@ -79,7 +80,7 @@ export async function applyReminders(settings) {
     const [hour, minute] = s.time.split(':').map(Number);
     await N.scheduleNotificationAsync({
       identifier: ID(meal),
-      content: { ...MESSAGES[meal], data: { url: route } },
+      content: { title: t(MESSAGES[meal].title), body: t(MESSAGES[meal].body), data: { url: route } },
       trigger: { type: N.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: CHANNEL },
     });
   }

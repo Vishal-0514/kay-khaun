@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
+import { languageMiddleware } from './i18n.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import healthRoutes from './routes/health.js';
 import authRoutes from './routes/auth.js';
@@ -14,6 +15,8 @@ import meRoutes from './routes/me.js';
 const app = express();
 
 app.use(cors());
+// Interface language (Accept-Language: hi) for text the server writes.
+app.use(languageMiddleware);
 // Fridge photos are bigger than everything else, so only that route gets a bigger limit.
 app.use('/api/cook/scan', express.json({ limit: '6mb' }));
 app.use(express.json({ limit: '100kb' }));

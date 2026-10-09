@@ -14,6 +14,7 @@ import { pickKitchenPhoto } from '../lib/photo';
 import { errorMessage } from '../lib/api';
 import { notify } from '../lib/notify';
 import { colors, fonts, radius, space, type } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // "What's in your kitchen?" — snap the fridge (Claude spots the ingredients) or
 // type them, then see what you can cook. Design: V5Fridge.
@@ -45,13 +46,13 @@ function Chip({ item, onRemove, onConfirm }) {
   const unsure = item.sure === false;
   return (
     <Animated.View entering={rise(0)} exiting={leave} layout={smoothLayout} style={[styles.chip, unsure && styles.chipUnsure]}>
-      <Pressable onPress={unsure ? onConfirm : undefined} disabled={!unsure} aria-label={unsure ? `Confirm ${item.label}` : undefined} hitSlop={4}>
+      <Pressable onPress={unsure ? onConfirm : undefined} disabled={!unsure} aria-label={unsure ? t('Confirm {name}', { name: t(item.label) }) : undefined} hitSlop={4}>
         <Text style={styles.chipText}>
-          {item.label}
+          {t(item.label)}
           {unsure ? '?' : ''}
         </Text>
       </Pressable>
-      <Pressable role="button" aria-label={`Remove ${item.label}`} onPress={onRemove} hitSlop={6} style={styles.chipX}>
+      <Pressable role="button" aria-label={t('Remove {name}', { name: t(item.label) })} onPress={onRemove} hitSlop={6} style={styles.chipX}>
         <Icon name="close" size={12} color={colors.muted} strokeWidth={2.4} />
       </Pressable>
     </Animated.View>
@@ -100,7 +101,7 @@ export default function Kitchen() {
 
   async function takePhoto(source) {
     if (!scanAvailable) {
-      notify('Photo scan is off', "Fridge scanning switches on once the AI key is added to the server. For now, type what you have below.");
+      notify(t('Photo scan is off'), t("Fridge scanning switches on once the AI key is added to the server. For now, type what you have below."));
       return;
     }
     setScanNote(null);
@@ -108,7 +109,7 @@ export default function Kitchen() {
     try {
       shot = await pickKitchenPhoto(source);
     } catch (err) {
-      notify(err.code === 'PERMISSION' ? 'Allow access' : "Couldn't open the camera", err.code === 'PERMISSION' ? `${err.message} Turn it on in your phone settings, or type what you have.` : err.message);
+      notify(err.code === 'PERMISSION' ? t('Allow access') : t("Couldn't open the camera"), err.code === 'PERMISSION' ? `${err.message} Turn it on in your phone settings, or type what you have.` : err.message);
       return;
     }
     if (!shot) return;
@@ -139,18 +140,18 @@ export default function Kitchen() {
         router.push('/recipes');
       }
     } catch (err) {
-      notify("Couldn't find recipes", errorMessage(err));
+      notify(t("Couldn't find recipes"), errorMessage(err));
     } finally {
       setFinding(false);
     }
   }
 
-  const title = scanning ? 'Looking at your photo…' : kitchen.length ? `You have ${kitchen.length} ${kitchen.length === 1 ? 'thing' : 'things'}` : "What's in your kitchen?";
+  const title = scanning ? t('Looking at your photo…') : kitchen.length ? t(kitchen.length === 1 ? 'You have {n} thing' : 'You have {n} things', { n: kitchen.length }) : t("What's in your kitchen?");
   const subtitle = unsureCount
-    ? `Tap the ones with “?” to confirm${unsureCount > 1 ? ' them' : ' it'}, or remove anything that's wrong.`
+    ? t(unsureCount > 1 ? "Tap the ones with “?” to confirm them, or remove anything that's wrong." : "Tap the one with “?” to confirm it, or remove it if it's wrong.")
     : kitchen.length
-      ? 'Add anything else you have. Salt, oil and spices are already counted.'
-      : 'Add a few things you have. Salt, oil and spices are already counted.';
+      ? t('Add anything else you have. Salt, oil and spices are already counted.')
+      : t('Add a few things you have. Salt, oil and spices are already counted.');
 
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -159,20 +160,20 @@ export default function Kitchen() {
         <View style={[styles.camera, { paddingTop: insets.top + space.base }]}>
           <Jaali />
           <View style={styles.header}>
-            <IconButton name="close" label="Close" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
-            <Text style={styles.headerTitle}>Your kitchen</Text>
+            <IconButton name="close" label={t("Close")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+            <Text style={styles.headerTitle}>{t("Your kitchen")}</Text>
             <View style={{ width: 44 }} />
           </View>
 
           <Animated.View entering={appear(0, 150)} style={styles.frame}>
             {photo ? (
               <>
-                <Image source={{ uri: photo }} style={StyleSheet.absoluteFill} resizeMode="cover" aria-label="Your kitchen photo" />
+                <Image source={{ uri: photo }} style={StyleSheet.absoluteFill} resizeMode="cover" aria-label={t("Your kitchen photo")} />
                 {scanning ? <ScanLine /> : null}
                 {scanning ? (
                   <View style={styles.scanOverlay}>
                     <ActivityIndicator color={colors.gold} size="large" />
-                    <Text style={styles.scanText}>Spotting ingredients…</Text>
+                    <Text style={styles.scanText}>{t("Spotting ingredients…")}</Text>
                   </View>
                 ) : null}
               </>
@@ -181,19 +182,19 @@ export default function Kitchen() {
                 <View style={styles.frameIcon}>
                   <Icon name="camera" size={28} color={colors.gold} />
                 </View>
-                <Text style={styles.frameTitle}>{scanAvailable ? 'Snap your fridge or shelf' : 'Type what you have'}</Text>
+                <Text style={styles.frameTitle}>{scanAvailable ? t('Snap your fridge or shelf') : t('Type what you have')}</Text>
                 <Text style={styles.frameText}>
-                  {scanAvailable ? 'Chatora will spot the ingredients for you.' : 'Photo scan switches on once the AI is connected.'}
+                  {scanAvailable ? t('Chatora will spot the ingredients for you.') : t('Photo scan switches on once the AI is connected.')}
                 </Text>
               </View>
             )}
           </Animated.View>
 
           <View style={[styles.shutterRow, !scanAvailable && { opacity: 0.45 }]}>
-            <PressScale scaleTo={0.88} role="button" aria-label="Choose a photo" onPress={() => takePhoto('library')} disabled={scanning} style={styles.gallery}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t("Choose a photo")} onPress={() => takePhoto('library')} disabled={scanning} style={styles.gallery}>
               <Icon name="image" size={22} color="#FFFFFF" />
             </PressScale>
-            <PressScale scaleTo={0.88} role="button" aria-label="Take a photo" onPress={() => takePhoto('camera')} disabled={scanning} style={styles.shutter}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t("Take a photo")} onPress={() => takePhoto('camera')} disabled={scanning} style={styles.shutter}>
               <View style={styles.shutterInner} />
             </PressScale>
             <View style={{ width: 48 }} />
@@ -220,22 +221,22 @@ export default function Kitchen() {
             <TextInput
               value={text}
               onChangeText={setText}
-              placeholder="Add an ingredient (e.g. aloo, eggs)"
+              placeholder={t("Add an ingredient (e.g. aloo, eggs)")}
               placeholderTextColor="#B3A196"
               style={styles.input}
-              aria-label="Add an ingredient"
+              aria-label={t("Add an ingredient")}
               returnKeyType="done"
               onSubmitEditing={addTyped}
               maxLength={80}
             />
-            <Pressable role="button" aria-label="Add" onPress={addTyped} disabled={!text.trim()} style={[styles.addBtn, !text.trim() && { opacity: 0.4 }]}>
+            <Pressable role="button" aria-label={t("Add")} onPress={addTyped} disabled={!text.trim()} style={[styles.addBtn, !text.trim() && { opacity: 0.4 }]}>
               <Icon name="plus" size={20} color="#FFFFFF" />
             </Pressable>
           </View>
 
           {suggestions.length ? (
             <>
-              <Text style={[type.label, { marginTop: space.lg }]}>{text.trim() ? 'Did you mean' : 'Quick add'}</Text>
+              <Text style={[type.label, { marginTop: space.lg }]}>{text.trim() ? t('Did you mean') : t('Quick add')}</Text>
               <View style={styles.chips}>
                 {suggestions.map((c, i) => (
                   <Animated.View key={c.id} entering={rise(i, 50)} exiting={leave} layout={smoothLayout}>
@@ -249,7 +250,7 @@ export default function Kitchen() {
                     style={styles.suggest}
                   >
                     <Icon name="plus" size={14} color={colors.ink} />
-                    <Text style={styles.suggestText}>{c.label}</Text>
+                    <Text style={styles.suggestText}>{t(c.label)}</Text>
                   </PressScale>
                   </Animated.View>
                 ))}
@@ -258,7 +259,7 @@ export default function Kitchen() {
           ) : null}
 
           <Button
-            title={readyCount ? `Show recipes` : 'Add something to start'}
+            title={readyCount ? t('Show recipes') : t('Add something to start')}
             icon={readyCount ? <Icon name="arrow" size={18} color="#FFFFFF" /> : null}
             onPress={showRecipes}
             loading={finding}

@@ -15,6 +15,7 @@ import { homeRouteFor } from '../lib/session';
 import { notify } from '../lib/notify';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, type, space, radius } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const SHEET_HEIGHT = 400;
 
@@ -65,7 +66,7 @@ function CravingDemo() {
   }, [index, demo.ask.length]);
 
   return (
-    <View style={styles.demo} aria-label={`Example: ${demo.ask}. ${demo.reply}.`}>
+    <View style={styles.demo} aria-label={t('Example: {ask}. {reply}.', { ask: demo.ask, reply: t(demo.reply) })}>
       {phase !== 'leaving' ? (
         <Animated.View key={`ask${index}`} entering={fromLeft()} exiting={leave} style={styles.askBubble}>
           <View style={styles.askMic}>
@@ -92,7 +93,7 @@ function CravingDemo() {
             <View style={styles.replyTick}>
               <Icon name="check" size={12} color="#FFFFFF" strokeWidth={3.2} />
             </View>
-            <Text style={styles.replyText}>{demo.reply}</Text>
+            <Text style={styles.replyText}>{t(demo.reply)}</Text>
             <Icon name={demo.icon} size={16} color={colors.goldText} />
           </Animated.View>
         ) : null}
@@ -120,7 +121,7 @@ export default function Welcome() {
 
   async function continueWithGoogle() {
     const reason = googleUnavailableReason();
-    if (reason) return notify('Google sign-in', reason);
+    if (reason) return notify(t('Google sign-in'), reason);
     setGoogleBusy(true);
     try {
       // Google's account picker -> Firebase -> our server's session (like KARIS).
@@ -130,7 +131,7 @@ export default function Welcome() {
       setSession(session);
       router.replace(homeRouteFor(session.user));
     } catch (err) {
-      notify("Couldn't sign in with Google", err.message);
+      notify(t("Couldn't sign in with Google"), err.message);
     } finally {
       setGoogleBusy(false);
     }
@@ -144,7 +145,7 @@ export default function Welcome() {
       setSession(data);
       router.replace(homeRouteFor(data.user));
     } catch (err) {
-      notify('Skip login', err.response?.status === 404 ? 'Skipping login is turned off on the server (ALLOW_GUEST_LOGIN).' : errorMessage(err));
+      notify(t('Skip login'), err.response?.status === 404 ? 'Skipping login is turned off on the server (ALLOW_GUEST_LOGIN).' : errorMessage(err));
     } finally {
       setGuestBusy(false);
     }
@@ -175,10 +176,10 @@ export default function Welcome() {
           <Text style={styles.brandName}>Kya Khaun?</Text>
         </Animated.View>
         <Reveal delay={250} style={{ marginTop: space.lg }}>
-          <Text style={styles.kicker}>Your AI food guide</Text>
+          <Text style={styles.kicker}>{t("Your AI food guide")}</Text>
         </Reveal>
         <Reveal delay={420}>
-          <Text style={styles.hero}>Hungry tonight?</Text>
+          <Text style={styles.hero}>{t("Hungry tonight?")}</Text>
         </Reveal>
         <Animated.View entering={appear(0, 900)}>
           <CravingDemo />
@@ -187,23 +188,23 @@ export default function Welcome() {
 
       <Animated.View entering={sheetUp(150)} style={[styles.sheet, { paddingBottom: insets.bottom + space.base }]}>
         <Animated.Text entering={rise(0, 550)} style={styles.title} role="heading">
-          Can't decide{'\n'}what to eat?
+          {t("Can't decide\nwhat to eat?")}
         </Animated.Text>
         <Animated.Text entering={rise(1, 550)} style={styles.lede}>
-          Tell me your craving, budget and time. I'll find the right meal in seconds.
+          {t("Tell me your craving, budget and time. I'll find the right meal in seconds.")}
         </Animated.Text>
         <View style={styles.buttons}>
           <Animated.View entering={rise(2, 550)}>
-            <Button variant="outline" title="Continue with Google" icon={<GoogleG />} loading={googleBusy} onPress={continueWithGoogle} />
+            <Button variant="outline" title={t("Continue with Google")} icon={<GoogleG />} loading={googleBusy} onPress={continueWithGoogle} />
           </Animated.View>
           <Animated.View entering={rise(3, 550)}>
-            <Button sheen title="Continue with email" icon={<Icon name="mail" color="#FFFFFF" />} onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'login' } })} />
+            <Button sheen title={t("Continue with email")} icon={<Icon name="mail" color="#FFFFFF" />} onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'login' } })} />
           </Animated.View>
         </View>
         <Animated.View entering={rise(4, 550)} style={styles.footer}>
-          <Button variant="link" title="New here? Create an account" onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'signup' } })} />
-          <Text style={styles.legal}>By continuing you agree to our Terms and Privacy Policy.</Text>
-          {__DEV__ ? <Button variant="link" title="Skip login (testing only)" loading={guestBusy} onPress={skipLogin} /> : null}
+          <Button variant="link" title={t("New here? Create an account")} onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'signup' } })} />
+          <Text style={styles.legal}>{t("By continuing you agree to our Terms and Privacy Policy.")}</Text>
+          {__DEV__ ? <Button variant="link" title={t("Skip login (testing only)")} loading={guestBusy} onPress={skipLogin} /> : null}
         </Animated.View>
       </Animated.View>
     </View>

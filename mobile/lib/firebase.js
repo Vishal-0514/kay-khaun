@@ -15,6 +15,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { api } from './api';
+import { t } from './i18n';
 
 // Sign-in works like KARIS: Firebase checks the email + password (or Google),
 // sends the verification and password-reset emails, then hands us an ID token
@@ -55,7 +56,7 @@ const FRIENDLY = {
 };
 
 function friendly(err) {
-  const error = new Error(FRIENDLY[err?.code] ?? err?.response?.data?.error ?? err?.message ?? 'Something went wrong. Please try again.');
+  const error = new Error(t(FRIENDLY[err?.code] ?? err?.response?.data?.error ?? err?.message ?? 'Something went wrong. Please try again.'));
   error.code = err?.code ?? err?.response?.data?.code;
   return error;
 }

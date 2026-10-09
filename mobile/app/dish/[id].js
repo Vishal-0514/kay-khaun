@@ -20,6 +20,7 @@ import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
+import { t } from '../../lib/i18n';
 
 // Each reason gets its own soft colour tile (design: V5 "Why I picked this").
 const TILE = {
@@ -68,19 +69,19 @@ export default function Dish() {
     try {
       await notForMe(dish);
       useChatStore.setState((s) => ({ picks: s.picks.filter((p) => p.id !== dish.id) }));
-      toast("Got it — I'll show this less", 'check');
+      toast(t("Got it — I'll show this less"), 'check');
       router.canGoBack() ? router.back() : router.replace('/home');
     } catch (err) {
       setHiding(false);
-      notify("Couldn't save that", errorMessage(err));
+      notify(t("Couldn't save that"), errorMessage(err));
     }
   }
 
   if (!dish) {
     return (
       <View style={[styles.root, { alignItems: 'center', justifyContent: 'center', padding: space.lg }]}>
-        <Text style={type.head}>This pick isn't available any more</Text>
-        <Button title="Back to Home" onPress={() => router.replace('/home')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
+        <Text style={type.head}>{t("This pick isn't available any more")}</Text>
+        <Button title={t("Back to Home")} onPress={() => router.replace('/home')} style={{ marginTop: space.lg, alignSelf: 'stretch' }} />
       </View>
     );
   }
@@ -90,9 +91,9 @@ export default function Dish() {
       <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-            <IconButton name="back" label="Back" onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
+            <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
             <View style={styles.headerRight}>
-              <IconButton name="share" label={`Share ${dish.name}`} onDark onPress={() => shareText(pickMessage(dish))} />
+              <IconButton name="share" label={t('Share {name}', { name: dish.name })} onDark onPress={() => shareText(pickMessage(dish))} />
               <HeartButton pick={dish} onDark />
             </View>
           </View>
@@ -103,7 +104,7 @@ export default function Dish() {
                   {dish.match}
                   <Text style={styles.bigPercent}>%</Text>
                 </Text>
-                <Text style={styles.bigLabel}>match for you</Text>
+                <Text style={styles.bigLabel}>{t("match for you")}</Text>
               </PlateRing>
             ) : (
               <View style={styles.badge}>
@@ -125,22 +126,22 @@ export default function Dish() {
         <Animated.View entering={riseUp(0, 300)} style={[styles.stats, { marginTop: bandHeight - 36 }]}>
           {place ? (
             <>
-              <Stat label="Google rating" value={dish.rating ? `${dish.rating.toFixed(1)} ★` : '—'} />
-              <Stat label="Distance" value={`${dish.distanceKm} km`} />
-              <Stat label="For one" value={shortPrice(dish.priceLabel) ?? '—'} />
+              <Stat label={t("Google rating")} value={dish.rating ? `${dish.rating.toFixed(1)} ★` : '—'} />
+              <Stat label={t("Distance")} value={t('{n} km', { n: dish.distanceKm })} />
+              <Stat label={t("For one")} value={shortPrice(dish.priceLabel) ?? '—'} />
             </>
           ) : (
             <>
-              {dish.people > 1 ? <Stat label={`For ${dish.people} (₹${dish.price} each)`} value={`₹${dish.groupPrice}`} /> : <Stat label="Price" value={`₹${dish.price}`} />}
-              <Stat label="Arrives in" value={`${dish.eta} min`} />
-              <Stat label="Rating" value={`${dish.rating} ★`} />
+              {dish.people > 1 ? <Stat label={t('For {n} (₹{price} each)', { n: dish.people, price: dish.price })} value={`₹${dish.groupPrice}`} /> : <Stat label={t("Price")} value={`₹${dish.price}`} />}
+              <Stat label={t("Arrives in")} value={t('{n} min', { n: dish.eta })} />
+              <Stat label={t("Rating")} value={`${dish.rating} ★`} />
             </>
           )}
         </Animated.View>
 
         {place && dish.ideas?.length ? (
           <Animated.View entering={rise(0, 380)} style={styles.ideas}>
-            <Text style={type.head}>Try here</Text>
+            <Text style={type.head}>{t("Try here")}</Text>
             <View style={styles.ideaRow}>
               {dish.ideas.map((idea) => (
                 <View key={idea} style={styles.idea}>
@@ -148,20 +149,20 @@ export default function Dish() {
                 </View>
               ))}
             </View>
-            <Text style={type.small}>Popular at places like this. Check today's menu and prices on Zomato or Swiggy.</Text>
+            <Text style={type.small}>{t("Popular at places like this. Check today's menu and prices on Zomato or Swiggy.")}</Text>
           </Animated.View>
         ) : null}
 
         <View style={styles.why}>
-          <Text style={type.head}>Why I picked this</Text>
+          <Text style={type.head}>{t("Why I picked this")}</Text>
           {(dish.reasons ?? [{ icon: 'heart', text: 'One of your picks from before' }]).map((r, i) => {
             const [tint, ink] = TILE[r.icon] ?? TILE.spark;
             return (
-              <Animated.View key={r.text} entering={rise(i, 450)} style={styles.reason}>
+              <Animated.View key={t(r.text)} entering={rise(i, 450)} style={styles.reason}>
                 <View style={[styles.tile, { backgroundColor: tint }]}>
                   <Icon name={r.icon} size={20} color={ink} strokeWidth={1.9} />
                 </View>
-                <Text style={styles.reasonText}>{r.text}</Text>
+                <Text style={styles.reasonText}>{t(r.text)}</Text>
               </Animated.View>
             );
           })}
@@ -171,25 +172,25 @@ export default function Dish() {
                 <Icon name="route" size={20} color={colors.muted} strokeWidth={1.9} />
               </View>
               <Text style={styles.reasonText}>
-                {[dish.distanceKm != null && `${dish.distanceKm} km away`, dish.cuisine, dish.spiceLabel, 'sample dish'].filter(Boolean).join(' · ')}
+                {[dish.distanceKm != null && t('{n} km away', { n: dish.distanceKm }), t(dish.cuisine), t(dish.spiceLabel), t('sample dish')].filter(Boolean).join(' · ')}
               </Text>
             </View>
           )}
-          <PressScale role="button" disabled={hiding} onPress={hide} style={styles.notForMe} aria-label="Not for me, show this less">
+          <PressScale role="button" disabled={hiding} onPress={hide} style={styles.notForMe} aria-label={t("Not for me, show this less")}>
             <Icon name="close" size={16} color={colors.muted} />
-            <Text style={styles.notForMeText}>Not for me — show this less</Text>
+            <Text style={styles.notForMeText}>{t("Not for me — show this less")}</Text>
           </PressScale>
         </View>
       </ScrollView>
 
       {/* Kya Khaun suggests; they order on Zomato or Swiggy. */}
       <View style={[styles.bar, { paddingBottom: insets.bottom + space.md }]}>
-        <Text style={styles.barTitle}>Order from {place ? dish.name : 'a delivery app'}</Text>
+        <Text style={styles.barTitle}>{place ? t('Order from {name}', { name: dish.name }) : t('Order from a delivery app')}</Text>
         <View style={styles.barButtons}>
           {Object.entries(ORDER_APPS).map(([app, a]) => (
             <Button
               key={app}
-              title={a.label}
+              title={t(a.label)}
               icon={<Icon name="external" size={18} color="#FFFFFF" />}
               onPress={() => openOrderApp(dish, app)}
               style={[styles.orderBtn, { backgroundColor: a.color, shadowColor: a.color }]}

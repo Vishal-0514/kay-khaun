@@ -6,6 +6,7 @@ import { nearbyPicks } from '../services/nearby.js';
 import { placesEnabled } from '../services/places.js';
 import { prefsOf, tasteOf } from '../services/taste.js';
 import { currentOccasion, findOccasion } from '../data/occasions.js';
+import { tr } from '../i18n.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 
@@ -50,23 +51,28 @@ const listWords = (words) => (words.length < 2 ? words.join('') : `${words.slice
 
 // Plain wording, used only when Claude is unavailable.
 const backupText = {
-  ask: (heard) => `${heard ? 'Got it.' : "Let's find you something."} Would you like to order in, or cook at home?`,
-  offTopic: "I'm here to help you decide what to eat. Tell me what you feel like!",
-  askKitchen: 'Nice, let\'s cook! What do you have at home? Type a few things like "eggs, onion, bread", or scan your fridge.',
+  ask: (heard) => tr(heard ? 'Got it. Would you like to order in, or cook at home?' : "Let's find you something. Would you like to order in, or cook at home?"),
+  get offTopic() {
+    return tr("I'm here to help you decide what to eat. Tell me what you feel like!");
+  },
+  get askKitchen() {
+    return tr('Nice, let\'s cook! What do you have at home? Type a few things like "eggs, onion, bread", or scan your fridge.');
+  },
   picks: ({ picks, relaxed }) => {
     const top = picks[0];
     if (top.source === 'places') {
-      const rating = top.rating ? ` (★${top.rating.toFixed(1)}, ${top.distanceKm} km away)` : ` (${top.distanceKm} km away)`;
-      return `My top pick is ${top.name}${rating}. Here are your top ${picks.length} — tap one to order on Zomato or Swiggy.`;
+      const extra = top.rating ? tr(' (★{r}, {km} km away)', { r: top.rating.toFixed(1), km: top.distanceKm }) : tr(' ({km} km away)', { km: top.distanceKm });
+      return tr('My top pick is {name}{extra}. Here are your top {n} — tap one to order on Zomato or Swiggy.', { name: top.name, extra, n: picks.length });
     }
-    const lead = relaxed === 'time' ? 'Nothing arrives that fast, so I widened the time a little. ' : relaxed === 'budget' ? 'Nothing fit the budget, so here are the closest options. ' : '';
-    const cost = top.people > 1 ? `₹${top.price} each (about ₹${top.groupPrice} for ${top.people})` : `₹${top.price}`;
-    return `${lead}My top pick is ${top.name} from ${top.restaurant}: ${cost}, about ${top.eta} min. Here are your top ${picks.length}.`;
+    const lead = relaxed === 'time' ? tr('Nothing arrives that fast, so I widened the time a little. ') : relaxed === 'budget' ? tr('Nothing fit the budget, so here are the closest options. ') : '';
+    const cost = top.people > 1 ? tr('₹{price} each (about ₹{total} for {n})', { price: top.price, total: top.groupPrice, n: top.people }) : `₹${top.price}`;
+    return tr('{lead}My top pick is {name} from {restaurant}: {cost}, about {eta} min. Here are your top {n}.', { lead, name: top.name, restaurant: top.restaurant, cost, eta: top.eta, n: picks.length });
   },
   recipes: (recipes) => {
     const top = recipes[0];
-    const need = top.missing.length ? ` You'll just need ${listWords(top.missing.map((m) => m.label.toLowerCase()))}.` : '';
-    return `You can make ${top.name} in about ${top.time} min.${need} Here ${recipes.length === 1 ? 'is 1 recipe' : `are ${recipes.length} recipes`} for what you have.`;
+    const need = top.missing.length ? tr(" You'll just need {list}.", { list: listWords(top.missing.map((m) => m.label.toLowerCase())) }) : '';
+    const count = recipes.length === 1 ? tr('Here is 1 recipe for what you have.') : tr('Here are {n} recipes for what you have.', { n: recipes.length });
+    return tr('You can make {name} in about {time} min.{need} {count}', { name: top.name, time: top.time, need, count });
   },
 };
 
@@ -245,7 +251,7 @@ export async function quickPicks(req, res) {
 // Today's festival or season special for Home, or null.
 export function occasionNow(req, res) {
   const o = currentOccasion();
-  res.json({ success: true, occasion: o && { id: o.id, title: o.title, subtitle: o.subtitle, icon: o.icon } });
+  res.json({ success: true, occasion: o && { id: o.id, title: tr(o.title), subtitle: tr(o.subtitle), icon: o.icon } });
 }
 
 // Lets the app show whether Chatora is running on Claude.

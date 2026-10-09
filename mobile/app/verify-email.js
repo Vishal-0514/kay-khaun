@@ -10,6 +10,7 @@ import { confirmEmailVerified, endFirebaseSession, resendVerificationEmail } fro
 import { homeRouteFor } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, radius, shadow, space } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 const RESEND_SECONDS = 30;
 
@@ -46,7 +47,7 @@ export default function VerifyEmail() {
         router.dismissAll?.();
         router.replace(homeRouteFor(session.user));
       } else if (!quiet) {
-        setNotice('Not verified yet. Tap the link in our email first — check your spam folder too.');
+        setNotice(t('Not verified yet. Tap the link in our email first — check your spam folder too.'));
       }
     } catch (err) {
       if (!quiet) setError(err.message);
@@ -71,7 +72,7 @@ export default function VerifyEmail() {
     try {
       await resendVerificationEmail();
       setWait(RESEND_SECONDS);
-      setNotice('A new link is on its way.');
+      setNotice(t('A new link is on its way.'));
     } catch (err) {
       setError(err.message);
     }
@@ -84,7 +85,7 @@ export default function VerifyEmail() {
 
   return (
     <View style={styles.root}>
-      <BandHeader height={bandHeight} title="Check your inbox" subtitle="One tap and you're in." onBack={differentEmail} />
+      <BandHeader height={bandHeight} title={t("Check your inbox")} subtitle="One tap and you're in." onBack={differentEmail} />
       <Animated.View entering={riseUp(0, 120)} style={[styles.card, { marginTop: bandHeight - 28 }]}>
         <View style={styles.iconWrap}>
           <Glow size={84} color={colors.gold} />
@@ -93,12 +94,12 @@ export default function VerifyEmail() {
           </View>
         </View>
         <Text style={styles.text}>
-          We sent a verification link to{'\n'}
+          {t('We sent a verification link to')}{'\n'}
           <Text style={styles.email}>{email}</Text>
-          {'\n'}Tap it, then come back here.
+          {'\n'}{t('Tap it, then come back here.')}
         </Text>
 
-        <Button sheen title="I've verified my email" onPress={() => check()} loading={checking} style={{ alignSelf: 'stretch', marginTop: space.lg }} />
+        <Button sheen title={t("I've verified my email")} onPress={() => check()} loading={checking} style={{ alignSelf: 'stretch', marginTop: space.lg }} />
 
         {error ? (
           <Animated.Text entering={rise(0)} style={styles.error}>
@@ -113,14 +114,14 @@ export default function VerifyEmail() {
 
         <View style={styles.links}>
           {wait > 0 ? (
-            <Text style={styles.wait}>Send a new link in {wait}s</Text>
+            <Text style={styles.wait}>{t('Send a new link in {n}s', { n: wait })}</Text>
           ) : (
             <Pressable role="button" onPress={resend} hitSlop={8}>
-              <Text style={styles.link}>Send a new link</Text>
+              <Text style={styles.link}>{t("Send a new link")}</Text>
             </Pressable>
           )}
           <Pressable role="button" onPress={differentEmail} hitSlop={8}>
-            <Text style={styles.link}>Use a different email</Text>
+            <Text style={styles.link}>{t("Use a different email")}</Text>
           </Pressable>
         </View>
       </Animated.View>

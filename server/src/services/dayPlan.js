@@ -2,6 +2,7 @@ import { dishes } from '../data/mumbaiMenu.js';
 import { recipes } from '../data/recipes.js';
 import { SPICE_WORD, dietAllows, effectiveCriteria, reasonsFor, score } from './ranking.js';
 import { nearbyPicks } from './nearby.js';
+import { tr } from '../i18n.js';
 
 // "Plan my whole day": one pick per meal that together fit a day's budget,
 // match the saved taste, and don't repeat a restaurant or lean on one cuisine.
@@ -185,7 +186,7 @@ async function placesPlan({ budget, meals, mood, people, veg }, prefs, location)
 
 function mealInfo(meal) {
   const { label, time } = MEALS[meal];
-  return { label, time };
+  return { label: tr(label), time: tr(time) };
 }
 
 // budget is per person for the day; people > 1 plans for a group (every
@@ -195,5 +196,5 @@ export async function planDay({ budget, meals, mood = 'balanced', people = 1, ve
   const dayBudget = budget ?? DAY_BUDGET_FROM_PREF[prefs.budget] ?? 1000;
   const input = { budget: dayBudget, meals: chosenMeals, mood: DAY_MOODS[mood] ? mood : 'balanced', people: Math.max(1, Math.min(12, people)), veg: Boolean(veg) };
   const plan = usePlaces && location ? await placesPlan(input, prefs, location) : samplePlan(input, prefs);
-  return { ...input, moodLabel: DAY_MOODS[input.mood].label, ...plan };
+  return { ...input, moodLabel: tr(DAY_MOODS[input.mood].label), ...plan };
 }
