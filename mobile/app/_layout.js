@@ -12,6 +12,7 @@ import { ToastHost } from '../components/Toast';
 import { listenForReminders } from '../lib/reminders';
 import { useLang } from '../lib/i18n';
 import WakingUp from '../components/WakingUp';
+import { ReportHost } from '../components/ReportSheet';
 import { useWake } from '../lib/wake';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -64,9 +65,11 @@ export default function RootLayout() {
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="taste" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="ai-consent" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
+      <ReportHost />
       <WakingUp />
       <ToastHost />
     </SafeAreaProvider>

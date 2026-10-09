@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import BandHeader, { useBandHeight } from '../components/BandHeader';
 import Button from '../components/Button';
+import LegalLine from '../components/LegalLine';
 import Icon from '../components/Icon';
 import { glideTo, leave, rise, smoothLayout } from '../components/Motion';
 import { signInWithEmail, signUpWithEmail } from '../lib/firebase';
@@ -192,7 +193,7 @@ export default function SignIn() {
             {!signup ? (
               <Button variant="link" title={t("Forgot password?")} onPress={() => router.push({ pathname: '/forgot', params: { email: email.trim() } })} />
             ) : (
-              <Text style={styles.small}>{t("By creating an account you agree to our Terms and Privacy Policy.")}</Text>
+              <LegalLine style={styles.small} text="By creating an account you agree to our {terms} and {privacy}." />
             )}
           </Animated.View>
         </Animated.View>

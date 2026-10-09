@@ -9,6 +9,7 @@ import DishMeta from '../../components/DishMeta';
 import PlateRing from '../../components/PlateRing';
 import VoiceBars from '../../components/VoiceBars';
 import ChatRow, { useOpenChat } from '../../components/ChatRow';
+import { ReportLink } from '../../components/ReportSheet';
 import { press, tap } from '../../lib/haptics';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { PressScale, TypingDots, fromRight, rise } from '../../components/Motion';
@@ -178,6 +179,9 @@ export default function Chat() {
         <Avatar />
         <View style={styles.aiBody}>
           <Text style={item.kind === 'question' && isLatest ? styles.aiQuestion : styles.aiText}>{t(item.text)}</Text>
+          {conversation?.id && !String(item.id).startsWith('local-') ? (
+            <ReportLink target={{ kind: 'chat', conversationId: conversation.id, messageId: String(item.id) }} style={styles.report} />
+          ) : null}
           {item.kind === 'question' && isLatest && conversation?.slip ? <OrderSlip slip={conversation.slip} /> : null}
           {item.kind === 'picks' && item.picks?.length ? (
             <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/results')}>
@@ -404,6 +408,7 @@ const styles = StyleSheet.create({
   aiBody: { flex: 1, gap: space.md },
   aiText: { ...type.body, color: colors.ink },
   aiQuestion: { ...type.head, color: colors.ink },
+  report: { marginTop: -6 },
   slip: { backgroundColor: colors.goldSoft, borderRadius: 16, paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.sm },
   notch: { position: 'absolute', top: '50%', width: 20, height: 20, marginTop: -10, borderRadius: 10, backgroundColor: colors.canvas },
   slipTitle: { ...type.label, marginBottom: space.xs },

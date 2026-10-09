@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema(
     // Off means the app stores no learned taste and ignores what it had.
     memoryEnabled: { type: Boolean, default: true },
     onboarded: { type: Boolean, default: false },
+    // Did they agree to Chatora using AI (Claude)? null = not asked yet. Without
+    // it the app still works, with keyword matching and plain wording.
+    aiConsent: { type: Boolean, default: null },
+    aiConsentAt: { type: Date, default: null },
     // Created by "Skip login (testing only)"; never available in production.
     isGuest: { type: Boolean, default: false },
   },

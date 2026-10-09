@@ -9,6 +9,7 @@ import IconButton from '../components/IconButton';
 import Icon from '../components/Icon';
 import Button from '../components/Button';
 import { useCookStore } from '../store/useCookStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { useChatStore } from '../store/useChatStore';
 import { pickKitchenPhoto } from '../lib/photo';
 import { errorMessage } from '../lib/api';
@@ -64,6 +65,7 @@ export default function Kitchen() {
   const insets = useSafeAreaInsets();
   const { from } = useLocalSearchParams();
   const fromChat = from === 'chat';
+  const aiOff = useAuthStore((s) => s.user?.aiConsent === false);
   const { catalogue, scanAvailable, kitchen, loadCatalogue, add, remove, confirm, scan, findRecipes, confirmedNames } = useCookStore();
   const sendChat = useChatStore((s) => s.send);
   const [text, setText] = useState('');
@@ -101,7 +103,7 @@ export default function Kitchen() {
 
   async function takePhoto(source) {
     if (!scanAvailable) {
-      notify(t('Photo scan is off'), t("Fridge scanning switches on once the AI key is added to the server. For now, type what you have below."));
+      notify(t('Photo scan is off'), aiOff ? t('Photo scan uses AI, which is off. Turn on "Use AI" in Profile, or type what you have below.') : t("Fridge scanning switches on once the AI key is added to the server. For now, type what you have below."));
       return;
     }
     setScanNote(null);
@@ -184,7 +186,7 @@ export default function Kitchen() {
                 </View>
                 <Text style={styles.frameTitle}>{scanAvailable ? t('Snap your fridge or shelf') : t('Type what you have')}</Text>
                 <Text style={styles.frameText}>
-                  {scanAvailable ? t('Chatora will spot the ingredients for you.') : t('Photo scan switches on once the AI is connected.')}
+                  {scanAvailable ? t('Chatora will spot the ingredients for you.') : aiOff ? t('Photo scan uses AI. Turn it on in Profile → Use AI.') : t('Photo scan switches on once the AI is connected.')}
                 </Text>
               </View>
             )}

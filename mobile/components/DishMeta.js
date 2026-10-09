@@ -30,6 +30,7 @@ export default function DishMeta({ pick, price, eta, rating, color = colors.ink 
   const p = pick ?? { price, eta, rating };
   return (
     <View style={styles.row}>
+      {p.source === 'sample' ? <SampleTag /> : null}
       <Text style={[styles.price, { color: colors.red }]}>
         ₹{p.price}
         {p.people > 1 ? <Text style={styles.group}> · {t('₹{price} for {n}', { price: p.groupPrice, n: p.people })}</Text> : null}
@@ -48,7 +49,18 @@ export default function DishMeta({ pick, price, eta, rating, color = colors.ink 
   );
 }
 
+// Sample dishes show how picks work; they aren't real restaurants yet.
+export function SampleTag() {
+  return (
+    <View style={styles.sample} aria-label={t('Sample dish, not a real restaurant')}>
+      <Text style={styles.sampleText}>{t('Sample')}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  sample: { paddingHorizontal: 6, height: 18, borderRadius: 5, backgroundColor: colors.soft, borderWidth: 1, borderColor: colors.hair, justifyContent: 'center' },
+  sampleText: { fontFamily: fonts.bold, fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: colors.muted },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   price: { fontFamily: fonts.bold, fontSize: 14 },

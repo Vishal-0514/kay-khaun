@@ -1,5 +1,5 @@
 import Conversation from '../models/Conversation.js';
-import { aiEnabled, understand, explainPicks, explainRecipes } from '../services/ai.js';
+import { aiEnabled, aiAllowedFor, understand, explainPicks, explainRecipes } from '../services/ai.js';
 import { parseWithKeywords } from '../services/intent.js';
 import { recommend } from '../services/ranking.js';
 import { nearbyPicks } from '../services/nearby.js';
@@ -78,7 +78,7 @@ const backupText = {
 
 // Read the message: Claude first, keywords if Claude is missing or fails.
 async function readMessage(text, conv, user) {
-  if (aiEnabled) {
+  if (aiAllowedFor(user)) {
     try {
       const history = conv.messages.slice(-HISTORY_TURNS).map((m) => ({ role: m.role, text: m.text }));
       const intent = await understand({ text, history, slip: slipView(conv.slots.toObject(), user) });

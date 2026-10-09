@@ -9,7 +9,7 @@ import Button from '../components/Button';
 import Animated from 'react-native-reanimated';
 import { PressScale, rise, riseUp } from '../components/Motion';
 import { useChatStore } from '../store/useChatStore';
-import DishMeta, { isPlace, shortPrice } from '../components/DishMeta';
+import DishMeta, { isPlace, shortPrice, SampleTag } from '../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
 import HeartButton from '../components/HeartButton';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
@@ -87,9 +87,12 @@ export default function Results() {
                 <Text style={styles.matchLabel}>{t("% match")}</Text>
               </PlateRing>
               <View style={{ flex: 1, gap: 4 }}>
-                <View style={styles.badge}>
-                  <Icon name="spark" size={12} color={colors.gold} />
-                  <Text style={styles.badgeText}>{t("Chatora's pick")}</Text>
+                <View style={styles.badgeRow}>
+                  <View style={styles.badge}>
+                    <Icon name="spark" size={12} color={colors.gold} />
+                    <Text style={styles.badgeText}>{t("Chatora's pick")}</Text>
+                  </View>
+                  {top.source === 'sample' ? <SampleTag /> : null}
                 </View>
                 <View style={styles.nameRow}>
                   {isPlace(top) ? null : <DietMark type={top.diet === 'veg' ? 'veg' : 'nonveg'} />}
@@ -119,7 +122,7 @@ export default function Results() {
             <View style={styles.actions}>
               {isPlace(top) ? (
                 Object.entries(ORDER_APPS).map(([app, a]) => (
-                  <Button key={app} title={t(a.label)} onPress={() => openOrderApp(top, app)} style={{ flex: 1, backgroundColor: a.color, shadowColor: a.color }} />
+                  <Button key={app} variant="outline" title={t(a.label)} onPress={() => openOrderApp(top, app)} style={{ flex: 1 }} />
                 ))
               ) : (
                 <Button title={t("See details")} onPress={() => router.push(`/dish/${top.id}`)} style={{ flex: 1 }} />
@@ -168,6 +171,7 @@ export default function Results() {
 }
 
 const styles = StyleSheet.create({
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   root: { flex: 1, backgroundColor: colors.canvas },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg },
   title: { fontFamily: fonts.display, fontSize: 22, lineHeight: 27, color: colors.cream },

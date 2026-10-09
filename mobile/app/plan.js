@@ -16,6 +16,8 @@ import { planMessage, shareText } from '../lib/share';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
 import Tip from '../components/Tip';
+import { useAuthStore } from '../store/useAuthStore';
+import { ReportLink } from '../components/ReportSheet';
 import { press, success, tap } from '../lib/haptics';
 
 const BUDGETS = [500, 800, 1200, 2000];
@@ -126,6 +128,8 @@ export default function Plan() {
   const choice = usePlanStore((s) => s.choice);
   const cook = usePlanStore((s) => s.cook);
   const note = usePlanStore((s) => s.note);
+  // Notes are written by AI only for people who allowed it.
+  const aiOn = useAuthStore((s) => s.user?.aiConsent === true);
   const noteStale = usePlanStore((s) => s.noteStale);
   const loading = usePlanStore((s) => s.loading);
   const savedAt = usePlanStore((s) => s.savedAt);
@@ -229,9 +233,12 @@ export default function Plan() {
               <TypingDots color={colors.red} />
             </View>
           ) : (
-            <Animated.Text key={note} entering={FadeIn.duration(300)} style={[styles.note, noteStale && styles.noteStale]} aria-live="polite">
-              {note}
-            </Animated.Text>
+            <View style={{ flex: 1, gap: space.xs }}>
+              <Animated.Text key={note} entering={FadeIn.duration(300)} style={[styles.note, noteStale && styles.noteStale]} aria-live="polite">
+                {note}
+              </Animated.Text>
+              {note && aiOn ? <ReportLink target={{ kind: 'plan', text: note }} /> : null}
+            </View>
           )}
         </View>
 

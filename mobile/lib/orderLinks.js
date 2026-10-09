@@ -5,10 +5,14 @@ import { t } from './i18n';
 
 // Kya Khaun suggests; the customer orders on Zomato or Swiggy. These open the
 // restaurant there (the app if it's installed, otherwise the website).
+// Kya Khaun isn't affiliated with either, so both look the same and neutral
+// (no brand colours or logos).
 export const ORDER_APPS = {
-  zomato: { label: 'Zomato', color: '#E23744' },
-  swiggy: { label: 'Swiggy', color: '#FC8019' },
+  zomato: { label: 'Zomato', color: '#2B0F0B' },
+  swiggy: { label: 'Swiggy', color: '#2B0F0B' },
 };
+
+export const NOT_AFFILIATED = "Kya Khaun isn't linked to Zomato or Swiggy. Check the menu and price there before you order.";
 
 export async function openOrderApp(pick, app) {
   // Heading to Zomato / Swiggy is the best sign they liked it: History and taste learning.

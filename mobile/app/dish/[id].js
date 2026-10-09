@@ -20,7 +20,7 @@ import { errorMessage } from '../../lib/api';
 import { pickMessage, shareText } from '../../lib/share';
 import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
-import { ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
+import { NOT_AFFILIATED, ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 
@@ -91,7 +91,7 @@ export default function Dish() {
 
   return (
     <View style={styles.root}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 150 + insets.bottom }}>
         <MaroonBand height={bandHeight}>
           <View style={[styles.header, { marginTop: insets.top + space.base }]}>
             <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/home'))} />
@@ -194,13 +194,15 @@ export default function Dish() {
           {Object.entries(ORDER_APPS).map(([app, a]) => (
             <Button
               key={app}
+              variant="outline"
               title={t(a.label)}
-              icon={<Icon name="external" size={18} color="#FFFFFF" />}
+              icon={<Icon name="external" size={18} color={colors.ink} />}
               onPress={() => openOrderApp(dish, app)}
-              style={[styles.orderBtn, { backgroundColor: a.color, shadowColor: a.color }]}
+              style={styles.orderBtn}
             />
           ))}
         </View>
+        <Text style={styles.barNote}>{t(NOT_AFFILIATED)}</Text>
       </View>
     </View>
   );
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, paddingTop: space.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.hair },
   barTitle: { fontFamily: fonts.semibold, fontSize: 14, color: colors.muted, marginBottom: space.sm },
   barButtons: { flexDirection: 'row', gap: space.sm },
+  barNote: { fontFamily: fonts.regular, fontSize: 11, lineHeight: 15, color: colors.muted, textAlign: 'center', marginTop: space.sm },
   orderBtn: { flex: 1 },
   ideas: { marginHorizontal: space.lg, marginTop: space.lg, gap: space.sm },
   ideaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },

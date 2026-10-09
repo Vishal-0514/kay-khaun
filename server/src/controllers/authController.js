@@ -12,6 +12,7 @@ export function toSafeUser(user) {
     preferences: user.preferences ?? {},
     memoryEnabled: user.memoryEnabled,
     onboarded: user.onboarded,
+    aiConsent: user.aiConsent ?? null,
     isGuest: user.isGuest,
   };
 }

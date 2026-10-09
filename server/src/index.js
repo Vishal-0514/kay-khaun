@@ -11,6 +11,8 @@ import chatRoutes from './routes/chat.js';
 import cookRoutes from './routes/cook.js';
 import planRoutes from './routes/plan.js';
 import meRoutes from './routes/me.js';
+import reportRoutes from './routes/reports.js';
+import { privacyPage, termsPage, deleteAccountPage } from './legal/pages.js';
 
 const app = express();
 
@@ -28,6 +30,14 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/cook', cookRoutes);
 app.use('/api/plan', planRoutes);
 app.use('/api/me', meRoutes);
+app.use('/api/reports', reportRoutes);
+
+// Public pages for the app stores (and linked from the app).
+const html = (render) => (req, res) => res.type('html').set('Cache-Control', 'public, max-age=3600').send(render());
+app.get('/privacy', html(privacyPage));
+app.get('/terms', html(termsPage));
+app.get('/delete-account', html(deleteAccountPage));
+app.get('/', (req, res) => res.redirect('/privacy'));
 
 app.use(notFoundHandler);
 app.use(errorHandler);

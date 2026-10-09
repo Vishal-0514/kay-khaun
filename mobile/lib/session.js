@@ -50,7 +50,10 @@ export async function signOut() {
   signOutOfGoogle();
 }
 
-// Where a signed-in user belongs: first-timers finish "Your taste" first.
+// Where a signed-in user belongs: first-timers finish "Your taste" first, then
+// say whether Chatora may use AI.
 export function homeRouteFor(user) {
-  return user?.onboarded ? '/home' : '/taste';
+  if (!user?.onboarded) return '/taste';
+  if (user.aiConsent == null) return '/ai-consent';
+  return '/home';
 }

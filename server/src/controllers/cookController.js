@@ -1,4 +1,4 @@
-import { aiEnabled, scanKitchen } from '../services/ai.js';
+import { aiEnabled, aiAllowedFor, scanKitchen } from '../services/ai.js';
 import { suggestRecipes, recipeDetail } from '../services/cooking.js';
 import { catalogue, normalizeAll } from '../data/pantry.js';
 
@@ -6,7 +6,7 @@ import { tasteOf } from '../services/taste.js';
 
 // Names for the kitchen screen's quick-add chips and type-ahead.
 export function listIngredients(req, res) {
-  res.json({ success: true, ingredients: catalogue, scanAvailable: aiEnabled });
+  res.json({ success: true, ingredients: catalogue, scanAvailable: aiAllowedFor(req.user) });
 }
 
 // "Here's what I have" -> recipes, straight from the kitchen screen.
@@ -31,6 +31,9 @@ export function getRecipe(req, res) {
 
 // Photo of a fridge or kitchen -> ingredients. Needs Claude.
 export async function scan(req, res) {
+  if (aiEnabled && !aiAllowedFor(req.user)) {
+    return res.status(403).json({ success: false, code: 'AI_CONSENT', error: 'Photo scan uses AI. Turn on "Use AI" in Profile to scan, or type what you have.' });
+  }
   if (!aiEnabled) {
     return res.status(503).json({ success: false, code: 'AI_OFF', error: "Photo scan isn't switched on yet. Type what you have instead." });
   }

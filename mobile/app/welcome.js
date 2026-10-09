@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import MumbaiScene from '../components/MumbaiScene';
 import Button from '../components/Button';
+import LegalLine from '../components/LegalLine';
 import Icon from '../components/Icon';
 import { Float, Glow, Reveal, TypingDots, appear, fromLeft, fromRight, leave, rise, sheetUp } from '../components/Motion';
 import { api, errorMessage } from '../lib/api';
@@ -203,7 +204,7 @@ export default function Welcome() {
         </View>
         <Animated.View entering={rise(4, 550)} style={styles.footer}>
           <Button variant="link" title={t("New here? Create an account")} onPress={() => router.push({ pathname: '/sign-in', params: { mode: 'signup' } })} />
-          <Text style={styles.legal}>{t("By continuing you agree to our Terms and Privacy Policy.")}</Text>
+          <LegalLine style={styles.legal} text="By continuing you agree to our {terms} and {privacy}." />
           {__DEV__ ? <Button variant="link" title={t("Skip login (testing only)")} loading={guestBusy} onPress={skipLogin} /> : null}
         </Animated.View>
       </Animated.View>

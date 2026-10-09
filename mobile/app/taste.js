@@ -8,7 +8,7 @@ import Icon, { DietMark } from '../components/Icon';
 import Animated from 'react-native-reanimated';
 import { PressScale, riseUp, sheetUp } from '../components/Motion';
 import { api, errorMessage } from '../lib/api';
-import { signOut } from '../lib/session';
+import { homeRouteFor, signOut } from '../lib/session';
 import { useAuthStore } from '../store/useAuthStore';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
@@ -65,7 +65,7 @@ export default function Taste() {
         onboarded: true,
       });
       setUser(data.user);
-      router.replace('/home');
+      router.replace(homeRouteFor(data.user));
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -78,7 +78,7 @@ export default function Taste() {
       <BandHeader
         height={bandHeight}
         title={t("What do you like to eat?")}
-        subtitle="The more I know, the fewer questions I'll ask."
+        subtitle={t("The more I know, the fewer questions I'll ask.")}
         onBack={user?.onboarded ? undefined : () => signOut().then(() => router.replace('/welcome'))}
       />
       <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 32, paddingBottom: 120 + insets.bottom }} keyboardShouldPersistTaps="handled">

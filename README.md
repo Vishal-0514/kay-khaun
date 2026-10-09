@@ -72,6 +72,15 @@ kya-khaun-app/
 - **Haptics** (`lib/haptics.js`, `expo-haptics`): send, start listening, save, Not for me, swap, save a day.
 - **Accessibility**: every tappable has a role and label, section titles are headings, and toasts are read aloud by screen readers.
 
+## Store rules (App Store + Play)
+
+- **Chatora uses AI**: after "Your taste", a screen explains what goes to Anthropic (Claude) and asks first (`mobile/app/ai-consent.js`). Saying no gives basic mode: keyword matching, template replies, no photo scan. The server enforces it (`aiAllowedFor(user)`); Profile → Use AI changes it.
+- **Report this reply**: a "Report" link under every Chatora reply and the plan note opens a sheet (wrong / unsafe / offensive / other). Saved in the `Report` collection (`POST /api/reports`).
+- **Delete my account** (bottom of Profile): deletes the user, chats, history, saves and sessions straight away (`DELETE /api/profile`), and the Firebase sign-in too when `FIREBASE_SERVICE_ACCOUNT` is set.
+- **Public pages** served by the server: `/privacy`, `/terms` and `/delete-account` (`server/src/legal/pages.js`; contact details from `SUPPORT_EMAIL` and `LEGAL_NAME`). Linked from Profile → About and the sign-in screens.
+- **Not affiliated**: the Zomato / Swiggy buttons are neutral (no brand colours), with a note on the dish screen; sample dishes carry a "Sample" tag.
+- Reviewer notes, demo-account steps and the Play Data safety / Apple App Privacy answers: [docs/store-review.md](docs/store-review.md).
+
 ## Voice input
 
 - **Home → "Tap to talk"** opens the chat already listening; the **mic in chat** does the same. Words appear live in the bar and send by themselves when you stop talking (or tap the bars to finish, ✕ to cancel).
@@ -163,6 +172,8 @@ Email + password then works everywhere — Expo Go, the browser and app builds.
 | GET / DELETE | `/api/me/learned` | what taste learning picked up; clear it |
 | GET | `/api/chat/:id` | one chat, with its picks re-ranked |
 | DELETE | `/api/chat/:id` | delete one chat |
+| DELETE | `/api/profile` | delete the account and all its data |
+| POST | `/api/reports` | `{ kind: "chat" or "plan", conversationId?, messageId?, text?, reason, note? }` report an AI reply |
 | POST | `/api/chat/quick-picks` | `{ mood? }` → 5 picks from your taste profile |
 
 Sign-in responses return `{ accessToken, refreshToken, isNew, user }`. Access tokens last 15 minutes; the app renews them automatically with the refresh token (valid 30 days, replaced on every use).

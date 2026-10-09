@@ -11,8 +11,8 @@ export const useCookStore = create((set, get) => ({
   source: null, // 'kitchen' | 'chat'
   current: null, // full recipe for the recipe / cook screens
 
+  // Fetched each time: whether scan is on can change (Profile → Use AI).
   async loadCatalogue() {
-    if (get().catalogue.length) return;
     const { data } = await api.get('/cook/ingredients');
     set({ catalogue: data.ingredients, scanAvailable: data.scanAvailable });
   },

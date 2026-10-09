@@ -13,6 +13,8 @@ import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
 export const aiEnabled = Boolean(client);
+// Claude is used for someone only after they agree to it (the "Chatora uses AI" screen).
+export const aiAllowedFor = (user) => aiEnabled && user?.aiConsent === true;
 
 export const AVOIDABLE = ['mushroom', 'karela', 'baingan', 'seafood', 'onion-garlic', 'egg'];
 const LANGUAGES = ['english', 'hinglish', 'hindi'];

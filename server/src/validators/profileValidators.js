@@ -17,6 +17,7 @@ export const updateProfileSchema = z
       .partial(),
     memoryEnabled: z.boolean(),
     onboarded: z.boolean(),
+    aiConsent: z.boolean(),
   })
   .partial()
   .strict();

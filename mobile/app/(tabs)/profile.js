@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useMeStore } from '../../store/useMeStore';
 import { readReminders } from '../../lib/reminders';
 import { useTips } from '../../lib/tips';
+import { PAGES, openPage } from '../../lib/pages';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { LANGUAGES, t, useLang } from '../../lib/i18n';
 
@@ -127,6 +128,27 @@ export default function Profile() {
     setRefreshing(false);
   }
 
+  // App Store and Play both require this inside the app. Everything goes, straight away.
+  const [deleting, setDeleting] = useState(false);
+  async function deleteAccount() {
+    const yes = await confirm(
+      t('Delete your account?'),
+      t('Your account, taste, chats, saved picks and history will be deleted for good. This can’t be undone.'),
+      t('Delete')
+    );
+    if (!yes) return;
+    setDeleting(true);
+    try {
+      await api.delete('/profile');
+      await signOut();
+      router.replace('/welcome');
+      toast(t('Your account has been deleted'), 'check');
+    } catch (err) {
+      setDeleting(false);
+      notify(t("Couldn't delete your account"), errorMessage(err));
+    }
+  }
+
   async function forget() {
     const yes = await confirm(t("Clear what I've learned?"), t('I’ll forget what you opened, ordered and marked "Not for me". Your saved picks, saved days and taste settings stay.'), 'Clear');
     if (!yes) return;
@@ -159,7 +181,7 @@ export default function Profile() {
   return (
     <ScrollView
       style={styles.root}
-      contentContainerStyle={{ paddingBottom: space.xl }}
+      contentContainerStyle={{ paddingBottom: space.xxl * 2 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.gold} progressViewOffset={insets.top} />}
     >
       <MaroonBand height={bandHeight}>
@@ -250,6 +272,7 @@ export default function Profile() {
             ))}
           </View>
         </Animated.View>
+        <NavRow n={0} icon="spark" tint={colors.goldSoft} ink={colors.goldText} label={t('Use AI')} value={user?.aiConsent ? t('On · Claude by Anthropic') : t('Off · basic mode')} onPress={() => router.push({ pathname: '/ai-consent', params: { from: 'profile' } })} />
         <Row n={0} icon="leaf" tint="#E3F2E7" ink={colors.green} label={t("Diet")} value={t(DIET[p.diet] ?? 'Not set')} lead={p.diet && p.diet !== 'egg' ? <DietMark type={p.diet} /> : null} />
         <Row n={1} icon="flame" tint="#FDE3E1" ink={colors.red} label={t("Spice level")} value={t(SPICE[(p.spice ?? 3) - 1])} />
         <Row n={2} icon="rupee" tint="#FCEBD0" ink="#A8670F" label={t("Budget per meal")} value={t(BUDGET[p.budget] ?? 'Not set')} />
@@ -273,12 +296,27 @@ export default function Profile() {
       <PressScale role="button" onPress={() => signOut().then(() => router.replace('/welcome'))} style={styles.signOut}>
         <Text style={styles.signOutText}>{user?.isGuest ? t('Leave test account') : t('Sign out')}</Text>
       </PressScale>
+
+      <Text style={[type.head, styles.section]} role="heading">{t('About')}</Text>
+      <View style={styles.list}>
+        <NavRow n={0} icon="external" tint={colors.soft} ink={colors.muted} label={t('Privacy policy')} onPress={() => openPage(PAGES.privacy)} />
+        <NavRow n={1} icon="external" tint={colors.soft} ink={colors.muted} label={t('Terms of use')} onPress={() => openPage(PAGES.terms)} />
+      </View>
+      <Text style={styles.independent}>{t('Kya Khaun is independent and not affiliated with Zomato, Swiggy or any restaurant.')}</Text>
+
+      <Pressable role="button" onPress={deleteAccount} disabled={deleting} hitSlop={8} style={styles.deleteBtn}>
+        <Icon name="trash" size={16} color={colors.red} />
+        <Text style={styles.deleteText}>{deleting ? t('Deleting…') : t('Delete my account')}</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
+  independent: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 18, color: colors.muted, marginHorizontal: space.lg, marginTop: space.sm },
+  deleteBtn: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: space.base, marginTop: space.lg },
+  deleteText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.red },
   tipsAgain: { alignSelf: 'center', marginTop: space.lg, minHeight: 32, justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.base, paddingHorizontal: space.lg },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },

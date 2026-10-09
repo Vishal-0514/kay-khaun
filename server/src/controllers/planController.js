@@ -1,4 +1,4 @@
-import { aiEnabled, explainPlan } from '../services/ai.js';
+import { aiAllowedFor, explainPlan } from '../services/ai.js';
 import { planDay } from '../services/dayPlan.js';
 import { placesEnabled } from '../services/places.js';
 import { prefsOf, tasteOf } from '../services/taste.js';
@@ -19,7 +19,7 @@ function templateNote({ meals, budget, total, people = 1 }) {
 }
 
 async function noteFor(facts, user) {
-  if (!aiEnabled || !facts.meals.length) return templateNote(facts);
+  if (!aiAllowedFor(user) || !facts.meals.length) return templateNote(facts);
   try {
     return await explainPlan({ ...facts, userName: user.name, taste: prefsOf(user), appLanguage: currentLang() === 'hi' ? 'hindi' : 'english' });
   } catch (err) {

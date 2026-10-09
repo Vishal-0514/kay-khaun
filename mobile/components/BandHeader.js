@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from './MaroonBand';
 import IconButton from './IconButton';
 import { colors, fonts, space } from '../lib/theme';
+import { t } from '../lib/i18n';
 
 // Maroon jaali header with a back button, title and optional subtitle.
 // Content below should start at `bandHeight - overlap` to sit over its edge.
@@ -17,7 +18,7 @@ export default function BandHeader({ height, title, subtitle, onBack, right }) {
   return (
     <MaroonBand height={height}>
       <View style={[styles.row, { marginTop: insets.top + space.base }]}>
-        {onBack !== false ? <IconButton name="back" label="Back" onDark onPress={onBack ?? (() => router.back())} /> : <View />}
+        {onBack !== false ? <IconButton name="back" label={t("Back")} onDark onPress={onBack ?? (() => router.back())} /> : <View />}
         {right}
       </View>
       <View style={styles.text}>
