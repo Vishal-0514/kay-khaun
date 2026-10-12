@@ -33,6 +33,19 @@ const cache = new Map(); // key -> { at, places }
 // ~1 km grid so nearby people share a cached answer.
 const cacheKey = ({ lat, lng, query, radius }) => `${lat.toFixed(2)},${lng.toFixed(2)}|${radius}|${query.toLowerCase()}`;
 
+// "Shop 21, Sai Kanwal Complex, DN Nagar, Andheri West, Mumbai" -> "Andheri West".
+// Google's short address ends with the neighbourhood and then the city.
+export function areaOf(shortAddress) {
+  const parts = String(shortAddress ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? '';
+  const area = parts.at(-2);
+  // Shop numbers, floors and pin codes aren't an area name.
+  return /\d|shop|floor|no\.|plot|unit/i.test(area) ? parts.at(-1) : area;
+}
+
 export async function searchPlaces({ lat, lng, query, radius = 4000 }) {
   if (!placesEnabled) throw new Error('GOOGLE_MAPS_API_KEY is not set');
   const key = cacheKey({ lat, lng, query, radius });
@@ -59,7 +72,7 @@ export async function searchPlaces({ lat, lng, query, radius = 4000 }) {
     .map((p) => ({
       id: p.id,
       name: p.displayName?.text ?? 'Restaurant',
-      area: p.shortFormattedAddress ?? p.formattedAddress ?? '',
+      area: areaOf(p.shortFormattedAddress ?? p.formattedAddress),
       address: p.formattedAddress ?? '',
       lat: p.location?.latitude,
       lng: p.location?.longitude,

@@ -26,23 +26,48 @@ const MOOD_QUERY = {
   comfort: 'home style food',
 };
 
-// "Look for" ideas by what kind of place it is (or what they asked for).
+// "Look for" ideas by what the place is. The most specific match wins, so
+// these go from specific dishes to broad kinds of place.
 const IDEAS = [
-  [/ice cream|gelato|kulfi/i, ['Kulfi', 'Sundae']],
-  [/bakery|cake|patisserie|pastry/i, ['Pastry', 'Brownie']],
+  [/waffle/i, ['Belgian waffle', 'Waffle with ice cream']],
+  [/donut|doughnut/i, ['Glazed donut', 'Chocolate donut']],
+  [/crepe|pancake/i, ['Nutella crepe', 'Pancakes']],
+  [/ice cream|gelato|kulfi|creamery/i, ['Kulfi', 'Sundae']],
+  [/falooda/i, ['Royal falooda', 'Kulfi falooda']],
+  [/chocolate|brownie/i, ['Brownie', 'Hot chocolate']],
+  [/cheesecake/i, ['Cheesecake', 'Brownie']],
+  [/bakery|bakes|cake|patisserie|pastry|bake house/i, ['Pastry', 'Brownie']],
   [/sweet|mithai|halwai|confection/i, ['Rasmalai', 'Kaju katli', 'Gulab jamun']],
-  [/dessert/i, ['Gulab jamun', 'Brownie with ice cream']],
+  [/juice|shake|smoothie/i, ['Fresh juice', 'Milkshake']],
+  [/chai|tea\b|tapri/i, ['Masala chai', 'Bun maska']],
   [/biryani/i, ['Chicken biryani', 'Veg dum biryani']],
-  [/chinese|asian|momo|noodle/i, ['Hakka noodles', 'Chilli paneer', 'Momos']],
-  [/south indian|udupi|dosa/i, ['Masala dosa', 'Idli vada', 'Filter coffee']],
-  [/pizza|italian/i, ['Margherita pizza', 'Pasta']],
-  [/burger|fast food|sandwich/i, ['Burger', 'Fries', 'Grilled sandwich']],
-  [/seafood|fish|coastal|malvani/i, ['Fish thali', 'Prawns fry']],
-  [/cafe|coffee|tea/i, ['Sandwich', 'Cold coffee']],
-  [/street|chaat|snack/i, ['Pav bhaji', 'Vada pav', 'Pani puri']],
+  [/momo/i, ['Steamed momos', 'Fried momos']],
+  [/shawarma|roll|frankie|wrap/i, ['Chicken shawarma', 'Paneer roll']],
+  [/kebab|kabab|tikka|grill|barbeque|bbq/i, ['Seekh kebab', 'Paneer tikka']],
+  [/chaap/i, ['Malai chaap', 'Tandoori chaap']],
+  [/thali/i, ['Veg thali', 'Special thali']],
+  [/(vada|wada) ?pa|pav ?bhaji/i, ['Vada pav', 'Pav bhaji']],
+  [/calcutta|kolkata|bengal/i, ['Kathi roll', 'Phuchka']],
+  [/pizza|pizzeria/i, ['Margherita pizza', 'Garlic bread']],
+  [/burger/i, ['Burger', 'Fries']],
+  [/sandwich|sub\b/i, ['Grilled sandwich', 'Club sandwich']],
+  [/sushi|japanese|ramen/i, ['Sushi', 'Ramen']],
+  [/korean/i, ['Korean fried chicken', 'Kimchi fried rice']],
+  [/thai/i, ['Thai green curry', 'Pad thai']],
+  [/naga|north ?east|assam|tibetan/i, ['Momos', 'Thukpa']],
+  [/dessert/i, ['Brownie', 'Ice cream sundae']],
+  [/chinese|asian|noodle|wok/i, ['Hakka noodles', 'Chilli paneer']],
+  [/south indian|udupi|dosa|idli/i, ['Masala dosa', 'Idli vada', 'Filter coffee']],
+  [/italian|pasta/i, ['Pasta', 'Pizza']],
+  [/seafood|fish|coastal|malvani|konkan|gomantak/i, ['Fish thali', 'Prawns fry']],
+  [/bhel|pani ?puri|golgappa/i, ['Bhel puri', 'Sev puri']],
+  [/chaat|snack|street food/i, ['Pav bhaji', 'Vada pav', 'Pani puri']],
   [/north indian|punjabi|dhaba|mughlai|tandoor/i, ['Butter chicken', 'Paneer tikka', 'Dal makhani']],
+  [/fast food/i, ['Burger', 'Fries']],
   [/healthy|salad|vegan/i, ['Salad bowl', 'Smoothie']],
+  [/cafe|coffee/i, ['Cold coffee', 'Sandwich']],
 ];
+const ideasMatching = (text) => IDEAS.find(([re]) => re.test(text))?.[1];
 
 // Zomato's web paths use its own city names.
 const ZOMATO_CITY = { bengaluru: 'bangalore', delhi: 'ncr', 'new delhi': 'ncr', gurugram: 'ncr', gurgaon: 'ncr', noida: 'ncr', mumbai: 'mumbai', 'navi mumbai': 'mumbai', thane: 'mumbai' };
@@ -77,11 +102,12 @@ function km(aLat, aLng, bLat, bLng) {
 
 function ideasFor(place, c) {
   if (c.dishWords.length) return c.dishWords.slice(0, 2).map((w) => w.replace(/^\w/, (x) => x.toUpperCase()));
-  const hay = `${place.kind} ${place.name}`;
-  const byKind = IDEAS.find(([re]) => re.test(hay));
-  if (byKind) return byKind[1].slice(0, 2);
-  const byMood = c.moods.includes('sweet') ? ['Gulab jamun', 'Rasmalai'] : c.cuisines.length ? IDEAS.find(([re]) => re.test(c.cuisines[0]))?.[1] : null;
-  return (byMood ?? []).slice(0, 2);
+  // The name says the most ("Snow Waffle"), then Google's kind of place ("Dessert shop").
+  const byPlace = ideasMatching(place.name) ?? ideasMatching(place.kind);
+  if (byPlace) return byPlace.slice(0, 2);
+  // A plain "Restaurant": go by what they asked for.
+  const byAsk = c.cuisines.length ? ideasMatching(c.cuisines[0]) : c.moods.includes('sweet') ? ideasMatching('dessert') : null;
+  return (byAsk ?? []).slice(0, 2);
 }
 
 // slots + saved taste + where they are -> { picks, relaxed, query }
