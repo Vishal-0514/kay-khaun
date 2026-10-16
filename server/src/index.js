@@ -12,9 +12,12 @@ import cookRoutes from './routes/cook.js';
 import planRoutes from './routes/plan.js';
 import meRoutes from './routes/me.js';
 import reportRoutes from './routes/reports.js';
+import contactRoutes from './routes/contact.js';
 import { privacyPage, termsPage, deleteAccountPage } from './legal/pages.js';
 
 const app = express();
+// Render sits in front of the server: trust its one proxy hop so req.ip is the visitor's address.
+app.set('trust proxy', 1);
 
 app.use(cors());
 // Interface language (Accept-Language: hi) for text the server writes.
@@ -31,6 +34,7 @@ app.use('/api/cook', cookRoutes);
 app.use('/api/plan', planRoutes);
 app.use('/api/me', meRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Public pages for the app stores (and linked from the app).
 const html = (render) => (req, res) => res.type('html').set('Cache-Control', 'public, max-age=3600').send(render());
