@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import { useTips } from '../../lib/tips';
 import { PAGES, openPage } from '../../lib/pages';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { LANGUAGES, t, useLang } from '../../lib/i18n';
+import { VOICES, VOICE_LANGUAGES, speak, stopSpeaking, useSpeaking, useVoiceSettings } from '../../lib/speak';
 
 const SPICE = ['Mild', 'Light', 'Medium', 'Hot', 'Extra hot'];
 const BUDGET = { low: 'Under ₹300', mid: '₹300–500', high: '₹500+' };
@@ -39,6 +40,90 @@ function Row({ n = 0, icon, tint, ink, label, value, lead }) {
 }
 
 // A row that opens another screen.
+const SAMPLE = {
+  en: "Hi! I'm Chatora. Tell me, what are you in the mood to eat today?",
+  hi: 'नमस्ते! मैं चटोरा हूँ। बताइए, आज क्या खाने का मन है?',
+};
+
+// Chatora's voice: male or female, English or Hindi, and whether replies are read aloud.
+function VoiceSettings({ lang }) {
+  const settings = useVoiceSettings();
+  const speaking = useSpeaking();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    settings.load();
+    return stopSpeaking;
+  }, []);
+  if (!settings.available) return null;
+  const language = settings.language ?? lang;
+  const sampling = speaking === 'sample';
+
+  function choose(patch) {
+    stopSpeaking();
+    settings.update(patch);
+  }
+
+  function sample() {
+    if (sampling) return stopSpeaking();
+    setFailed(false);
+    speak(SAMPLE[language], 'sample').catch(() => setFailed(true));
+  }
+
+  const segment = (options, value, onPick, label) => (
+    <View style={styles.langs} role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <PressScale key={o.id} role="radio" aria-checked={value === o.id} onPress={() => onPick(o.id)} style={[styles.lang, value === o.id && styles.langOn]}>
+          <Text style={[styles.langText, value === o.id && styles.langTextOn]}>{o.id === 'hi' ? o.label : t(o.label)}</Text>
+        </PressScale>
+      ))}
+    </View>
+  );
+
+  return (
+    <>
+      <Text style={[type.head, styles.section]} role="heading">{t("Chatora's voice")}</Text>
+      <View style={styles.list}>
+        <Animated.View entering={rise(0, 350)} style={styles.row}>
+          <View style={[styles.rowIcon, { backgroundColor: colors.redSoft }]}>
+            <Icon name="speaker" size={18} color={colors.red} strokeWidth={1.9} />
+          </View>
+          <Text style={styles.rowLabel}>{t('Voice')}</Text>
+          {segment(VOICES, settings.voice, (voice) => choose({ voice }), t('Voice'))}
+        </Animated.View>
+        <Animated.View entering={rise(1, 350)} style={styles.row}>
+          <View style={[styles.rowIcon, { backgroundColor: '#E8EEF7' }]}>
+            <Icon name="mic" size={18} color="#3A5A8C" strokeWidth={1.9} />
+          </View>
+          <Text style={styles.rowLabel}>{t('Speaks and listens in')}</Text>
+          {segment(VOICE_LANGUAGES, language, (id) => choose({ language: id }), t('Speaks and listens in'))}
+        </Animated.View>
+        <Animated.View entering={rise(2, 350)} style={styles.row}>
+          <View style={[styles.rowIcon, { backgroundColor: colors.goldSoft }]}>
+            <Icon name="headset" size={18} color={colors.goldText} strokeWidth={1.9} />
+          </View>
+          <Text style={styles.rowLabel}>{t('Read replies aloud')}</Text>
+          <Switch
+            value={settings.readAloud}
+            onValueChange={(readAloud) => choose({ readAloud })}
+            trackColor={{ true: colors.green, false: '#C9B9A6' }}
+            thumbColor="#FFFFFF"
+            aria-label={t('Read replies aloud')}
+          />
+        </Animated.View>
+      </View>
+      <Pressable role="button" onPress={sample} hitSlop={8} style={styles.sample}>
+        <Icon name={sampling ? 'stop' : 'play'} size={14} color={colors.red} />
+        <Text style={styles.sampleText}>{sampling ? t('Stop') : t('Hear a sample')}</Text>
+      </Pressable>
+      <Text style={styles.voiceNote}>
+        {failed
+          ? t("Couldn't play Chatora's voice. Check your internet and try again.")
+          : t('Tap the headphones in Chat to talk hands-free. Replies are turned into speech by Google.')}
+      </Text>
+    </>
+  );
+}
+
 function NavRow({ n = 0, icon, tint, ink, label, value, onPress }) {
   return (
     <Animated.View entering={rise(n, 350)}>
@@ -281,6 +366,8 @@ export default function Profile() {
       </View>
       <Button variant="outline" title={t("Edit my taste")} onPress={() => router.push('/taste')} style={styles.edit} />
 
+      <VoiceSettings lang={lang} />
+
       <Pressable
         onPress={() => {
           useTips.getState().reset();
@@ -301,6 +388,7 @@ export default function Profile() {
       <View style={styles.list}>
         <NavRow n={0} icon="external" tint={colors.soft} ink={colors.muted} label={t('Privacy policy')} onPress={() => openPage(PAGES.privacy)} />
         <NavRow n={1} icon="external" tint={colors.soft} ink={colors.muted} label={t('Terms of use')} onPress={() => openPage(PAGES.terms)} />
+        <NavRow n={2} icon="external" tint={colors.soft} ink={colors.muted} label={t('Help and support')} onPress={() => openPage(PAGES.support)} />
       </View>
       <Text style={styles.independent}>{t('Kya Khaun is independent and not affiliated with Zomato, Swiggy or any restaurant.')}</Text>
 
@@ -338,6 +426,9 @@ const styles = StyleSheet.create({
   langOn: { backgroundColor: colors.maroon, borderColor: colors.maroon },
   langText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
   langTextOn: { color: colors.gold },
+  sample: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginHorizontal: space.lg, marginTop: space.md, minHeight: 32 },
+  sampleText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.red },
+  voiceNote: { ...type.small, marginHorizontal: space.lg, marginTop: space.xs },
   week: { marginHorizontal: space.lg, marginTop: space.base, padding: space.base, borderRadius: radius.card, backgroundColor: colors.surface, gap: space.md, ...shadow.card },
   weekTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
   weekStats: { flexDirection: 'row', gap: space.sm },

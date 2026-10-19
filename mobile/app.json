@@ -67,6 +67,13 @@
           "icon": "./assets/notification-icon.png",
           "color": "#C8161D"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating.",
+          "enableBackgroundPlayback": false
+        }
       ]
     ],
     "extra": {

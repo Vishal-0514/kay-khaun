@@ -43,6 +43,9 @@ const shapes = {
   trash: [['path', 'M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5']],
   list: [['path', 'M9 6h11M9 12h11M9 18h11'], ['circle', { cx: 4.5, cy: 6, r: 1 }], ['circle', { cx: 4.5, cy: 12, r: 1 }], ['circle', { cx: 4.5, cy: 18, r: 1 }]],
   share: [['path', 'M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6'], ['path', 'M12 3v12'], ['path', 'M7.5 7.5L12 3l4.5 4.5']],
+  speaker: [['path', 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z'], ['path', 'M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11']],
+  headset: [['path', 'M4 15v-3a8 8 0 0 1 16 0v3'], ['rect', { x: 3, y: 13.5, width: 4.5, height: 7, rx: 1.8 }], ['rect', { x: 16.5, y: 13.5, width: 4.5, height: 7, rx: 1.8 }]],
+  stop: [['rect', { x: 6.5, y: 6.5, width: 11, height: 11, rx: 2 }]],
 };
 
 // fill: colour the inside too (a filled ♡ for saved).

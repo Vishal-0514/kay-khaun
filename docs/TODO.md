@@ -1,6 +1,6 @@
 # Kya Khaun? — To-do list
 
-Last updated: 11 October 2026
+Last updated: 19 October 2026
 
 Order agreed: 1 New features → 2 Experience polish → 3 Store rules → 4 Reliability → 5 Security → 6 Launch preparation.
 Phases 1–3 are done and pushed (latest commit `95bc586`).
@@ -10,7 +10,6 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 ## 1. Your to-dos (only you can do these)
 
 ### Now (small, quick)
-- [ ] **Render → Environment:** add `SUPPORT_EMAIL` (a real inbox) and `LEGAL_NAME` (your name or company). The privacy, terms and delete-account pages show them.
 - [ ] **Install the latest APK** and test: new icon, AI consent screen, vibration, meal reminders, Hindi voice, share.
   APK: https://expo.dev/artifacts/eas/zYbbFzeZFzlbaFnaWJYY7b7qRxWcXXWRLf09n94jl9g.apk
 - [ ] **Sentry** (free, crash reports): create 2 projects (React Native + Node.js) and send the 2 DSNs.
@@ -18,12 +17,13 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] **Claude Console → Limits:** set a monthly spend limit (for example $20) so a bug or abuse can't run up a big bill.
 
 ### Before launch
-- [ ] **Google Places key**, so picks are real restaurants instead of sample dishes. **This is the most important item for launch.** Add a card in Google Cloud, then set a budget alert and a daily cap.
+- [x] **Google Places key**, so picks are real restaurants instead of sample dishes. **This is the most important item for launch.** Add a card in Google Cloud, then set a budget alert and a daily cap.
 - [ ] **Hosting decision (reminder):** Render's free plan sleeps, so the first open can take up to a minute. Options:
   - free pinger that keeps it awake (UptimeRobot / cron-job.org)
   - Render paid (about $7 a month)
   - Google Cloud Run (once the Google card is added)
-- [ ] **Buy a domain** (about ₹800–1,500 a year, for example `kyakhaun.app` or `kyakhaun.in`). It gives a professional support email and privacy/terms links that don't break if hosting changes.
+- [x] **Domain and website:** karisglobalretail.com is live on Vercel; the app's privacy, terms and support links point to it.
+- [ ] **Google Cloud free credit runs out around 9 January 2027** (84 days left on 17 October 2026). Upgrade to a full billing account before then, or nearby places and Chatora's voice stop. Set a budget alert at the same time.
 - [ ] **Google Play developer account** ($25 one-time). A personal account needs a **closed test with 12 testers for 14 days** before publishing, so start this early.
 - [ ] **Apple Developer account** ($99 a year). No Mac needed; EAS builds the iPhone app in the cloud.
 - [ ] **Reviewer demo account**: create it in the app, following the steps in `docs/store-review.md`.

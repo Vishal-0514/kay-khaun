@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { t, currentLang } from './i18n';
+import { t } from './i18n';
+import { stopSpeaking, voiceLanguage } from './speak';
 
 // Speech-to-text uses the phone's own recogniser (Google on Android, Apple on
 // iPhone, the browser's on web), so it's free and fast. Expo Go doesn't ship the
@@ -19,8 +20,9 @@ const speech = loadSpeech();
 
 // Indian English hears Hinglish ("kuch teekha 400 ke andar") as Latin text,
 // which is what both Claude and the keyword parser expect.
-// Hindi interface listens for Hindi; otherwise Indian English (Hinglish).
-const LANG = () => (currentLang() === 'hi' ? 'hi-IN' : 'en-IN');
+// Listens in the voice language from Profile (the app's language by default):
+// Hindi, or Indian English (which also hears Hinglish).
+const LANG = () => (voiceLanguage() === 'hi' ? 'hi-IN' : 'en-IN');
 const FOOD_WORDS = [
   'biryani', 'pav bhaji', 'vada pav', 'paneer', 'chaat', 'pani puri', 'momos', 'dosa', 'idli', 'thali', 'misal',
   'chole bhature', 'rasmalai', 'gulab jamun', 'jalebi', 'kulfi', 'falooda', 'teekha', 'meetha', 'halka', 'ke andar', 'rupaye',
@@ -118,6 +120,7 @@ export function useVoice({ onFinal, onError }) {
       handlers.current.onError?.(t(ERRORS['not-allowed']));
       return;
     }
+    stopSpeaking(); // never listen to Chatora's own voice
     reset();
     active.current = true;
     setListening(true);

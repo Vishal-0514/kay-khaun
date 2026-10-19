@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
 import IconButton from '../../components/IconButton';
@@ -17,6 +17,7 @@ import { useChatStore } from '../../store/useChatStore';
 import { errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { useVoice, voiceUnavailableReason } from '../../lib/voice';
+import { speak, stopSpeaking, useSpeaking, useVoiceSettings } from '../../lib/speak';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 
@@ -102,11 +103,82 @@ export default function Chat() {
   // Speak a craving: the live words show in the bar, and it sends when you stop.
   const talk = useVoice({
     onFinal: (said) => submit(said),
-    onError: (message) => setHint(message),
+    onError: (message) => {
+      setHint(message);
+      endHandsFree();
+    },
   });
+
+  // Chatora's voice. Hands-free: listen, speak the reply aloud, listen again,
+  // until nothing is said or it's switched off. "Read replies aloud" in
+  // Profile speaks replies without the listening loop.
+  const voiceAvailable = useVoiceSettings((s) => s.available);
+  const readAloud = useVoiceSettings((s) => s.readAloud);
+  const speakingId = useSpeaking();
+  const [handsFree, setHandsFree] = useState(false);
+  const handsFreeRef = useRef(false);
+  const awaiting = useRef(null); // while a reply is on its way: { before: id of the last reply }
+  useEffect(() => {
+    useVoiceSettings.getState().load();
+  }, []);
 
   const messages = conversation?.messages ?? [];
   const lastAi = [...messages].reverse().find((m) => m.role === 'ai');
+
+  function endHandsFree() {
+    if (!handsFreeRef.current) return;
+    handsFreeRef.current = false;
+    setHandsFree(false);
+    stopSpeaking();
+  }
+
+  function startHandsFree() {
+    const unavailable = voiceUnavailableReason();
+    if (unavailable) {
+      setHint(unavailable);
+      return;
+    }
+    tap();
+    handsFreeRef.current = true;
+    setHandsFree(true);
+    listen();
+  }
+
+  function say(item) {
+    speak(t(item.text), String(item.id))
+      .then((how) => {
+        if (how === 'ended' && handsFreeRef.current) listen();
+      })
+      .catch(() => {
+        setHint(t("Couldn't play Chatora's voice. Check your internet and try again."));
+        endHandsFree();
+      });
+  }
+
+  function toggleSay(item) {
+    tap();
+    if (speakingId === String(item.id)) stopSpeaking();
+    else say(item);
+  }
+
+  // A reply that just arrived for something sent from here is spoken aloud.
+  useEffect(() => {
+    if (!awaiting.current || !lastAi || lastAi.id === awaiting.current.before) return;
+    awaiting.current = null;
+    if (voiceAvailable && (handsFreeRef.current || readAloud)) say(lastAi);
+  }, [lastAi?.id]);
+
+  // Leaving the chat ends the conversation and silences Chatora.
+  useFocusEffect(
+    useCallback(
+      () => () => {
+        handsFreeRef.current = false;
+        setHandsFree(false);
+        stopSpeaking();
+      },
+      []
+    )
+  );
 
   // An empty chat shows the last few chats to pick up again.
   const empty = !conversation;
@@ -135,7 +207,7 @@ export default function Chat() {
   }, [hint]);
 
   function listen() {
-    if (sending) return;
+    if (useChatStore.getState().sending) return;
     const unavailable = voiceUnavailableReason();
     if (unavailable) {
       setHint(unavailable);
@@ -157,9 +229,12 @@ export default function Chat() {
     if (!msg || sending) return;
     setText('');
     press();
+    awaiting.current = { before: lastAi?.id };
     try {
       await send(msg);
     } catch (err) {
+      awaiting.current = null;
+      endHandsFree();
       setText(msg);
       notify(t("Couldn't send"), errorMessage(err));
     }
@@ -180,7 +255,23 @@ export default function Chat() {
         <View style={styles.aiBody}>
           <Text style={item.kind === 'question' && isLatest ? styles.aiQuestion : styles.aiText}>{t(item.text)}</Text>
           {conversation?.id && !String(item.id).startsWith('local-') ? (
-            <ReportLink target={{ kind: 'chat', conversationId: conversation.id, messageId: String(item.id) }} style={styles.report} />
+            <View style={styles.msgActions}>
+              {voiceAvailable ? (
+                <Pressable
+                  onPress={() => toggleSay(item)}
+                  hitSlop={10}
+                  role="button"
+                  aria-label={speakingId === String(item.id) ? t('Stop') : t('Listen')}
+                  style={styles.listenLink}
+                >
+                  <Icon name={speakingId === String(item.id) ? 'stop' : 'speaker'} size={13} color={speakingId === String(item.id) ? colors.red : colors.muted} />
+                  <Text style={[styles.listenText, speakingId === String(item.id) && { color: colors.red }]}>
+                    {speakingId === String(item.id) ? t('Stop') : t('Listen')}
+                  </Text>
+                </Pressable>
+              ) : null}
+              <ReportLink target={{ kind: 'chat', conversationId: conversation.id, messageId: String(item.id) }} />
+            </View>
           ) : null}
           {item.kind === 'question' && isLatest && conversation?.slip ? <OrderSlip slip={conversation.slip} /> : null}
           {item.kind === 'picks' && item.picks?.length ? (
@@ -345,7 +436,16 @@ export default function Chat() {
 
       {talk.listening ? (
         <Animated.View key="listening" entering={FadeIn.duration(220)} style={[styles.inputBar, styles.listenBar, { marginBottom: space.md }]}>
-          <PressScale scaleTo={0.88} role="button" aria-label={t("Cancel")} onPress={talk.cancel} style={styles.cancelBtn}>
+          <PressScale
+            scaleTo={0.88}
+            role="button"
+            aria-label={handsFree ? t('End voice chat') : t("Cancel")}
+            onPress={() => {
+              talk.cancel();
+              endHandsFree();
+            }}
+            style={styles.cancelBtn}
+          >
             <Icon name="close" size={18} color={colors.muted} />
           </PressScale>
           <Text style={[styles.heard, !talk.heard && styles.heardWaiting]} numberOfLines={2} aria-live="polite">
@@ -355,8 +455,28 @@ export default function Chat() {
             <VoiceBars level={talk.level} color="#FFFFFF" height={22} />
           </PressScale>
         </Animated.View>
+      ) : handsFree ? (
+        <Animated.View key="handsfree" entering={FadeIn.duration(220)} style={[styles.inputBar, styles.listenBar, { marginBottom: space.md }]}>
+          <PressScale scaleTo={0.88} role="button" aria-label={t('End voice chat')} onPress={endHandsFree} style={styles.cancelBtn}>
+            <Icon name="close" size={18} color={colors.muted} />
+          </PressScale>
+          <View style={styles.voiceState}>
+            {speakingId ? <VoiceBars level={0.6} color={colors.red} height={16} /> : <TypingDots color={colors.red} />}
+            <Text style={styles.heard} numberOfLines={1} aria-live="polite">
+              {speakingId ? t('Chatora is speaking…') : t('Chatora is thinking…')}
+            </Text>
+          </View>
+          <PressScale scaleTo={0.88} role="button" aria-label={t('Speak now')} onPress={listen} disabled={sending} style={[styles.sendBtn, sending && { opacity: 0.5 }]}>
+            <Icon name="mic" size={22} color="#FFFFFF" />
+          </PressScale>
+        </Animated.View>
       ) : (
-      <View style={[styles.inputBar, { marginBottom: space.md }]}>
+      <View style={[styles.inputBar, voiceAvailable && styles.inputBarVoice, { marginBottom: space.md }]}>
+        {voiceAvailable ? (
+          <PressScale scaleTo={0.88} role="button" aria-label={t('Talk with Chatora')} onPress={startHandsFree} disabled={sending} style={styles.handsFreeBtn}>
+            <Icon name="headset" size={20} color={colors.red} />
+          </PressScale>
+        ) : null}
         <TextInput
           ref={inputRef}
           value={text}
@@ -408,7 +528,12 @@ const styles = StyleSheet.create({
   aiBody: { flex: 1, gap: space.md },
   aiText: { ...type.body, color: colors.ink },
   aiQuestion: { ...type.head, color: colors.ink },
-  report: { marginTop: -6 },
+  msgActions: { flexDirection: 'row', alignItems: 'center', gap: space.base, marginTop: -6 },
+  listenLink: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 24 },
+  listenText: { fontFamily: fonts.medium, fontSize: 12, color: colors.muted },
+  inputBarVoice: { paddingLeft: 6 },
+  handsFreeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
+  voiceState: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm },
   slip: { backgroundColor: colors.goldSoft, borderRadius: 16, paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.sm },
   notch: { position: 'absolute', top: '50%', width: 20, height: 20, marginTop: -10, borderRadius: 10, backgroundColor: colors.canvas },
   slipTitle: { ...type.label, marginBottom: space.xs },

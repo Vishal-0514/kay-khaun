@@ -2,12 +2,11 @@ import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { colors } from './theme';
 
-// The privacy policy, terms and delete-account pages live on our server
-// (server/src/legal/pages.js), so the app stores and the app share one copy.
-const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4100/api';
-export const SITE = baseURL.replace(/\/api\/?$/, '');
+// The privacy policy, terms, delete-account and support pages live on the
+// company website, the same pages the App Store and Play listings link to.
+export const SITE = 'https://www.karisglobalretail.com/apps/kya-khaun';
 
-export const PAGES = { privacy: '/privacy', terms: '/terms', deleteAccount: '/delete-account' };
+export const PAGES = { privacy: '/privacy', terms: '/terms', deleteAccount: '/delete-account', support: '/support' };
 
 export function openPage(path) {
   const url = SITE + path;
