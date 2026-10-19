@@ -71,4 +71,4 @@ Tracking: **No**. For each item: **Linked to the user: Yes**, **Used for trackin
 ## Content and age rating
 
 - No user-to-user content or chat between people; AI replies are about food, can be reported, and Claude follows Anthropic's usage policies.
-- No gambling, violence or mature content. Expected rating: Everyone / 4+ (choose "contains AI-generated content" where asked).
+- No gambling or violence. **Alcohol:** if the user says they are drinking (wine, beer…), Chatora suggests food that goes with it. It never suggests or encourages alcohol, and reminds people not to drive after drinking. Answer the questionnaires as "mild or infrequent references to alcohol": expected rating about **12+ on Apple** and **Teen / PEGI 12 on Google Play**. Choose "contains AI-generated content" where asked.

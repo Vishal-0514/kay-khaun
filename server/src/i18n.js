@@ -22,6 +22,20 @@ export function tr(text, vars) {
 }
 
 const HI = {
+  // the moment: weather and drinks (services/context.js)
+  "It's raining — good weather for something hot": "बारिश हो रही है — कुछ गरम खाने का मौसम",
+  "{n}° outside — something light and cool": "बाहर {n}° है — कुछ हल्का और ठंडा",
+  "Chilly at {n}° — something warm": "{n}° की ठंड — कुछ गरम",
+  "Goes well with {drink}": "{drink} के साथ बढ़िया",
+  "wine": "वाइन",
+  "beer": "बीयर",
+  "whisky": "व्हिस्की",
+  "rum": "रम",
+  "vodka": "वोडका",
+  "cocktails": "कॉकटेल",
+  "champagne": "शैंपेन",
+  "chai": "चाय",
+  "coffee": "कॉफ़ी",
   // reasons
   'Exactly what you asked for': 'बिल्कुल वही जो आपने माँगा',
   'Fiery, just like you asked': 'ज़बरदस्त तीखा, जैसा आपने कहा',

@@ -1,6 +1,8 @@
-import { aiEnabled, aiAllowedFor, scanKitchen } from '../services/ai.js';
+import { aiEnabled, aiAllowedFor, scanKitchen, suggestSwap } from '../services/ai.js';
 import { suggestRecipes, recipeDetail } from '../services/cooking.js';
-import { catalogue, normalizeAll } from '../data/pantry.js';
+import { catalogue, labelOf, normalizeAll } from '../data/pantry.js';
+import { findRecipe } from '../data/recipes.js';
+import { tr } from '../i18n.js';
 
 import { tasteOf } from '../services/taste.js';
 
@@ -56,4 +58,54 @@ export async function scan(req, res) {
     }
   }
   res.json({ success: true, items });
+}
+
+// A swap for a missing ingredient: the recipe's own tip if it has one,
+// otherwise Chatora (Claude) suggests one that fits their diet and avoid list.
+const swaps = new Map(); // cache: same recipe + ingredient + kitchen + language → same answer
+const SWAP_LIMIT = 30; // per person per hour
+const swapTimes = new Map();
+
+export async function swap(req, res) {
+  const { recipeId, ingredientId, have } = req.body;
+  const recipe = findRecipe(recipeId);
+  const line = recipe?.ingredients.find(([id]) => id === ingredientId);
+  if (!line) return res.status(404).json({ success: false, error: 'Ingredient not found in this recipe' });
+  if (recipe.subs[ingredientId]) return res.json({ success: true, canSwap: true, swap: tr(recipe.subs[ingredientId]), source: 'recipe' });
+
+  if (aiEnabled && !aiAllowedFor(req.user)) {
+    return res.status(403).json({ success: false, code: 'AI_CONSENT', error: 'Swaps use AI. Turn on "Use AI" in Profile to ask Chatora.' });
+  }
+  if (!aiEnabled) return res.status(503).json({ success: false, code: 'AI_OFF', error: "Chatora can't suggest swaps right now." });
+
+  // Diet and avoid always count here, even with taste memory off: a swap must be safe to eat.
+  const prefs = req.user.preferences?.toObject?.() ?? req.user.preferences ?? {};
+  const language = req.lang === 'hi' ? 'hindi' : 'english';
+  const theyHave = [...new Set(have)].filter((id) => id !== ingredientId).map(labelOf).sort();
+  const key = [recipeId, ingredientId, language, prefs.diet ?? '', (prefs.avoid ?? []).join('|'), theyHave.join('|')].join('#');
+  const cached = swaps.get(key);
+  if (cached) return res.json({ success: true, ...cached, source: 'ai' });
+
+  const now = Date.now();
+  const mine = (swapTimes.get(String(req.user._id)) ?? []).filter((t) => now - t < 60 * 60 * 1000);
+  if (mine.length >= SWAP_LIMIT) return res.status(429).json({ success: false, error: 'That’s a lot of swaps for one hour. Try again a little later.' });
+  swapTimes.set(String(req.user._id), [...mine, now]);
+
+  try {
+    const out = await suggestSwap({
+      recipe: recipe.name,
+      ingredient: labelOf(ingredientId),
+      quantity: line[1],
+      theyHave,
+      diet: prefs.diet ?? recipe.diet,
+      avoid: prefs.avoid ?? [],
+      language,
+    });
+    swaps.set(key, out);
+    if (swaps.size > 3000) swaps.delete(swaps.keys().next().value);
+    res.json({ success: true, ...out, source: 'ai' });
+  } catch (err) {
+    console.error('Swap failed:', err.message);
+    res.status(502).json({ success: false, error: "Chatora couldn't think of a swap just now. Try again." });
+  }
 }

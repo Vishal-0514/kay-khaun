@@ -617,4 +617,7 @@ export default {
   "Interrupt and talk": "बीच में बोलें",
   "Chatora's voice isn't available right now, but you can still talk and read the replies.": "चटोरा की आवाज़ अभी उपलब्ध नहीं है, पर आप बोल सकते हैं और जवाब पढ़ सकते हैं।",
   "Tap \"Tap to talk\" on Home, or the voice button in Chat, to talk with Chatora. Replies are turned into speech by Google.": "होम पर \"बोलने के लिए टैप करें\" या चैट में आवाज़ वाला बटन दबाकर चटोरा से बात करें। जवाबों को Google आवाज़ में बदलता है।",
+  "With": "साथ में",
+  "Ask Chatora for a swap": "चटोरा से इसकी जगह कुछ और पूछें",
+  "Asking Chatora…": "चटोरा से पूछ रहे हैं…",
 };

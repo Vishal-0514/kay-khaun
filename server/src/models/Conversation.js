@@ -46,6 +46,8 @@ const conversationSchema = new mongoose.Schema(
       avoid: [String],
       // Cook at home: pantry ids of what they have (unknown items as 'x-name').
       ingredients: [String],
+      // What they're drinking with the meal (data/pairings.js), for food that goes with it.
+      drink: { type: String, default: null },
     },
     messages: [messageSchema],
   },

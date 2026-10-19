@@ -9,6 +9,7 @@ import { currentOccasion, findOccasion } from '../data/occasions.js';
 import { tr } from '../i18n.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
+import { contextFacts, contextFor, drinkLabel, withHints } from '../services/context.js';
 
 const BRANCH_OPTIONS = [
   { id: 'order', label: 'Order in' },
@@ -19,7 +20,7 @@ const HISTORY_TURNS = 8;
 
 // New values from this message override the slip; "avoid" and the kitchen only ever grow.
 function mergeSlots(slots, intent) {
-  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch']) {
+  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch', 'drink']) {
     if (intent[key] !== null && intent[key] !== undefined) slots[key] = intent[key];
   }
   for (const key of ['moods', 'cuisines', 'dishWords']) {
@@ -43,6 +44,7 @@ function slipView(slots, user) {
     time: slots.timeMax ?? null,
     branch: slots.branch ?? null,
     ingredients: (slots.ingredients ?? []).map(labelOf),
+    drink: drinkLabel(slots.drink),
   };
 }
 
@@ -90,12 +92,12 @@ async function readMessage(text, conv, user) {
   const intent = parseWithKeywords(text);
   // Once they've chosen to cook, a plain list ("eggs, bread, onion") is their kitchen.
   if (!intent.ingredients.length && (intent.branch ?? conv.slots.branch) === 'cook') intent.ingredients = findIngredientsInText(text);
-  const aboutFood = Boolean(intent.craving || intent.cuisines.length || intent.diet || intent.budgetMax || intent.timeMax || intent.branch || intent.ingredients.length);
+  const aboutFood = Boolean(intent.craving || intent.cuisines.length || intent.diet || intent.budgetMax || intent.timeMax || intent.branch || intent.ingredients.length || intent.drink);
   return { ...intent, aboutFood, language: 'english', reply: null, source: 'keywords' };
 }
 
 // Final answer + one reason per dish: Claude's words when possible.
-async function describePicks(result, { text, intent, conv, user }) {
+async function describePicks(result, { text, intent, conv, user, ctx }) {
   const fallback = { message: backupText.picks(result), reasons: {} };
   if (!aiEnabled || intent.source !== 'ai') return fallback;
   try {
@@ -107,6 +109,7 @@ async function describePicks(result, { text, intent, conv, user }) {
       relaxed: result.relaxed,
       userName: user.name,
       taste: prefsOf(user),
+      moment: contextFacts(ctx),
     });
   } catch (err) {
     console.error('Claude could not explain the picks, using templates:', err.message);
@@ -114,7 +117,7 @@ async function describePicks(result, { text, intent, conv, user }) {
   }
 }
 
-async function describeRecipes(recipes, { text, intent, conv, user }) {
+async function describeRecipes(recipes, { text, intent, conv, user, ctx }) {
   const fallback = { message: backupText.recipes(recipes), reasons: {} };
   if (!aiEnabled || intent.source !== 'ai') return fallback;
   try {
@@ -125,6 +128,7 @@ async function describeRecipes(recipes, { text, intent, conv, user }) {
       recipes,
       userName: user.name,
       taste: prefsOf(user),
+      moment: contextFacts(ctx),
     });
   } catch (err) {
     console.error('Claude could not explain the recipes, using templates:', err.message);
@@ -134,8 +138,10 @@ async function describeRecipes(recipes, { text, intent, conv, user }) {
 
 // Real nearby places when we know where they are and Google is set up;
 // otherwise the sample Mumbai menu (handy for building and testing).
-async function findPicks(slots, user, location) {
+// ctx: the drink and weather (services/context.js); looked up here when not given.
+async function findPicks(slots, user, location, ctx) {
   const taste = await tasteOf(user);
+  slots = withHints(slots, ctx ?? (await contextFor(slots, location)));
   if (placesEnabled && location) {
     try {
       const result = await nearbyPicks(slots, taste, location);
@@ -170,7 +176,8 @@ export async function sendMessage(req, res) {
   if (conv.title === 'New chat' && conv.slots.branch === 'cook') conv.title = 'Cooking at home';
 
   const slots = conv.slots.toObject();
-  const hasWish = Boolean(slots.craving || slots.moods?.length || slots.cuisines?.length || slots.dishWords?.length || slots.branch || slots.ingredients?.length);
+  const hasWish = Boolean(slots.craving || slots.moods?.length || slots.cuisines?.length || slots.dishWords?.length || slots.branch || slots.ingredients?.length || slots.drink);
+  const ctx = await contextFor(slots, location);
   let reply;
   let picks = [];
   let recipes = [];
@@ -183,7 +190,7 @@ export async function sendMessage(req, res) {
     if (!slots.ingredients?.length) {
       reply = { kind: 'question', text: intent.reply ?? backupText.askKitchen, options: [SCAN_OPTION] };
     } else {
-      const found = suggestRecipes(slots, await tasteOf(req.user));
+      const found = suggestRecipes(withHints(slots, ctx), await tasteOf(req.user));
       if (!found.length) {
         reply = {
           kind: 'info',
@@ -191,17 +198,17 @@ export async function sendMessage(req, res) {
           options: [SCAN_OPTION, { id: 'order', label: 'Order in' }],
         };
       } else {
-        const words = await describeRecipes(found, { text, intent, conv, user: req.user });
+        const words = await describeRecipes(found, { text, intent, conv, user: req.user, ctx });
         recipes = found.map((r) => (words.reasons[r.id] ? { ...r, reason: words.reasons[r.id] } : r));
         reply = { kind: 'recipes', text: words.message };
       }
     }
   } else {
-    const result = await findPicks(slots, req.user, location);
+    const result = await findPicks(slots, req.user, location, ctx);
     if (!result.picks.length) {
       reply = { kind: 'info', text: "I couldn't find anything that fits. Try a different craving or a bigger budget?" };
     } else {
-      const words = await describePicks(result, { text, intent, conv, user: req.user });
+      const words = await describePicks(result, { text, intent, conv, user: req.user, ctx });
       picks = result.picks.map((p) => (words.reasons[p.id] ? { ...p, reasons: [{ icon: 'spark', text: words.reasons[p.id] }, ...p.reasons].slice(0, 4) } : p));
       reply = { kind: 'picks', text: words.message };
     }
@@ -265,7 +272,7 @@ export async function getConversation(req, res) {
   const lng = Number(req.query.lng);
   const location = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, city: String(req.query.city ?? '') } : null;
   const picks = slots.branch === 'order' ? (await findPicks(slots, req.user, location)).picks : [];
-  const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(slots, await tasteOf(req.user)) : [];
+  const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(withHints(slots, await contextFor(slots, null)), await tasteOf(req.user)) : [];
   res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots) });
 }
 

@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
+import { DRINKS } from '../data/pairings.js';
 
 // Chatora's brain. Every job is grounded:
 //  1. understand() reads the message (with the chat so far) into slots and writes
@@ -9,6 +10,7 @@ import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
 //     dish facts we pass in. Dishes, prices and times always come from ranking.js.
 //  3. explainRecipes() does the same for home recipes (cooking.js).
 //  4. scanKitchen() lists the ingredients in a fridge or kitchen photo.
+//  5. suggestSwap() suggests what to use for a missing recipe ingredient.
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
@@ -64,6 +66,7 @@ const understandSchema = strictObject({
   branch: { anyOf: [{ type: 'string', enum: ['order', 'cook'] }, { type: 'null' }] },
   avoid: { type: 'array', items: { type: 'string', enum: AVOIDABLE } },
   ingredients: { type: 'array', items: { type: 'string' } },
+  drink: { anyOf: [{ type: 'string', enum: DRINKS }, { type: 'null' }] },
   language: { type: 'string', enum: LANGUAGES },
   aboutFood: { type: 'boolean' },
   reply: { type: 'string' },
@@ -83,6 +86,7 @@ const understandCheck = z.object({
   branch: z.enum(['order', 'cook']).nullable(),
   avoid: z.array(z.enum(AVOIDABLE)),
   ingredients: z.array(z.string().max(40)).max(30),
+  drink: z.enum(DRINKS).nullable(),
   language: z.enum(LANGUAGES),
   aboutFood: z.boolean(),
   reply: z.string().min(1).max(400),
@@ -104,6 +108,7 @@ Slots — report only what the latest message adds or changes; use null / [] for
 - branch: "order" to get food delivered, "cook" to make it at home, else null.
 - avoid: things they don't want, from: ${AVOIDABLE.join(', ')}.
 - ingredients: food items they say they have at home right now, in simple lowercase English ("aloo" = "potato", "dahi" = "curd").
+- drink: what they say they are drinking or will drink with the meal (${DRINKS.join(', ')}; "daru" or "peg" = whisky), so the app can pick food that goes with it. null if they don't mention one, or if they want to ORDER that drink itself ("I want chai" is a craving, not a drink to pair).
 - language: the language they wrote in.
 - aboutFood: false for greetings, thanks or unrelated chat.
 
@@ -112,7 +117,8 @@ reply — one or two short, friendly sentences in the SAME language and style th
 - Else if the order-or-cook choice is still unknown (not in the slip and not in this message): acknowledge what they want in a few words and ask ONLY whether they want to order in or cook at home.
 - Else if they want to cook and no ingredients are known yet (none in the slip or this message): ask what they have at home, and mention they can scan their fridge.
 - Else: a short acknowledgement such as "On it!" — the app will add the results.
-Never name restaurants, dishes, recipes, prices or delivery times in the reply.`;
+Never name restaurants, dishes, recipes, prices or delivery times in the reply.
+Drinks: you only pair food with a drink the user already mentioned. Never suggest, recommend or encourage alcohol or drinking more. If they mention driving after drinking, add a short, kind reminder not to drive.`;
 
 export async function understand({ text, history, slip }) {
   const content = [
@@ -144,14 +150,16 @@ async function explain(system, payload, ids) {
 const EXPLAIN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already chosen and ranked the dishes; you only explain them.
 Use ONLY the facts given for each dish (name, restaurant, price, delivery minutes, rating, spice, cuisine, diet, distance). Never invent dishes, prices, times, offers or ingredients.
 - message: two short sentences max, in the user's language and style. Name the #1 dish with its restaurant, price and minutes exactly as given. If "people" is more than 1, the price is per person: also give the groupPrice for all of them, exactly as given. If "relaxed" is set, gently say which limit you stretched.
-- reasons: for EVERY dish, one reason of at most 12 words, personal to what they asked for and their taste, in the same language. Use the dish id exactly as given.`;
+- reasons: for EVERY dish, one reason of at most 12 words, personal to what they asked for and their taste, in the same language. Use the dish id exactly as given.
+- If "moment" is given: in the message only, you may say the food goes well with their drink (never suggest or encourage alcohol) or mention the weather in a few words ("perfect for this rain"). Keep it out of the reasons: the app already shows that line.`;
 
 const PLACES_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already found and ranked real nearby restaurants from Google; the customer orders on Zomato or Swiggy. You only explain the choices.
 Use ONLY the facts given (name, kind of place, area, distance, Google rating, price range, open now, typical dishes). You do NOT know their menu or exact prices: never state a dish price, never promise a dish is on the menu — say "try" or "known for" only about the typical dishes given.
 - message: two short sentences max, in the user's language and style. Name the #1 place with its distance and rating, and say they can tap to order on Zomato or Swiggy.
-- reasons: for EVERY place, one reason of at most 12 words, personal to what they asked for. Use the place id exactly as given.`;
+- reasons: for EVERY place, one reason of at most 12 words, personal to what they asked for. Use the place id exactly as given.
+- If "moment" is given: in the message only, you may say the food goes well with their drink (never suggest or encourage alcohol) or mention the weather in a few words ("perfect for this rain"). Keep it out of the reasons: the app already shows that line.`;
 
-export async function explainPicks({ text, language, slip, picks, relaxed, userName, taste }) {
+export async function explainPicks({ text, language, slip, picks, relaxed, userName, taste, moment = null }) {
   if (picks[0]?.source === 'places') {
     const places = picks.map((p, i) => ({
       rank: i + 1,
@@ -166,7 +174,7 @@ export async function explainPicks({ text, language, slip, picks, relaxed, userN
       openNow: p.openNow,
       typicalDishes: p.ideas,
     }));
-    return explain(PLACES_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, places }, picks.map((p) => p.id));
+    return explain(PLACES_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, moment, places }, picks.map((p) => p.id));
   }
   const dishes = picks.map((p, i) => ({
     rank: i + 1,
@@ -183,15 +191,16 @@ export async function explainPicks({ text, language, slip, picks, relaxed, userN
     distanceKm: p.distanceKm,
     ...(p.people > 1 ? { people: p.people, groupPrice: p.groupPrice } : null),
   }));
-  return explain(EXPLAIN_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, relaxed, dishes }, picks.map((p) => p.id));
+  return explain(EXPLAIN_SYSTEM, { userMessage: text, language, userName: userName || null, orderSlip: slip, savedTaste: taste, moment, relaxed, dishes }, picks.map((p) => p.id));
 }
 
 const RECIPES_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The user wants to cook at home. The app has already chosen and ranked recipes from what they have; you only explain them.
 Use ONLY the facts given for each recipe (name, minutes, level, what they have, what is missing). Never invent recipes, ingredients, steps or times.
 - message: two short sentences max, in the user's language and style. Name the #1 recipe and its minutes exactly as given. If it needs something they don't have, say so plainly.
-- reasons: for EVERY recipe, one reason of at most 12 words, personal to what they asked for, in the same language. Use the recipe id exactly as given.`;
+- reasons: for EVERY recipe, one reason of at most 12 words, personal to what they asked for, in the same language. Use the recipe id exactly as given.
+- If "moment" is given: in the message only, you may say the food goes well with their drink (never suggest or encourage alcohol) or mention the weather in a few words ("perfect for this rain"). Keep it out of the reasons: the app already shows that line.`;
 
-export async function explainRecipes({ text, language, haveLabels, recipes, userName, taste }) {
+export async function explainRecipes({ text, language, haveLabels, recipes, userName, taste, moment = null }) {
   const facts = recipes.map((r, i) => ({
     rank: i + 1,
     id: r.id,
@@ -203,7 +212,7 @@ export async function explainRecipes({ text, language, haveLabels, recipes, user
     hasAllIngredients: r.missing.length === 0,
     missing: r.missing.map((m) => m.label),
   }));
-  return explain(RECIPES_SYSTEM, { userMessage: text, language, userName: userName || null, theyHave: haveLabels, savedTaste: taste, recipes: facts }, recipes.map((r) => r.id));
+  return explain(RECIPES_SYSTEM, { userMessage: text, language, userName: userName || null, theyHave: haveLabels, savedTaste: taste, moment, recipes: facts }, recipes.map((r) => r.id));
 }
 
 const PLAN_SYSTEM = `You are Chatora, the food guide in the Kya Khaun? app. The app has already planned the user's meals for the day; you only introduce the plan.
@@ -256,4 +265,22 @@ export async function scanKitchen({ image, mediaType }) {
     { type: 'text', text: 'List the cooking ingredients in this photo.' },
   ];
   return scanCheck.parse(await callJson({ system: SCAN_SYSTEM, content, schema: scanSchema, maxTokens: 1500 }));
+}
+
+// ---------- 5. a swap for a missing ingredient ----------
+
+const swapSchema = strictObject({ canSwap: { type: 'boolean' }, swap: { type: 'string' } });
+const swapCheck = z.object({ canSwap: z.boolean(), swap: z.string().min(1).max(260) });
+
+const SWAP_SYSTEM = `You help an Indian home cook who is missing one ingredient for a recipe.
+Suggest ONE practical substitute that Indian homes usually have, preferring something from "theyHave", with the amount and any change to the method, in one or two short sentences (at most 40 words).
+- Respect "diet" (veg = no meat, fish or egg; egg = no meat or fish) and never suggest anything in "avoid".
+- If the dish works fine without it, say they can skip it and what changes.
+- If there is no sensible substitute (it's the star of the dish), set canSwap to false and say so kindly in "swap", suggesting they pick another recipe.
+- Write in "language": "hindi" = simple Hindi in Devanagari, otherwise simple English.
+- Food safety first: never suggest anything unsafe, such as undercooked meat or egg.`;
+
+export async function suggestSwap({ recipe, ingredient, quantity, theyHave, diet, avoid, language }) {
+  const content = JSON.stringify({ recipe, missingIngredient: ingredient, quantity, theyHave, diet, avoid, language });
+  return swapCheck.parse(await callJson({ system: SWAP_SYSTEM, content, schema: swapSchema, maxTokens: 600 }));
 }

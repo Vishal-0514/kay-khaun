@@ -44,6 +44,12 @@ export function effectiveCriteria(slots, prefs = {}) {
     wantsMeat: slots.diet === 'nonveg',
     // What taste learning picked up (services/taste.js), or null.
     learned: prefs.learned ?? null,
+    // Soft hints from the moment: a drink they mentioned, or the weather (services/context.js).
+    hintWords: slots.hintWords ?? [],
+    hintMoods: slots.hintMoods ?? [],
+    hintCuisines: slots.hintCuisines ?? [],
+    hintQuery: slots.hintQuery ?? null,
+    hintReason: slots.hintReason ?? null,
   };
 }
 
@@ -74,13 +80,26 @@ export function score(d, c) {
   // A dish they named still wins when the mood alone already maxes out taste;
   // for 3 or more, dishes made for sharing get a small lift.
   const sharing = c.people >= 3 && SHAREABLE.has(d.id) ? 0.05 : 0;
-  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost + (nameHit ? 0.06 : 0) + sharing;
-  return { total, nameHit };
+  const hintHit = hintMatch(d, c);
+  const total = 0.42 * taste + 0.18 * price + 0.14 * time + 0.14 * personal + 0.12 * rating + nudge.boost + (nameHit ? 0.06 : 0) + sharing + hintHit;
+  return { total, nameHit, hintHit };
 }
 
-export function reasonsFor(d, c, nameHit) {
+// How well a dish fits the drink or weather hint. A dish named in the pairing
+// (kebab with whisky) counts most and gets the reason line; a matching mood or
+// cuisine only nudges it up.
+export const HINT_DISH = 0.18;
+export function hintMatch(d, c) {
+  const name = d.name.toLowerCase();
+  if (c.hintWords.some((w) => name.includes(w))) return HINT_DISH;
+  if (c.hintCuisines.includes(d.cuisine) || c.hintMoods.some((m) => d.moods.includes(m))) return 0.06;
+  return 0;
+}
+
+export function reasonsFor(d, c, nameHit, hintHit = 0) {
   const r = [];
   if (nameHit) r.push({ icon: 'spark', text: tr('Exactly what you asked for') });
+  if (hintHit >= HINT_DISH && c.hintReason) r.push(c.hintReason);
   const learnedReason = learnedNudge(c.learned, d.id, d.cuisine).reason;
   if (learnedReason) r.push(learnedReason);
   if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: tr(d.spice === 5 ? 'Fiery, just like you asked' : 'Properly spicy, just like you asked') });
@@ -121,13 +140,13 @@ export function recommend(slots, prefs, { limit = 5 } = {}) {
         .map((d) => ({ d, ...score(d, c) }))
         .sort((a, b) => b.total - a.total)
         .slice(0, limit)
-        .map(({ d, total, nameHit }) => ({
+        .map(({ d, total, nameHit, hintHit }) => ({
           ...d,
           source: 'sample',
           ...(c.people > 1 ? { people: c.people, groupPrice: d.price * c.people } : null),
           match: Math.min(99, Math.round(52 + 47 * total)),
           spiceLabel: SPICE_WORD[d.spice - 1],
-          reasons: reasonsFor(d, c, nameHit),
+          reasons: reasonsFor(d, c, nameHit, hintHit),
         }));
       const relaxed = i === 0 ? null : i === 1 ? 'time' : 'budget';
       return { picks: ranked, relaxed, criteria: c };

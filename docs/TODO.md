@@ -2,7 +2,7 @@
 
 Last updated: 19 October 2026
 
-Order agreed: 1 New features → 2 Experience polish → 3 Store rules → 4 Reliability → 5 Security → 6 Launch preparation.
+Order agreed: 1 New features → 2 Experience polish → 3 Store rules → 4–7 Blueprint features → 8 Reliability → 9 Security → 10 Launch preparation.
 Phases 1–3 are done and pushed (latest commit `95bc586`).
 
 ---
@@ -27,7 +27,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] **Google Play developer account** ($25 one-time). A personal account needs a **closed test with 12 testers for 14 days** before publishing, so start this early.
 - [ ] **Apple Developer account** ($99 a year). No Mac needed; EAS builds the iPhone app in the cloud.
 - [ ] **Reviewer demo account**: create it in the app, following the steps in `docs/store-review.md`.
-- [ ] **Rotate the Claude key and the MongoDB password** (Phase 5). Both were shared in chat earlier.
+- [ ] **Rotate the Claude key and the MongoDB password** (Phase 9). Both were shared in chat earlier.
 - [ ] **Firebase:** decide whether it stays on the current Google account or moves to a company or client account before launch.
 - [ ] Optional: **`FIREBASE_SERVICE_ACCOUNT`** on Render, so "Delete my account" also removes the Firebase sign-in email.
 
@@ -44,7 +44,35 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 
 ## 2. What I will build (in order)
 
-### Phase 4: Reliability
+Phases 4–7 come from the blueprint PDFs ("Full Product Flow & Feature Blueprint" and "Snap Your Food – Get Your Song").
+Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
+
+### Phase 4: Quick upgrades (the half-built parts)
+- [x] At most 5 recipes in Cook at home
+- [x] Weather in Chatora's thinking (rain → chai and pakoda, heat → coolers). Built; switches on once **you** enable the Weather API on the Google key
+- [x] Food that goes with your drink ("I'm drinking wine tonight"). Store age rating becomes about 12+ / Teen (see docs/store-review.md)
+- [x] Chatora suggests a swap for any missing ingredient, respecting the diet and avoid list
+
+### Phase 5: Go Out ("Where should I go?")
+- [ ] Third choice beside Order and Cook, in chat, voice and on Home
+- [ ] Understands café, dinner, chill, live music, date, long drive
+- [ ] 3–4 real nearby places: rating, distance, travel time, vibe, open now, "Why it fits"
+- [ ] Travel time with traffic (Google Routes). **You:** turn on the Routes API
+- [ ] Long drive ideas (scenic spots, dhabas 20–80 km away)
+- [ ] Directions button (Google Maps / Apple Maps); save ♡ and history for places
+
+### Phase 6: Snap My Mood
+- [ ] Home's Snap offers: My kitchen / Where I am / My food
+- [ ] Photo of where you are, plus an optional voice or text line
+- [ ] Chatora reads the setting as hints (never claims your mood) and gives 4–5 food or place ideas with "Why this fits"
+- [ ] Privacy policy, AI consent and store data-safety updates (the photo isn't kept)
+
+### Phase 7: Snap Your Food, Get Your Song
+- [ ] Photo of your food, then Hindi / English / Both
+- [ ] 3–4 songs with a short reason, each checked against Apple's public music catalogue so none are made up
+- [ ] Open in Spotify, YouTube Music or Apple Music (no playback or lyrics in the app)
+
+### Phase 8: Reliability
 - [ ] Sentry crash reporting (app + server)
 - [ ] Over-the-air updates (EAS Update): small fixes reach phones without a new build
 - [ ] App version in Profile + a "What's new" screen after updates
@@ -52,7 +80,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] Nightly database backup (last 30 days kept)
 - [ ] Fix: a reopened saved day plan shows its note in English even in Hindi mode
 
-### Phase 5: Security
+### Phase 9: Security
 - [ ] Request limits per user and IP + a **daily AI limit per user** (protects the Claude bill)
 - [ ] Security headers (helmet), and CORS locked down
 - [ ] Restrict the Google and Firebase keys to the app only
@@ -60,7 +88,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] Chat retention: for example, auto-delete chats older than 90 days, and update the privacy policy to match
 - [ ] Final security review of the whole codebase
 
-### Phase 6: Launch preparation
+### Phase 10: Launch preparation
 - [ ] Sign in with Apple (required by Apple because the app offers Google sign-in)
 - [ ] Switch on Google Places and test real restaurants
 - [ ] Production builds (Play Store AAB + iPhone)
@@ -69,7 +97,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] iPhone testing through TestFlight
 - [ ] Final hosting move, if one is chosen
 
-### Phase 7 (optional): Swiggy in-app ordering
+### Phase 11 (optional): Swiggy in-app ordering
 - [ ] Only after Swiggy approves: link a Swiggy account → cart → place order → track, all inside Kya Khaun
 - [ ] Update the privacy policy, the "not linked to Swiggy" note and the store forms
 
@@ -96,7 +124,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 
 ## Suggested order
 1. The quick to-dos: Render settings, Sentry, GitHub secret, Claude spend limit
-2. Phase 4
+2. Phases 4–7 (blueprint features), then Phase 8
 3. Google Places key + domain
-4. Phase 5
-5. Developer accounts (start the Play closed test early, because it takes 14 days) + Phase 6
+4. Phase 9
+5. Developer accounts (start the Play closed test early, because it takes 14 days) + Phase 10

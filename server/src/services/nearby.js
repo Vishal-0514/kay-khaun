@@ -89,6 +89,7 @@ export function queryFor(c) {
   if (c.dishWords.length) what = c.dishWords.slice(0, 2).join(' ');
   else if (c.cuisines.length) what = c.cuisines[0] === 'Desserts' ? 'desserts' : `${c.cuisines[0]} food`;
   else if (c.moods.length) what = MOOD_QUERY[c.moods[0]] ?? 'restaurants';
+  else if (c.hintQuery) what = c.hintQuery;
   else what = 'restaurants';
   const veg = c.diet === 'veg' && !/dessert|sweet/.test(what) ? 'pure veg ' : '';
   return `${veg}${what} restaurant`.replace(/restaurants? restaurant$/, 'restaurants');
@@ -105,6 +106,8 @@ function ideasFor(place, c) {
   // The name says the most ("Snow Waffle"), then Google's kind of place ("Dessert shop").
   const byPlace = ideasMatching(place.name) ?? ideasMatching(place.kind);
   if (byPlace) return byPlace.slice(0, 2);
+  // Searched because of a drink or the weather: what goes with it.
+  if (c.hintQuery && c.hintWords.length) return c.hintWords.slice(0, 2).map((w) => w.replace(/^\w/, (x) => x.toUpperCase()));
   // A plain "Restaurant": go by what they asked for.
   const byAsk = c.cuisines.length ? ideasMatching(c.cuisines[0]) : c.moods.includes('sweet') ? ideasMatching('dessert') : null;
   return (byAsk ?? []).slice(0, 2);
@@ -146,6 +149,8 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
     const ideas = ideasFor(p, c);
     const reasons = [];
     const learnedReason = learnedNudge(c.learned, p.id, p.kind).reason;
+    // A drink or the weather shaped the search (or the place clearly fits it).
+    if (c.hintReason && (c.hintQuery || c.hintWords.some((w) => `${p.name} ${p.kind}`.toLowerCase().includes(w)))) reasons.push(c.hintReason);
     if (learnedReason) reasons.push(learnedReason);
     if (p.rating) reasons.push({ icon: 'star', text: tr('Rated {r} by {n} people on Google', { r: p.rating.toFixed(1), n: p.ratingCount.toLocaleString('en-IN') }) });
     reasons.push({ icon: 'route', text: tr('{km} km from you', { km: distanceKm.toFixed(1) }) });

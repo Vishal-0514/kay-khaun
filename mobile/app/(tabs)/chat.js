@@ -48,6 +48,7 @@ function OrderSlip({ slip }) {
     ['People', slip.people ? t('{n} of you', { n: slip.people }) : null],
     ['Budget', slip.budget && slip.branch !== 'cook' ? budgetText(slip) : null],
     ['Time', slip.time ? t('{n} min', { n: slip.time }) : null],
+    ['With', slip.drink ? slip.drink.replace(/^\w/, (c) => c.toUpperCase()) : null],
     ['Kitchen', slip.ingredients?.length ? slip.ingredients.slice(0, 3).join(', ') + (slip.ingredients.length > 3 ? ` +${slip.ingredients.length - 3}` : '') : null],
   ].filter(([, v]) => v);
   return (

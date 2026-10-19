@@ -34,6 +34,9 @@ const TILE = {
   star: ['#FCF1DA', colors.goldText],
   spark: ['#FCF1DA', colors.goldText],
   route: ['#E8EEF7', '#3A5A8C'],
+  cloud: ['#E8EEF7', '#3A5A8C'],
+  sun: ['#FCEBD0', '#A8670F'],
+  cup: ['#FDE8D6', '#B8501A'],
 };
 
 function Stat({ label, value }) {

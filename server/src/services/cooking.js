@@ -23,6 +23,8 @@ function stock(recipe, have) {
 function reasonFor({ owned, missing, extras }, recipe, c) {
   const used = [...owned, ...extras].slice(0, 3).map((id) => labelOf(id).toLowerCase());
   if (!missing.length) return used.length ? `You have everything — uses your ${listWords(used)}` : 'You have everything for this';
+  // Opened without a kitchen (from Saved or a link): nothing to say about what they have.
+  if (!used.length) return `${recipe.level === 'Easy' ? 'An easy' : `A ${recipe.level.toLowerCase()}`} ${recipe.time}-minute recipe`;
   if (c.moods.some((m) => recipe.moods.includes(m))) return `Uses your ${listWords(used)}, and fits your mood`;
   return `Uses your ${listWords(used)}`;
 }
@@ -31,7 +33,7 @@ const listWords = (words) => (words.length < 2 ? words.join('') : `${words.slice
 
 // slots: { ingredients, moods, dishWords, diet, timeMax, avoid } from the chat (or the kitchen screen).
 // prefs: the saved taste profile (or {}).
-export function suggestRecipes(slots, prefs = {}, { limit = 6 } = {}) {
+export function suggestRecipes(slots, prefs = {}, { limit = 5 } = {}) {
   const have = new Set(slots.ingredients ?? []);
   const c = {
     diet: slots.diet ?? prefs.diet ?? null,
@@ -42,6 +44,9 @@ export function suggestRecipes(slots, prefs = {}, { limit = 6 } = {}) {
     spice: prefs.spice ?? 3,
     favCuisines: prefs.cuisines ?? [],
     learned: prefs.learned ?? null,
+    // A drink they mentioned or the weather (services/context.js): a gentle lift only.
+    hintWords: slots.hintWords ?? [],
+    hintMoods: slots.hintMoods ?? [],
   };
 
   const scored = [];
@@ -68,6 +73,8 @@ export function suggestRecipes(slots, prefs = {}, { limit = 6 } = {}) {
     let total = (0.55 - wT) * coverage + 0.15 * uses + wT * taste + 0.12 * time + 0.08 * personal + 0.1 * coverage;
     if (c.moods.some((m) => r.moods.includes(m))) total += 0.15;
     total += nudge.boost;
+    if (c.hintWords.some((w) => r.name.toLowerCase().includes(w))) total += 0.08;
+    else if (!c.moods.length && c.hintMoods.some((m) => r.moods.includes(m))) total += 0.04;
     if (!have.has(r.core[0])) total *= 0.7;
     scored.push({ r, s, total });
   }

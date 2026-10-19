@@ -1,4 +1,5 @@
 import { findIngredientsInText } from '../data/pantry.js';
+import { DRINK_WORDS } from '../data/pairings.js';
 
 // Backup reader for chat messages (English + Hinglish keywords). Claude (ai.js)
 // is the main reader; this keeps the app answering if Claude is unreachable.
@@ -44,7 +45,7 @@ function peopleIn(text) {
 
 export function parseWithKeywords(raw) {
   const text = ` ${raw.toLowerCase().replace(/₹/g, ' rs ')} `;
-  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, budgetPerPerson: null, people: null, timeMax: null, branch: null, avoid: [], ingredients: [] };
+  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, budgetPerPerson: null, people: null, timeMax: null, branch: null, avoid: [], ingredients: [], drink: null };
 
   for (const [mood, words] of Object.entries(MOOD_WORDS)) if (has(text, words)) out.moods.push(mood);
   for (const [cuisine, words] of Object.entries(CUISINE_WORDS)) if (has(text, words)) out.cuisines.push(cuisine);
@@ -79,6 +80,9 @@ export function parseWithKeywords(raw) {
 
   if (has(text, ['order', 'order in', 'deliver', 'delivery', 'mangwa', 'mangao', 'bahar se', 'outside', 'swiggy', 'zomato'])) out.branch = 'order';
   if (has(text, ['cook', 'cook at home', 'make at home', 'ghar pe', 'banao', 'banana', 'recipe', 'fridge'])) out.branch = 'cook';
+
+  // "Drinking wine tonight": food to go with it.
+  out.drink = Object.entries(DRINK_WORDS).find(([, words]) => has(text, words))?.[0] ?? null;
 
   // "I have eggs and bread", "mere paas aloo hai": things in their kitchen.
   if (HAVE.test(text)) out.ingredients = findIngredientsInText(text);

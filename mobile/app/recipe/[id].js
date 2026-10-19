@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
@@ -11,7 +11,8 @@ import Animated from 'react-native-reanimated';
 import { appear, rise, riseUp, sheetUp } from '../../components/Motion';
 import { useCookStore } from '../../store/useCookStore';
 import { useMeStore } from '../../store/useMeStore';
-import { errorMessage } from '../../lib/api';
+import { api, errorMessage } from '../../lib/api';
+import { tap } from '../../lib/haptics';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 
@@ -26,8 +27,35 @@ function Fact({ icon, value }) {
   );
 }
 
+// "No paneer?" → Chatora suggests what to use instead (or says to skip it).
+function AskSwap({ recipeId, item }) {
+  const kitchen = useCookStore((s) => s.kitchen);
+  const [state, setState] = useState({ busy: false, text: null, error: null });
+  async function ask() {
+    tap();
+    setState({ busy: true, text: null, error: null });
+    try {
+      const have = kitchen.filter((k) => k.sure !== false).map((k) => k.id);
+      const { data } = await api.post('/cook/swap', { recipeId, ingredientId: item.id, have });
+      setState({ busy: false, text: data.swap, error: null });
+    } catch (err) {
+      setState({ busy: false, text: null, error: errorMessage(err) });
+    }
+  }
+  if (state.text) return <Text style={styles.sub}>{state.text}</Text>;
+  return (
+    <>
+      <Pressable role="button" onPress={ask} disabled={state.busy} hitSlop={8} style={styles.askSwap}>
+        {state.busy ? <ActivityIndicator size="small" color={colors.red} /> : <Icon name="spark" size={14} color={colors.red} />}
+        <Text style={styles.askSwapText}>{state.busy ? t('Asking Chatora…') : t('Ask Chatora for a swap')}</Text>
+      </Pressable>
+      {state.error ? <Text style={styles.swapError}>{state.error}</Text> : null}
+    </>
+  );
+}
+
 // One ingredient line: have it (green tick), missing (gold), optional, or pantry basic.
-function Ingredient({ item, n }) {
+function Ingredient({ item, n, recipeId }) {
   const mark = {
     have: { bg: colors.green, icon: 'check', color: '#FFFFFF' },
     missing: { bg: colors.goldSoft, icon: 'plus', color: colors.goldText },
@@ -44,7 +72,7 @@ function Ingredient({ item, n }) {
           <Text style={styles.ingQty}>{item.qty}</Text>
         </View>
         {note ? <Text style={[styles.ingNote, item.status === 'missing' && { color: colors.goldText, fontFamily: fonts.bold }]}>{note}</Text> : null}
-        {item.sub ? <Text style={styles.sub}>{item.sub}</Text> : null}
+        {item.sub ? <Text style={styles.sub}>{item.sub}</Text> : item.status === 'missing' ? <AskSwap recipeId={recipeId} item={item} /> : null}
       </View>
     </Animated.View>
   );
@@ -128,7 +156,7 @@ export default function Recipe() {
         <View style={styles.section}>
           <Text style={type.head} role="heading">{t("Ingredients")}</Text>
           {shown.map((i, n) => (
-            <Ingredient key={i.id} item={i} n={Math.min(n, 10)} />
+            <Ingredient key={i.id} item={i} n={Math.min(n, 10)} recipeId={recipe.id} />
           ))}
         </View>
 
@@ -185,6 +213,9 @@ const styles = StyleSheet.create({
   ingName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink, flexShrink: 1 },
   ingQty: { fontFamily: fonts.regular, fontSize: 14, color: colors.muted, textAlign: 'right', flexShrink: 1 },
   ingNote: { fontFamily: fonts.regular, fontSize: 12, color: colors.muted, marginTop: 2 },
+  askSwap: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: space.xs, minHeight: 28 },
+  askSwapText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.red },
+  swapError: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.muted },
   sub: { marginTop: space.xs, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.body, backgroundColor: colors.goldSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, overflow: 'hidden' },
   step: { flexDirection: 'row', gap: space.md, paddingVertical: space.md },
   stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.maroon, alignItems: 'center', justifyContent: 'center' },
