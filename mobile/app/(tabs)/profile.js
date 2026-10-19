@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useMeStore } from '../../store/useMeStore';
 import { readReminders } from '../../lib/reminders';
 import { useTips } from '../../lib/tips';
+import { versionLabel } from '../../lib/version';
 import { PAGES, openPage } from '../../lib/pages';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { LANGUAGES, t, useLang } from '../../lib/i18n';
@@ -389,8 +390,10 @@ export default function Profile() {
         <NavRow n={0} icon="external" tint={colors.soft} ink={colors.muted} label={t('Privacy policy')} onPress={() => openPage(PAGES.privacy)} />
         <NavRow n={1} icon="external" tint={colors.soft} ink={colors.muted} label={t('Terms of use')} onPress={() => openPage(PAGES.terms)} />
         <NavRow n={2} icon="external" tint={colors.soft} ink={colors.muted} label={t('Help and support')} onPress={() => openPage(PAGES.support)} />
+        <NavRow n={3} icon="spark" tint={colors.goldSoft} ink={colors.goldText} label={t("What's new")} value={versionLabel()} onPress={() => router.push('/whats-new')} />
       </View>
       <Text style={styles.independent}>{t('Kya Khaun is independent and not affiliated with Zomato, Swiggy or any restaurant.')}</Text>
+      <Text style={styles.independent}>{t('Kya Khaun {version} · Karis Global Retail Private Limited', { version: versionLabel() })}</Text>
 
       <Pressable role="button" onPress={deleteAccount} disabled={deleting} hitSlop={8} style={styles.deleteBtn}>
         <Icon name="trash" size={16} color={colors.red} />

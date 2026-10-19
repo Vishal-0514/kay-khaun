@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Baloo2_600SemiBold, Baloo2_700Bold } from '@expo-google-fonts/baloo-2';
 import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
@@ -14,10 +15,11 @@ import { useLang } from '../lib/i18n';
 import WakingUp from '../components/WakingUp';
 import { ReportHost } from '../components/ReportSheet';
 import { useWake } from '../lib/wake';
+import { withSentry } from '../lib/sentry';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     Baloo2_600SemiBold,
     Baloo2_700Bold,
@@ -55,6 +57,7 @@ export default function RootLayout() {
   }
 
   return (
+    <KeyboardProvider>
     <SafeAreaProvider>
       <StatusBar style="light" />
       {/* Page transitions: screens slide in from the right; sheets like the kitchen rise from
@@ -70,11 +73,15 @@ export default function RootLayout() {
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="snap" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="songs" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="whats-new" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
       <ReportHost />
       <WakingUp />
       <ToastHost />
     </SafeAreaProvider>
+    </KeyboardProvider>
   );
 }
+
+export default withSentry(RootLayout);

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BandHeader, { useBandHeight } from '../components/BandHeader';
@@ -81,7 +82,7 @@ export default function Taste() {
         subtitle={t("The more I know, the fewer questions I'll ask.")}
         onBack={user?.onboarded ? undefined : () => signOut().then(() => router.replace('/welcome'))}
       />
-      <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 32, paddingBottom: 120 + insets.bottom }} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView bottomOffset={24} contentContainerStyle={{ paddingTop: bandHeight - 32, paddingBottom: 120 + insets.bottom }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={riseUp(0, 150)} style={styles.card}>
           <Text style={styles.section} nativeID="name-label">{t("What should I call you?")}</Text>
           <TextInput
@@ -172,7 +173,7 @@ export default function Taste() {
             })}
           </View>
         </Animated.View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <Animated.View entering={sheetUp(350)} style={[styles.footer, { paddingBottom: insets.bottom + space.base }]}>
         {error ? <Text style={styles.error}>{error}</Text> : null}

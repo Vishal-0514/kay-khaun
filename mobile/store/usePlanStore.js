@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
+import { currentLang, t } from '../lib/i18n';
 import { useLocationStore } from './useLocationStore';
 import { toItem, useMeStore } from './useMeStore';
 
@@ -127,7 +128,10 @@ export const usePlanStore = create((set, get) => ({
       plan: { budget: p.budget, moodLabel: p.moodLabel, mood: null, meals, spent: p.total, overBudget: false },
       choice: {},
       cook: Object.fromEntries(p.meals.map((m) => [m.meal, m.cook])),
-      note: `Your saved day from ${new Date(entry.at).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}. Tap a meal to order it again, or change anything above for a fresh plan.`,
+      // In the app's language: the date and the sentence both follow Hindi mode.
+      note: t('Your saved day from {date}. Tap a meal to order it again, or change anything above for a fresh plan.', {
+        date: new Date(entry.at).toLocaleDateString(currentLang() === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'short' }),
+      }),
       noteStale: false,
       savedAt: entry.at,
       settings: { ...get().settings, budget: p.budget, meals: p.meals.map((m) => m.meal) },

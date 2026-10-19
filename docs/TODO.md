@@ -13,7 +13,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] **Install the latest APK** and test: new icon, AI consent screen, vibration, meal reminders, Hindi voice, share.
   APK: https://expo.dev/artifacts/eas/zYbbFzeZFzlbaFnaWJYY7b7qRxWcXXWRLf09n94jl9g.apk
 - [ ] **Sentry** (free, crash reports): create 2 projects (React Native + Node.js) and send the 2 DSNs.
-- [ ] **GitHub → Settings → Secrets and variables → Actions:** add `MONGODB_URI` for nightly database backups. Don't paste it in chat.
+- [ ] **GitHub → Settings → Secrets and variables → Actions:** add `MONGODB_URI` and `BACKUP_PASSPHRASE` (a long password you keep safe) for nightly backups. See docs/backups.md. Don't paste them in chat.
 - [ ] **Claude Console → Limits:** set a monthly spend limit (for example $20) so a bug or abuse can't run up a big bill.
 
 ### Before launch
@@ -75,20 +75,20 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - [x] "Song for this meal?" on every dish page (no photo needed)
 
 ### Phase 8: Reliability
-- [ ] Sentry crash reporting (app + server)
-- [ ] Over-the-air updates (EAS Update): small fixes reach phones without a new build
-- [ ] App version in Profile + a "What's new" screen after updates
-- [ ] Automatic server tests on every push (GitHub Actions)
-- [ ] Nightly database backup (last 30 days kept)
-- [ ] Fix: a reopened saved day plan shows its note in English even in Hindi mode
+- [x] Sentry crash reporting (app + server): built; switches on when **you** add the DSNs (app: `EXPO_PUBLIC_SENTRY_DSN` in eas.json; server: `SENTRY_DSN` on Render)
+- [x] Over-the-air updates (EAS Update): set up; works from the next build. Send a fix with `npm run update:preview -- "what changed"`
+- [x] App version in Profile + a "What's new" screen after updates (app version is now 1.1.0)
+- [x] Automatic server tests on every push (GitHub Actions, 21 tests)
+- [x] Nightly encrypted database backup, kept 30 days: needs **you** to add `MONGODB_URI` and `BACKUP_PASSPHRASE` in GitHub (see docs/backups.md)
+- [x] Fix: a reopened saved day plan shows its note in English even in Hindi mode
 
 ### Phase 9: Security
-- [ ] Request limits per user and IP + a **daily AI limit per user** (protects the Claude bill)
-- [ ] Security headers (helmet), and CORS locked down
+- [x] Request limits per user and IP + a **daily AI limit per user** (protects the Claude bill)
+- [x] Security headers (helmet), and CORS locked down
 - [ ] Restrict the Google and Firebase keys to the app only
-- [ ] Update dependencies and fix known vulnerabilities
+- [x] Update dependencies and fix known vulnerabilities (server: 0 known issues)
 - [ ] Chat retention: for example, auto-delete chats older than 90 days, and update the privacy policy to match
-- [ ] Final security review of the whole codebase
+- [x] Security + QA review (docs/security.md): secrets, routes, tokens, load test, links, keyboard. Re-run before release
 
 ### Phase 10: Launch preparation
 - [ ] Sign in with Apple (required by Apple because the app offers Google sign-in)

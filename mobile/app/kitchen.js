@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { PressScale, appear, leave, rise, smoothLayout } from '../components/Motion';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Pattern, Path, Circle, Rect } from 'react-native-svg';
@@ -156,8 +157,8 @@ export default function Kitchen() {
       : t('Add a few things you have. Salt, oil and spices are already counted.');
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+    <View style={styles.root}>
+      <KeyboardAwareScrollView bottomOffset={24} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         {/* Camera area */}
         <View style={[styles.camera, { paddingTop: insets.top + space.base }]}>
           <Jaali />
@@ -269,8 +270,8 @@ export default function Kitchen() {
             style={{ marginTop: space.xl }}
           />
         </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,8 @@ import { api, errorMessage } from '../../lib/api';
 import { notify } from '../../lib/notify';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
+import { shouldShowWhatsNew } from '../../lib/version';
+import { useTips } from '../../lib/tips';
 
 const MOODS = [
   { id: 'spicy', label: 'Spicy', icon: 'flame', tint: '#FDE3E1', ink: colors.red },
@@ -59,6 +61,20 @@ export default function Home() {
   const prefBudget = BUDGET[user?.preferences?.budget];
   const craving = slip?.craving ?? t('Tell me what you feel like');
   const budget = slip?.budget ?? prefBudget;
+
+  // After an update, "What's new" once. People who haven't seen any tip yet are new: they get the tips instead.
+  const tipsSeen = useTips((s) => s.seen);
+  const whatsNewChecked = useRef(false);
+  useEffect(() => {
+    useTips.getState().load?.();
+  }, []);
+  useEffect(() => {
+    if (tipsSeen === null || whatsNewChecked.current) return;
+    whatsNewChecked.current = true;
+    shouldShowWhatsNew({ isNewUser: tipsSeen.length === 0 })
+      .then((show) => show && setTimeout(() => router.push('/whats-new'), 600))
+      .catch(() => {});
+  }, [tipsSeen]);
 
   // Where they are, so picks are real places nearby.
   const locationStatus = useLocationStore((s) => s.status);

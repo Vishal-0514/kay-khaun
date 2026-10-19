@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import BandHeader, { useBandHeight } from '../components/BandHeader';
@@ -37,13 +38,13 @@ export default function Forgot() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={styles.root}>
       <BandHeader
         height={bandHeight}
         title={sent ? t('Check your email') : t('Forgot your password?')}
         subtitle={sent ? t('Follow the link to choose a new password.') : t("We'll email you a link to set a new one.")}
       />
-      <ScrollView contentContainerStyle={{ paddingTop: bandHeight - 28, paddingBottom: space.xl }} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView bottomOffset={24} contentContainerStyle={{ paddingTop: bandHeight - 28, paddingBottom: space.xl }} keyboardShouldPersistTaps="handled">
         <Animated.View entering={rise(0, 120)} style={styles.card}>
           {!sent ? (
             <Animated.View key="email" exiting={leave}>
@@ -88,8 +89,8 @@ export default function Forgot() {
             </Animated.View>
           )}
         </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 

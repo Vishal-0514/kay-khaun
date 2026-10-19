@@ -67,6 +67,7 @@ Tracking: **No**. For each item: **Linked to the user: Yes**, **Used for trackin
 | User content → Other user content (chats, reports) | App functionality |
 | Search history (what you ask Chatora) | App functionality, product personalisation |
 | Usage data → Product interaction (opened, ordered, saved) | Product personalisation |
+| App info and performance → Crash logs, Diagnostics | App functionality (fixing bugs) — collected once SENTRY DSNs are set; not shared, not linked to the account |
 
 ## Content and age rating
 - Music: the app only suggests song names (checked against Apple's public iTunes catalogue, explicit songs skipped) and opens Spotify, YouTube Music or Apple Music. No music plays inside the app and no lyrics are shown, so no music licence is needed.

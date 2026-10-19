@@ -1,6 +1,6 @@
 {
   "name": "kya-khaun-mobile",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "expo-router/entry",
   "private": true,
   "scripts": {
@@ -9,15 +9,19 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:android": "npx eas-cli build --platform android --profile development",
-    "build:share": "npx eas-cli build --platform android --profile preview"
+    "build:share": "npx eas-cli build --platform android --profile preview",
+    "update:preview": "npx eas-cli update --channel preview --message",
+    "update:production": "npx eas-cli update --channel production --message"
   },
   "dependencies": {
     "@expo-google-fonts/baloo-2": "^0.4.2",
     "@expo-google-fonts/figtree": "^0.4.1",
     "@expo/metro-runtime": "~57.0.16",
     "@react-native-google-signin/google-signin": "^16.1.5",
+    "@sentry/react-native": "~7.11.0",
     "axios": "^1.20.0",
     "expo": "~57.0.27",
+    "expo-application": "~57.0.3",
     "expo-audio": "~57.0.5",
     "expo-constants": "~57.0.19",
     "expo-dev-client": "~57.0.19",
@@ -34,11 +38,13 @@
     "expo-speech-recognition": "^57.1.0",
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
+    "expo-updates": "~57.0.26",
     "expo-web-browser": "~57.0.3",
     "firebase": "^12.19.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-keyboard-controller": "1.21.9",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",

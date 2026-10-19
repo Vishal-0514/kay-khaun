@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle } from 'react-native-reanimated';
 import { create } from 'zustand';
 import Button from './Button';
 import Icon from './Icon';
@@ -41,6 +42,9 @@ export function ReportHost() {
   const target = useReport((s) => s.target);
   const close = useReport((s) => s.close);
   const insets = useSafeAreaInsets();
+  // The sheet rides up with the keyboard so the note box stays visible.
+  const keyboard = useReanimatedKeyboardAnimation();
+  const lift = useAnimatedStyle(() => ({ transform: [{ translateY: keyboard.height.value }] }));
   const [reason, setReason] = useState(null);
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
@@ -65,10 +69,10 @@ export function ReportHost() {
   }
 
   return (
-    <Modal visible={Boolean(target)} transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
+    <Modal visible={Boolean(target)} transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent navigationBarTranslucent>
       <Pressable style={styles.scrim} onPress={dismiss} aria-label={t('Close')} />
       {target ? (
-        <Animated.View entering={sheetUp(0)} style={[styles.sheet, { paddingBottom: insets.bottom + space.base }]} role="dialog" aria-label={t('Report this reply')}>
+        <Animated.View entering={sheetUp(0)} style={[styles.sheet, { paddingBottom: insets.bottom + space.base }, lift]} role="dialog" aria-label={t('Report this reply')}>
           <View style={styles.grip} />
           <Text style={type.title} role="heading">
             {t('Report this reply')}

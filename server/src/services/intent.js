@@ -71,7 +71,7 @@ export function parseWithKeywords(raw) {
   // Budget: "under 400", "400 ke andar", "rs 400", "budget 400", "400 rupees"
   const money =
     text.match(/(?:under|below|less than|upto|up to|within|max|budget|around|about|approx|rs\.?|inr)\s*(?:rs\.?\s*)?(\d{2,5})/) ||
-    text.match(/(\d{2,5})\s*(?:rs|rupees|bucks|ke andar|tak|se kam|ka budget)/);
+    text.match(/(\d{2,5})\s*(?:rs|rupees|bucks|ke andar|tak|se kam|ka budget|each|per person|per head)/);
   if (money) {
     out.budgetMax = Number(money[1]);
     out.budgetStrict = !/around|about|approx|tak/.test(money[0]);

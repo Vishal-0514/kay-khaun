@@ -1,0 +1,50 @@
+# Nightly database backup. Copies the whole Kya Khaun database, encrypts it
+# with BACKUP_PASSPHRASE and keeps it as a download on this workflow run for
+# 30 days. Needs two repository secrets (Settings → Secrets and variables →
+# Actions): MONGODB_URI and BACKUP_PASSPHRASE. How to restore: docs/backups.md.
+name: Database backup
+
+on:
+  schedule:
+    - cron: '30 21 * * *' # 03:00 in India
+  workflow_dispatch: # "Run workflow" button for a backup right now
+
+jobs:
+  backup:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check the secrets are set
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$MONGODB_URI" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Add MONGODB_URI and BACKUP_PASSPHRASE under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Install MongoDB tools
+        run: |
+          curl -sSfL https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.10.0.tgz | tar xz
+          echo "$PWD/mongodb-database-tools-ubuntu2204-x86_64-100.10.0/bin" >> "$GITHUB_PATH"
+
+      - name: Back up and encrypt
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_DB: ${{ vars.MONGODB_DB || 'kyakhaun' }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          name="kyakhaun-$(date -u +%Y-%m-%d)"
+          mongodump --uri="$MONGODB_URI" --db="$MONGODB_DB" --archive="$name.archive.gz" --gzip
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+            --symmetric --cipher-algo AES256 --output "$name.archive.gz.gpg" "$name.archive.gz"
+          rm "$name.archive.gz"
+          ls -lh "$name.archive.gz.gpg"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}.archive.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

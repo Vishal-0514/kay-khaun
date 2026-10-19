@@ -8,11 +8,11 @@ const REFRESH_TTL_MS = Number(process.env.REFRESH_TOKEN_DAYS || 30) * 24 * 60 * 
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
 export function signAccessToken(user) {
-  return jwt.sign({ sub: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: ACCESS_TTL });
+  return jwt.sign({ sub: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: ACCESS_TTL, algorithm: 'HS256' });
 }
 
 export function verifyAccessToken(token) {
-  return jwt.verify(token, process.env.JWT_SECRET);
+  return jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 }
 
 async function issueRefreshToken(userId) {

@@ -39,4 +39,18 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Signed-in requests remember a user for a few seconds (middleware/auth.js).
+// Any change to the account clears that memory at once.
+const changeListeners = new Set();
+export const onUserChange = (fn) => changeListeners.add(fn);
+const changed = (doc) => doc?._id && changeListeners.forEach((fn) => fn(String(doc._id)));
+userSchema.post('save', changed);
+userSchema.post('deleteOne', { document: true, query: false }, changed);
+userSchema.post(['findOneAndUpdate', 'findOneAndDelete'], changed);
+userSchema.post(['updateOne', 'updateMany', 'deleteOne', 'deleteMany'], { document: false, query: true }, function () {
+  const id = this.getFilter()?._id;
+  if (id) changeListeners.forEach((fn) => fn(String(id)));
+  else changeListeners.forEach((fn) => fn(null)); // unknown which: forget everyone
+});
+
 export default mongoose.model('User', userSchema);

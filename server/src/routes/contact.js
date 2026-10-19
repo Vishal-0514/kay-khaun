@@ -32,7 +32,7 @@ router.post('/', validateBody(contactSchema), async (req, res) => {
   if (website) return res.json({ success: true }); // quietly drop bots
   if (tooMany(req.ip)) return res.status(429).json({ success: false, error: 'Too many messages. Please try again in an hour, or email us.' });
   await ContactMessage.create(message);
-  console.log(`Contact form (${message.topic}) from ${message.email}`);
+  console.log(`Contact form message received (${message.topic})`); // no email in the logs
   res.status(201).json({ success: true });
 });
 

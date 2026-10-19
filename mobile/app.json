@@ -3,7 +3,7 @@
     "name": "Kya Khaun?",
     "slug": "kya-khaun",
     "scheme": "kyakhaun",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -74,7 +74,8 @@
           "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating.",
           "enableBackgroundPlayback": false
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "router": {},
@@ -84,6 +85,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6ff91634-5a35-43b8-bdf4-94ad502c6ff2",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     }
   }
 }
