@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaroonBand from '../../components/MaroonBand';
@@ -14,6 +14,7 @@ import Tip from '../../components/Tip';
 import { tap } from '../../lib/haptics';
 import { toast } from '../../components/Toast';
 import { useChatStore } from '../../store/useChatStore';
+import { useSongStore } from '../../store/useSongStore';
 import { planDish, usePlanStore } from '../../store/usePlanStore';
 import { meDish, useMeStore } from '../../store/useMeStore';
 import { errorMessage } from '../../lib/api';
@@ -22,7 +23,7 @@ import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { NOT_AFFILIATED, ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
-import { t } from '../../lib/i18n';
+import { currentLang, t } from '../../lib/i18n';
 
 // Each reason gets its own soft colour tile (design: V5 "Why I picked this").
 const TILE = {
@@ -59,6 +60,8 @@ export default function Dish() {
   const track = useMeStore((s) => s.track);
   const notForMe = useMeStore((s) => s.notForMe);
   const [hiding, setHiding] = useState(false);
+  const findSongs = useSongStore((s) => s.find);
+  const [songBusy, setSongBusy] = useState(false);
   // Picks opened from Saved or History have no match score or reasons.
   const scored = dish?.match != null;
   const bandHeight = (scored ? 404 : 250) + insets.top;
@@ -68,6 +71,22 @@ export default function Dish() {
   useEffect(() => {
     if (dish) track('opened', dish);
   }, [dish?.id]);
+
+  // "Song for this meal?": 3–4 songs for this dish (Snap Your Food, Get Your Song).
+  async function songForMeal() {
+    tap();
+    setSongBusy(true);
+    try {
+      const name = place && dish.ideas?.length ? `${dish.ideas[0]} at ${dish.name}` : dish.name;
+      const data = await findSongs({ dish: { name, ...(dish.cuisine ? { cuisine: dish.cuisine } : {}) }, language: currentLang() === 'hi' ? 'hindi' : 'both' });
+      if (data.unusable) notify(t('No songs this time'), data.message);
+      else router.push('/songs');
+    } catch (err) {
+      notify(t("Couldn't pick songs"), errorMessage(err));
+    } finally {
+      setSongBusy(false);
+    }
+  }
 
   async function hide() {
     tap();
@@ -182,6 +201,16 @@ export default function Dish() {
               </Text>
             </View>
           )}
+          <PressScale role="button" disabled={songBusy} onPress={songForMeal} style={styles.song} aria-label={t('Song for this meal')}>
+            <View style={styles.songIcon}>
+              {songBusy ? <ActivityIndicator size="small" color={colors.gold} /> : <Icon name="music" size={18} color={colors.gold} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.songTitle}>{t('Song for this meal?')}</Text>
+              <Text style={type.small}>{t('3–4 songs that suit it, in Hindi, English or both')}</Text>
+            </View>
+            <Icon name="chevron" size={18} color={colors.muted} />
+          </PressScale>
           <Tip id="dish-learn" icon="heart" text={t('♡ keeps a pick for later, and "Not for me" shows it less. Both teach Chatora your taste.')} />
           <PressScale role="button" disabled={hiding} onPress={hide} style={styles.notForMe} aria-label={t("Not for me, show this less")}>
             <Icon name="close" size={16} color={colors.muted} />
@@ -212,6 +241,9 @@ export default function Dish() {
 }
 
 const styles = StyleSheet.create({
+  song: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.card, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair },
+  songIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.maroon, alignItems: 'center', justifyContent: 'center' },
+  songTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },
   root: { flex: 1, backgroundColor: colors.canvas },
   header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: space.lg },
   hero: { alignItems: 'center', marginTop: space.sm },

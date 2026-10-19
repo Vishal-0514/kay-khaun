@@ -22,6 +22,9 @@ export function tr(text, vars) {
 }
 
 const HI = {
+  // Songs for your meal
+  "I couldn't spot any food in that photo. Try a photo of your plate.": "इस फ़ोटो में खाना नहीं दिखा। अपनी प्लेट की फ़ोटो लें।",
+  "I couldn't find songs I'm sure about this time. Try again.": "इस बार पक्के गाने नहीं मिले। फिर से कोशिश करें।",
   // Snap My Mood
   "From a photo": "फ़ोटो से",
   "Here's where I am. What should I have?": "मैं यहाँ हूँ। क्या खाऊँ?",

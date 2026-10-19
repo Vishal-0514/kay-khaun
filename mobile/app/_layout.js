@@ -69,6 +69,7 @@ export default function RootLayout() {
         <Stack.Screen name="talk" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="snap" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="songs" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
       <ReportHost />

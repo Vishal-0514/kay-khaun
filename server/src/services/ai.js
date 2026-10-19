@@ -15,6 +15,8 @@ import { OUTING_IDS } from './outing.js';
 //  6. explainOutings() explains places to go out to (Go Out).
 //  7. readScene() + explainMood(): Snap My Mood — a photo of where they are
 //     becomes hints (setting, time, company, drink), then ideas that fit.
+//  8. suggestSongs(): Snap Your Food, Get Your Song — songs for the moment
+//     (checked against Apple's catalogue in services/music.js before showing).
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
@@ -378,4 +380,34 @@ Use ONLY the facts given for each idea. Never invent menus, prices, events or an
 
 export async function explainMood({ scene, note, ideas, userName }) {
   return explain(MOOD_SYSTEM, { scene, note: note || null, language: scene.language, userName: userName || null, ideas }, ideas.map((i) => i.id));
+}
+
+// ---------- 8. songs for the meal ----------
+
+export const SONG_LANGUAGES = ['hindi', 'english', 'both'];
+
+const songsSchema = strictObject({
+  usable: { type: 'boolean' },
+  moment: { type: 'string' },
+  songs: { type: 'array', items: strictObject({ title: { type: 'string' }, artist: { type: 'string' }, language: { type: 'string', enum: ['hindi', 'english'] }, reason: { type: 'string' } }) },
+});
+
+const songsCheck = z.object({
+  usable: z.boolean(),
+  moment: z.string().max(140),
+  songs: z.array(z.object({ title: z.string().min(1).max(120), artist: z.string().min(1).max(120), language: z.enum(['hindi', 'english']), reason: z.string().min(1).max(140) })).max(10),
+});
+
+const SONGS_SYSTEM = `You pick music for the moment someone is eating, for the Kya Khaun? app. You get a photo of their food (and the table around it) or the name of a dish, and the language they want: "hindi" (Hindi film or Hindi indie songs), "english", or "both" (half and half).
+- usable: false if a photo has no food or drink in it; then songs is empty.
+- moment: one short, warm line about the food and setting, in English, like "Hot chai and pakoda on a rainy evening". Never claim how they feel.
+- songs: 6 real, well-known, released songs that suit the food and the moment (coffee and rain → soft acoustic; pizza with friends → upbeat; a candle-lit dinner → soft romantic). Give the exact title as released and the main artist or singer. No explicit songs, no songs about drinking or drugs. Prefer popular songs that are easy to find on Spotify and YouTube.
+- reason: why it fits, at most 10 words, in English ("Slow and cozy, like the rain outside").
+Only songs you are sure exist; the app checks each one and drops any it can't find.`;
+
+export async function suggestSongs({ image, mediaType, dish, language, note }) {
+  const content = [];
+  if (image) content.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data: image } });
+  content.push({ type: 'text', text: JSON.stringify({ language, dish: dish ?? null, note: note || null }) });
+  return songsCheck.parse(await callJson({ system: SONGS_SYSTEM, content, schema: songsSchema, maxTokens: 2000 }));
 }

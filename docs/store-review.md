@@ -34,7 +34,7 @@ Account deletion: Profile → scroll down → "Delete my account". It deletes th
 
 Permissions (all optional, asked only when used):
 - Location: to find food near you.
-- Camera / photos: to scan your fridge for ingredients, and for Snap My Mood (a photo of where you are, read for the setting only and not stored).
+- Camera / photos: to scan your fridge for ingredients, for Snap My Mood (a photo of where you are, read for the setting only and not stored), and for songs for your meal (a photo of the food, not stored).
 - Microphone / speech recognition: to speak your craving instead of typing.
 - Notifications: meal reminders you set up yourself.
 ```
@@ -48,7 +48,7 @@ Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in 
 | Personal info → Name | Yes | No | Required | Account management, app functionality |
 | Personal info → Email address | Yes | No | Required | Account management |
 | Location → Approximate location | Yes, processed ephemerally | No | Optional | App functionality |
-| Photos and videos → Photos | Yes, processed ephemerally | No | Optional | App functionality (fridge scan, Snap My Mood) |
+| Photos and videos → Photos | Yes, processed ephemerally | No | Optional | App functionality (fridge scan, Snap My Mood, songs for your meal) |
 | App activity → App interactions | Yes | No | Optional ("Remember my taste") | Personalisation |
 | App activity → In-app search history | Yes (chats) | No | Required to use chat | App functionality, personalisation |
 | App activity → Other user-generated content | Yes (chats, reports) | No | Required to use chat | App functionality |
@@ -69,6 +69,7 @@ Tracking: **No**. For each item: **Linked to the user: Yes**, **Used for trackin
 | Usage data → Product interaction (opened, ordered, saved) | Product personalisation |
 
 ## Content and age rating
+- Music: the app only suggests song names (checked against Apple's public iTunes catalogue, explicit songs skipped) and opens Spotify, YouTube Music or Apple Music. No music plays inside the app and no lyrics are shown, so no music licence is needed.
 
 - No user-to-user content or chat between people; AI replies are about food, can be reported, and Claude follows Anthropic's usage policies.
 - No gambling or violence. **Alcohol:** if the user says they are drinking (wine, beer…), Chatora suggests food that goes with it. It never suggests or encourages alcohol, and reminds people not to drive after drinking. Answer the questionnaires as "mild or infrequent references to alcohol": expected rating about **12+ on Apple** and **Teen / PEGI 12 on Google Play**. Choose "contains AI-generated content" where asked.

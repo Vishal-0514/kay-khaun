@@ -63,15 +63,16 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - Bars, pubs and nightclubs are left out of Go Out (alcohol and the age rating)
 
 ### Phase 6: Snap My Mood
-- [x] Home's Snap offers: Where I am / My kitchen (My food arrives with Phase 7)
+- [x] Home's Snap offers: Where I am / My kitchen / My food
 - [x] Photo of where you are, plus an optional voice or text line
 - [x] Chatora reads the setting as hints (never claims your mood) and gives 4–5 food or place ideas with "Why this fits"
 - [x] Privacy policy, AI consent and store data-safety updates (the photo isn't kept)
 
 ### Phase 7: Snap Your Food, Get Your Song
-- [ ] Photo of your food, then Hindi / English / Both
-- [ ] 3–4 songs with a short reason, each checked against Apple's public music catalogue so none are made up
-- [ ] Open in Spotify, YouTube Music or Apple Music (no playback or lyrics in the app)
+- [x] Photo of your food, then Hindi / English / Both
+- [x] 3–4 songs with a short reason, each checked against Apple's public music catalogue so none are made up
+- [x] Open in Spotify, YouTube Music or Apple Music (no playback or lyrics in the app)
+- [x] "Song for this meal?" on every dish page (no photo needed)
 
 ### Phase 8: Reliability
 - [ ] Sentry crash reporting (app + server)
