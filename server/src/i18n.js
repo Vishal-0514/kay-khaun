@@ -22,6 +22,11 @@ export function tr(text, vars) {
 }
 
 const HI = {
+  // Snap My Mood
+  "From a photo": "फ़ोटो से",
+  "Here's where I am. What should I have?": "मैं यहाँ हूँ। क्या खाऊँ?",
+  "I couldn't make out a place in that photo. Try a photo of where you're sitting, or tell me in words.": "इस फ़ोटो में जगह समझ नहीं आई। जहाँ बैठे हैं उसकी फ़ोटो लें, या शब्दों में बताएँ।",
+  "I couldn't find anything that fits right now. Tell me in words what you feel like.": "अभी कुछ सही नहीं मिला। शब्दों में बताएँ क्या मन है।",
   // Go Out (services/outing.js)
   "Got it. Would you like to order in, cook at home, or go out?": "समझ गया। ऑर्डर करना है, घर पर बनाना है, या बाहर चलना है?",
   "Let's find you something. Would you like to order in, cook at home, or go out?": "चलिए कुछ ढूँढते हैं। ऑर्डर करना है, घर पर बनाना है, या बाहर चलना है?",

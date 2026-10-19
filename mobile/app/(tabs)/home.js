@@ -209,9 +209,9 @@ export default function Home() {
           <Icon name="type" size={18} />
           <Text style={styles.actionText} numberOfLines={1}>{t('Type')}</Text>
         </PressScale>
-        <PressScale role="button" aria-label={t('Scan my fridge')} style={styles.action} onPress={() => router.push('/kitchen')}>
+        <PressScale role="button" aria-label={t('Snap a photo')} style={styles.action} onPress={() => router.push('/snap')}>
           <Icon name="camera" size={18} />
-          <Text style={styles.actionText} numberOfLines={1}>{t('Scan fridge')}</Text>
+          <Text style={styles.actionText} numberOfLines={1}>{t('Snap')}</Text>
         </PressScale>
         <PressScale role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { ask: t('I want to go out'), at: String(Date.now()) } })}>
           <Icon name="pin" size={18} />

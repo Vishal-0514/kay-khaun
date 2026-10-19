@@ -34,7 +34,7 @@ Account deletion: Profile → scroll down → "Delete my account". It deletes th
 
 Permissions (all optional, asked only when used):
 - Location: to find food near you.
-- Camera / photos: to scan your fridge for ingredients.
+- Camera / photos: to scan your fridge for ingredients, and for Snap My Mood (a photo of where you are, read for the setting only and not stored).
 - Microphone / speech recognition: to speak your craving instead of typing.
 - Notifications: meal reminders you set up yourself.
 ```
@@ -48,7 +48,7 @@ Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in 
 | Personal info → Name | Yes | No | Required | Account management, app functionality |
 | Personal info → Email address | Yes | No | Required | Account management |
 | Location → Approximate location | Yes, processed ephemerally | No | Optional | App functionality |
-| Photos and videos → Photos | Yes, processed ephemerally | No | Optional | App functionality (fridge scan) |
+| Photos and videos → Photos | Yes, processed ephemerally | No | Optional | App functionality (fridge scan, Snap My Mood) |
 | App activity → App interactions | Yes | No | Optional ("Remember my taste") | Personalisation |
 | App activity → In-app search history | Yes (chats) | No | Required to use chat | App functionality, personalisation |
 | App activity → Other user-generated content | Yes (chats, reports) | No | Required to use chat | App functionality |

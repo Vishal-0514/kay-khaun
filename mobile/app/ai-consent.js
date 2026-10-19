@@ -21,7 +21,7 @@ import { t } from '../lib/i18n';
 const SHARED = [
   { icon: 'chat', text: 'What you type or say to Chatora, and the recent chat' },
   { icon: 'leaf', text: 'Your taste settings and first name' },
-  { icon: 'camera', text: 'Photos of your fridge, only when you choose to scan' },
+  { icon: 'camera', text: 'Photos of your fridge or of where you are, only when you choose to snap' },
 ];
 const NOT_SHARED = 'Not your email, your exact location or anything else on your phone.';
 

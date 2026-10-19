@@ -254,7 +254,27 @@ export default function Chat() {
             </View>
           ) : null}
           {item.kind === 'question' && isLatest && conversation?.slip ? <OrderSlip slip={conversation.slip} /> : null}
-          {item.kind === 'picks' && item.picks?.length ? (
+          {/* A photo reply when they're out: places first, then food to order. */}
+          {(item.kind === 'outings' || item.kind === 'mood') && item.outings?.length ? (
+            <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/outings')}>
+              <View style={[styles.pickBadge, { borderColor: '#3A5A8C' }]}>
+                <Icon name="pin" size={20} color="#3A5A8C" />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.pickName} numberOfLines={1}>
+                  {item.outings[0].name}
+                </Text>
+                <Text style={type.small} numberOfLines={1}>
+                  {[item.outings[0].restaurant, item.outings[0].travelMin ? t('{n} min by car', { n: item.outings[0].travelMin }) : t('{n} km', { n: item.outings[0].distanceKm })].filter(Boolean).join(' · ')}
+                </Text>
+              </View>
+              <View style={styles.seeAll}>
+                <Text style={styles.seeAllText}>{t('See all {n}', { n: item.outings.length })}</Text>
+                <Icon name="chevron" size={16} color={colors.red} />
+              </View>
+            </PressScale>
+          ) : null}
+          {(item.kind === 'picks' || item.kind === 'mood') && item.picks?.length ? (
             <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/results')}>
               <View style={styles.pickBadge}>
                 <Text style={styles.pickBadgeText}>{item.picks[0].match}%</Text>
@@ -270,25 +290,6 @@ export default function Chat() {
               </View>
               <View style={styles.seeAll}>
                 <Text style={styles.seeAllText}>{t('See all {n}', { n: item.picks.length })}</Text>
-                <Icon name="chevron" size={16} color={colors.red} />
-              </View>
-            </PressScale>
-          ) : null}
-          {item.kind === 'outings' && item.outings?.length ? (
-            <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/outings')}>
-              <View style={[styles.pickBadge, { borderColor: '#3A5A8C' }]}>
-                <Icon name="pin" size={20} color="#3A5A8C" />
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.pickName} numberOfLines={1}>
-                  {item.outings[0].name}
-                </Text>
-                <Text style={type.small} numberOfLines={1}>
-                  {[item.outings[0].restaurant, item.outings[0].travelMin ? t('{n} min by car', { n: item.outings[0].travelMin }) : t('{n} km', { n: item.outings[0].distanceKm })].filter(Boolean).join(' · ')}
-                </Text>
-              </View>
-              <View style={styles.seeAll}>
-                <Text style={styles.seeAllText}>{t('See all {n}', { n: item.outings.length })}</Text>
                 <Icon name="chevron" size={16} color={colors.red} />
               </View>
             </PressScale>

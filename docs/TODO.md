@@ -63,10 +63,10 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - Bars, pubs and nightclubs are left out of Go Out (alcohol and the age rating)
 
 ### Phase 6: Snap My Mood
-- [ ] Home's Snap offers: My kitchen / Where I am / My food
-- [ ] Photo of where you are, plus an optional voice or text line
-- [ ] Chatora reads the setting as hints (never claims your mood) and gives 4–5 food or place ideas with "Why this fits"
-- [ ] Privacy policy, AI consent and store data-safety updates (the photo isn't kept)
+- [x] Home's Snap offers: Where I am / My kitchen (My food arrives with Phase 7)
+- [x] Photo of where you are, plus an optional voice or text line
+- [x] Chatora reads the setting as hints (never claims your mood) and gives 4–5 food or place ideas with "Why this fits"
+- [x] Privacy policy, AI consent and store data-safety updates (the photo isn't kept)
 
 ### Phase 7: Snap Your Food, Get Your Song
 - [ ] Photo of your food, then Hindi / English / Both

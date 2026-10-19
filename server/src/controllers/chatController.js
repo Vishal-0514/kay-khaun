@@ -155,7 +155,7 @@ async function describeRecipes(recipes, { text, intent, conv, user, ctx }) {
 }
 
 // Go Out: places for the outing, with drive times. Empty if it can't search.
-async function findOutings(slots, user, location, ctx) {
+export async function findOutings(slots, user, location, ctx) {
   if (!placesEnabled || !location) return { picks: [] };
   try {
     return await outingPicks(slots, await tasteOf(user), location, { weather: ctx?.weather ?? null });
@@ -187,7 +187,7 @@ async function describeOutings(result, { text, intent, conv, user, ctx }) {
 // Real nearby places when we know where they are and Google is set up;
 // otherwise the sample Mumbai menu (handy for building and testing).
 // ctx: the drink and weather (services/context.js); looked up here when not given.
-async function findPicks(slots, user, location, ctx) {
+export async function findPicks(slots, user, location, ctx) {
   const taste = await tasteOf(user);
   slots = withHints(slots, ctx ?? (await contextFor(slots, location)));
   if (placesEnabled && location) {
@@ -201,7 +201,7 @@ async function findPicks(slots, user, location, ctx) {
   return recommend(slots, taste);
 }
 
-function toPublic(conv, user) {
+export function toPublic(conv, user) {
   return {
     id: conv._id,
     title: conv.title,

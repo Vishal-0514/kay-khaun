@@ -13,6 +13,8 @@ import { OUTING_IDS } from './outing.js';
 //  4. scanKitchen() lists the ingredients in a fridge or kitchen photo.
 //  5. suggestSwap() suggests what to use for a missing recipe ingredient.
 //  6. explainOutings() explains places to go out to (Go Out).
+//  7. readScene() + explainMood(): Snap My Mood — a photo of where they are
+//     becomes hints (setting, time, company, drink), then ideas that fit.
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
@@ -315,4 +317,65 @@ export async function explainOutings({ text, language, slip, outing, picks, user
     priceRange: p.priceLabel,
   }));
   return explain(OUTING_SYSTEM, { userMessage: text, language, userName: userName || null, plan: outing, orderSlip: slip, moment, places }, picks.map((p) => p.id));
+}
+
+// ---------- 7. Snap My Mood: read the setting, then explain the ideas ----------
+
+export const SETTINGS = ['home', 'cafe', 'restaurant', 'office', 'outdoors', 'car', 'party', 'travel', 'other'];
+export const VIBES = ['cozy', 'quiet', 'relaxed', 'lively', 'festive', 'romantic', 'work', 'scenic'];
+
+const sceneSchema = strictObject({
+  usable: { type: 'boolean' },
+  setting: { type: 'string', enum: SETTINGS },
+  indoors: nullable('boolean'),
+  timeOfDay: { anyOf: [{ type: 'string', enum: ['morning', 'afternoon', 'evening', 'night'] }, { type: 'null' }] },
+  rain: { type: 'boolean' },
+  company: { type: 'string', enum: ['alone', 'two', 'group', 'unknown'] },
+  drink: { anyOf: [{ type: 'string', enum: DRINKS }, { type: 'null' }] },
+  foodSeen: { type: 'array', items: { type: 'string' } },
+  vibe: { type: 'array', items: { type: 'string', enum: VIBES } },
+  craving: nullable('string'),
+  language: { type: 'string', enum: LANGUAGES },
+  summary: { type: 'string' },
+});
+
+const sceneCheck = z.object({
+  usable: z.boolean(),
+  setting: z.enum(SETTINGS),
+  indoors: z.boolean().nullable(),
+  timeOfDay: z.enum(['morning', 'afternoon', 'evening', 'night']).nullable(),
+  rain: z.boolean(),
+  company: z.enum(['alone', 'two', 'group', 'unknown']),
+  drink: z.enum(DRINKS).nullable(),
+  foodSeen: z.array(z.string().max(40)).max(6),
+  vibe: z.array(z.enum(VIBES)).max(3),
+  craving: z.string().max(80).nullable(),
+  language: z.enum(LANGUAGES),
+  summary: z.string().max(160),
+});
+
+const SCENE_SYSTEM = `Someone using the Kya Khaun? food app took a photo of where they are, because they can't decide what to eat or where to go. Describe the SETTING as hints for food and place ideas.
+- usable: false if the photo shows no real-world setting (a screenshot, a document, a blank or black frame) or anything inappropriate; then fill the rest with neutral values.
+- setting, indoors, timeOfDay (from light and windows; null if unclear), rain (visible rain or wet streets), foodSeen (food on the table, simple English, at most 5).
+- company: how many people seem to be there with them: "alone", "two", "group", or "unknown". Count only. Never describe people: no identity, age, gender, looks, clothing or emotions.
+- drink: a drink clearly in view (wine glass, beer bottle, chai cup, coffee mug), or one their note mentions; else null.
+- vibe: up to 3 words for the place itself (cozy, quiet, relaxed, lively, festive, romantic, work, scenic).
+- craving: if their note says what they want ("something fun", "kuch teekha"), a short English phrase; else null. language: the language of their note (english if none).
+- summary: one short, neutral line about the setting in that language, starting like "Looks like…" ("Looks like a rainy evening at home"). Never claim to know how they feel.`;
+
+export async function readScene({ image, mediaType, note }) {
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+    { type: 'text', text: note ? `Their note: ${note}` : 'No note.' },
+  ];
+  return sceneCheck.parse(await callJson({ system: SCENE_SYSTEM, content, schema: sceneSchema, maxTokens: 1200 }));
+}
+
+const MOOD_SYSTEM = `You are Chatora, the guide in the Kya Khaun? app. The user showed you a photo of where they are. The app read the setting ("scene") and already chose real ideas: dishes to order and places nearby. You only explain them.
+Use ONLY the facts given for each idea. Never invent menus, prices, events or anything about the people in the photo, and never claim to know how they feel: talk about the setting ("for a rainy evening in"). Never suggest alcohol.
+- message: at most two short sentences in the user's language: start from the scene summary, then name the #1 idea.
+- reasons: for EVERY idea, "why this fits" in at most 12 words, tied to the setting or their note. Use the idea id exactly as given.`;
+
+export async function explainMood({ scene, note, ideas, userName }) {
+  return explain(MOOD_SYSTEM, { scene, note: note || null, language: scene.language, userName: userName || null, ideas }, ideas.map((i) => i.id));
 }

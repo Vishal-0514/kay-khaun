@@ -49,6 +49,20 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  // Snap My Mood: a photo of where they are → a new chat with dishes and places.
+  // Returns { unusable, message } when the photo isn't of a place.
+  async snapMood(shot, note) {
+    const { data } = await api.post('/mood/snap', { image: shot.base64, mediaType: shot.mediaType, ...(note ? { note } : {}), location: await located() });
+    if (data.unusable) return data;
+    set({
+      conversation: data.conversation,
+      picks: data.picks,
+      picksSource: { kind: 'chat', label: data.scene?.summary },
+      outings: data.outings,
+    });
+    return data;
+  },
+
   async open(id) {
     const { data } = await api.get(`/chat/${id}`, { params: where() });
     set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving }, ...(data.outings?.length ? { outings: data.outings } : null) });
