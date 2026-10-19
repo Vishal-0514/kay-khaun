@@ -6,6 +6,12 @@ const pickSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// A place to go out to (Go Out), as it was shown.
+const outingSchema = new mongoose.Schema(
+  { id: String, placeId: String, outing: String, name: String, restaurant: String, area: String, rating: Number, travelMin: Number, distanceKm: Number },
+  { _id: false }
+);
+
 const recipeSchema = new mongoose.Schema(
   { id: String, name: String, time: Number, level: String, have: Number, total: Number },
   { _id: false }
@@ -17,10 +23,12 @@ const messageSchema = new mongoose.Schema(
     text: { type: String, required: true },
     // ai messages: 'question' asks for something, 'picks' carries dishes to order,
     // 'recipes' carries things to cook, 'info' is plain text
-    kind: { type: String, enum: ['text', 'question', 'picks', 'recipes', 'info'], default: 'text' },
+    // 'outings' carries places to go out to
+    kind: { type: String, enum: ['text', 'question', 'picks', 'recipes', 'outings', 'info'], default: 'text' },
     options: [{ _id: false, id: String, label: String }],
     picks: [pickSchema],
     recipes: [recipeSchema],
+    outings: [outingSchema],
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
@@ -48,6 +56,8 @@ const conversationSchema = new mongoose.Schema(
       ingredients: [String],
       // What they're drinking with the meal (data/pairings.js), for food that goes with it.
       drink: { type: String, default: null },
+      // Go Out: what kind of outing (services/outing.js).
+      outing: { type: String, default: null },
     },
     messages: [messageSchema],
   },

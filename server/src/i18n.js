@@ -22,6 +22,27 @@ export function tr(text, vars) {
 }
 
 const HI = {
+  // Go Out (services/outing.js)
+  "Got it. Would you like to order in, cook at home, or go out?": "समझ गया। ऑर्डर करना है, घर पर बनाना है, या बाहर चलना है?",
+  "Let's find you something. Would you like to order in, cook at home, or go out?": "चलिए कुछ ढूँढते हैं। ऑर्डर करना है, घर पर बनाना है, या बाहर चलना है?",
+  "Let's go out! What are you in the mood for — a café, dinner, somewhere chill, live music, a date, outdoors or a long drive?": "चलिए बाहर चलते हैं! किसका मन है — कैफ़े, डिनर, कहीं आराम से बैठना, लाइव म्यूज़िक, डेट, खुली हवा या लंबी ड्राइव?",
+  "To find places near you, I need your location. Turn on location for Kya Khaun, then ask me again.": "आपके पास की जगहें ढूँढने के लिए लोकेशन चाहिए। Kya Khaun के लिए लोकेशन चालू करें, फिर दोबारा पूछें।",
+  "I couldn't find a good place for that nearby right now. Try a different kind of outing?": "अभी पास में इसके लिए अच्छी जगह नहीं मिली। कोई और तरह की आउटिंग आज़माएँ?",
+  "{n} min away": "{n} मिनट दूर",
+  "{km} km away": "{km} किमी दूर",
+  "Try {name} ({time}). Here are {n} places — tap Directions to go.": "{name} आज़माएँ ({time})। ये रहीं {n} जगहें — जाने के लिए रास्ता दबाएँ।",
+  "It's raining — check the sky before you head out": "बारिश हो रही है — निकलने से पहले मौसम देख लें",
+  "{n}° now — nicer after sunset": "अभी {n}° है — शाम के बाद ज़्यादा अच्छा",
+  "{n} min by car now ({extra} min extra traffic)": "अभी कार से {n} मिनट ({extra} मिनट ट्रैफ़िक की वजह से)",
+  "{n} min by car now": "अभी कार से {n} मिनट",
+  "Café": "कैफ़े",
+  "Dinner": "डिनर",
+  "Chill place": "आराम की जगह",
+  "Live music": "लाइव म्यूज़िक",
+  "Date night": "डेट",
+  "Outdoors": "खुली हवा",
+  "Long drive": "लंबी ड्राइव",
+  "Go out": "बाहर चलें",
   // the moment: weather and drinks (services/context.js)
   "It's raining — good weather for something hot": "बारिश हो रही है — कुछ गरम खाने का मौसम",
   "{n}° outside — something light and cool": "बाहर {n}° है — कुछ हल्का और ठंडा",

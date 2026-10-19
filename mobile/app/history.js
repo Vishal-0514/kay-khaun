@@ -14,6 +14,7 @@ import { useMeStore } from '../store/useMeStore';
 import { usePlanStore } from '../store/usePlanStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
+import { isOuting, openDirections } from '../lib/directions';
 import { errorMessage } from '../lib/api';
 import { confirm, notify } from '../lib/notify';
 import { dayLabel, timeOf } from '../lib/dates';
@@ -34,12 +35,13 @@ function group(entries) {
 }
 
 function OrderedRow({ e, onOpen, onRemove }) {
-  const app = ORDER_APPS[e.app] ?? ORDER_APPS.zomato;
+  const place = isOuting(e.item);
+  const app = place ? { label: t('Maps') } : ORDER_APPS[e.app] ?? ORDER_APPS.zomato;
   return (
     <View style={styles.card}>
       <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: e.item.name })} onPress={onOpen} style={styles.cardMain}>
         <View style={[styles.tile, { backgroundColor: colors.redSoft }]}>
-          <Icon name="bag" size={18} color={colors.red} />
+          <Icon name={place ? 'pin' : 'bag'} size={18} color={colors.red} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={styles.name} numberOfLines={1}>
@@ -49,12 +51,12 @@ function OrderedRow({ e, onOpen, onRemove }) {
             {e.item.restaurant}
           </Text>
           <Text style={styles.meta}>
-            {t('Opened in {app} · {time}', { app: app.label, time: timeOf(e.at) })}
+            {place ? t('Got directions · {time}', { time: timeOf(e.at) }) : t('Opened in {app} · {time}', { app: app.label, time: timeOf(e.at) })}
           </Text>
         </View>
       </PressScale>
       <View style={styles.side}>
-        <PressScale role="button" aria-label={t('Order {name} again on {app}', { name: e.item.name, app: app.label })} onPress={() => openOrderApp(e.item, e.app ?? 'zomato')} style={styles.again}>
+        <PressScale role="button" aria-label={place ? t('Directions to {name}', { name: e.item.name }) : t('Order {name} again on {app}', { name: e.item.name, app: app.label })} onPress={() => (place ? openDirections(e.item) : openOrderApp(e.item, e.app ?? 'zomato'))} style={styles.again}>
           <Icon name="restart" size={14} color="#FFFFFF" />
           <Text style={styles.againText}>{t("Again")}</Text>
         </PressScale>
@@ -215,7 +217,7 @@ export default function History() {
                 {e.kind === 'plan' ? (
                   <PlanRow e={e} onOpen={() => openPlan(e)} onRemove={() => remove(e)} />
                 ) : (
-                  <OrderedRow e={e} onOpen={() => router.push(`/dish/${e.item.id}`)} onRemove={() => remove(e)} />
+                  <OrderedRow e={e} onOpen={() => router.push(isOuting(e.item) ? `/place/${encodeURIComponent(e.item.id)}` : `/dish/${e.item.id}`)} onRemove={() => remove(e)} />
                 )}
               </Animated.View>
             )}

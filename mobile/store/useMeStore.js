@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 // The user's own food data: ♡ saved dishes, history (what they opened in
 // Zomato / Swiggy, saved day plans) and what taste learning picked up.
 
-const FIELDS = ['id', 'source', 'name', 'restaurant', 'area', 'cuisine', 'diet', 'price', 'eta', 'rating', 'ratingCount', 'spice', 'spiceLabel', 'distanceKm', 'priceLabel', 'ideas', 'links'];
+const FIELDS = ['id', 'source', 'name', 'restaurant', 'area', 'cuisine', 'diet', 'price', 'eta', 'rating', 'ratingCount', 'spice', 'spiceLabel', 'distanceKm', 'priceLabel', 'ideas', 'links', 'placeId', 'outing', 'lat', 'lng', 'travelMin', 'vibe'];
 
 // The parts of a pick worth keeping (the server checks them again).
 export function toItem(pick) {

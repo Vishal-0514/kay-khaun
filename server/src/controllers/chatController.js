@@ -1,5 +1,5 @@
 import Conversation from '../models/Conversation.js';
-import { aiEnabled, aiAllowedFor, understand, explainPicks, explainRecipes } from '../services/ai.js';
+import { aiEnabled, aiAllowedFor, understand, explainPicks, explainRecipes, explainOutings } from '../services/ai.js';
 import { parseWithKeywords } from '../services/intent.js';
 import { recommend } from '../services/ranking.js';
 import { nearbyPicks } from '../services/nearby.js';
@@ -10,17 +10,19 @@ import { tr } from '../i18n.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 import { contextFacts, contextFor, drinkLabel, withHints } from '../services/context.js';
+import { OUTINGS, OUTING_OPTIONS, outingPicks } from '../services/outing.js';
 
 const BRANCH_OPTIONS = [
   { id: 'order', label: 'Order in' },
   { id: 'cook', label: 'Cook at home' },
+  { id: 'out', label: 'Go out' },
 ];
 const SCAN_OPTION = { id: 'scan', label: 'Scan my fridge' };
 const HISTORY_TURNS = 8;
 
 // New values from this message override the slip; "avoid" and the kitchen only ever grow.
 function mergeSlots(slots, intent) {
-  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch', 'drink']) {
+  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch', 'drink', 'outing']) {
     if (intent[key] !== null && intent[key] !== undefined) slots[key] = intent[key];
   }
   for (const key of ['moods', 'cuisines', 'dishWords']) {
@@ -45,6 +47,7 @@ function slipView(slots, user) {
     branch: slots.branch ?? null,
     ingredients: (slots.ingredients ?? []).map(labelOf),
     drink: drinkLabel(slots.drink),
+    outing: slots.branch === 'out' && OUTINGS[slots.outing] ? tr(OUTINGS[slots.outing].label) : null,
   };
 }
 
@@ -53,7 +56,21 @@ const listWords = (words) => (words.length < 2 ? words.join('') : `${words.slice
 
 // Plain wording, used only when Claude is unavailable.
 const backupText = {
-  ask: (heard) => tr(heard ? 'Got it. Would you like to order in, or cook at home?' : "Let's find you something. Would you like to order in, or cook at home?"),
+  ask: (heard) => tr(heard ? 'Got it. Would you like to order in, cook at home, or go out?' : "Let's find you something. Would you like to order in, cook at home, or go out?"),
+  get askOuting() {
+    return tr("Let's go out! What are you in the mood for — a café, dinner, somewhere chill, live music, a date, outdoors or a long drive?");
+  },
+  get needLocation() {
+    return tr('To find places near you, I need your location. Turn on location for Kya Khaun, then ask me again.');
+  },
+  get noOutings() {
+    return tr("I couldn't find a good place for that nearby right now. Try a different kind of outing?");
+  },
+  outings: ({ picks }) => {
+    const top = picks[0];
+    const time = top.travelMin ? tr('{n} min away', { n: top.travelMin }) : tr('{km} km away', { km: top.distanceKm });
+    return tr('Try {name} ({time}). Here are {n} places — tap Directions to go.', { name: top.name, time, n: picks.length });
+  },
   get offTopic() {
     return tr("I'm here to help you decide what to eat. Tell me what you feel like!");
   },
@@ -92,7 +109,8 @@ async function readMessage(text, conv, user) {
   const intent = parseWithKeywords(text);
   // Once they've chosen to cook, a plain list ("eggs, bread, onion") is their kitchen.
   if (!intent.ingredients.length && (intent.branch ?? conv.slots.branch) === 'cook') intent.ingredients = findIngredientsInText(text);
-  const aboutFood = Boolean(intent.craving || intent.cuisines.length || intent.diet || intent.budgetMax || intent.timeMax || intent.branch || intent.ingredients.length || intent.drink);
+  if ((intent.branch ?? conv.slots.branch) !== 'out') intent.outing = null;
+  const aboutFood = Boolean(intent.craving || intent.cuisines.length || intent.diet || intent.budgetMax || intent.timeMax || intent.branch || intent.ingredients.length || intent.drink || intent.outing);
   return { ...intent, aboutFood, language: 'english', reply: null, source: 'keywords' };
 }
 
@@ -136,6 +154,36 @@ async function describeRecipes(recipes, { text, intent, conv, user, ctx }) {
   }
 }
 
+// Go Out: places for the outing, with drive times. Empty if it can't search.
+async function findOutings(slots, user, location, ctx) {
+  if (!placesEnabled || !location) return { picks: [] };
+  try {
+    return await outingPicks(slots, await tasteOf(user), location, { weather: ctx?.weather ?? null });
+  } catch (err) {
+    console.error('Go Out search failed:', err.message);
+    return { picks: [] };
+  }
+}
+
+async function describeOutings(result, { text, intent, conv, user, ctx }) {
+  const fallback = { message: backupText.outings(result), reasons: {} };
+  if (!aiEnabled || intent.source !== 'ai') return fallback;
+  try {
+    return await explainOutings({
+      text,
+      language: intent.language,
+      slip: slipView(conv.slots.toObject(), user),
+      outing: result.outing,
+      picks: result.picks,
+      userName: user.name,
+      moment: contextFacts(ctx),
+    });
+  } catch (err) {
+    console.error('Claude could not explain the outings, using templates:', err.message);
+    return fallback;
+  }
+}
+
 // Real nearby places when we know where they are and Google is set up;
 // otherwise the sample Mumbai menu (handy for building and testing).
 // ctx: the drink and weather (services/context.js); looked up here when not given.
@@ -158,7 +206,7 @@ function toPublic(conv, user) {
     id: conv._id,
     title: conv.title,
     slip: slipView(conv.slots, user),
-    messages: conv.messages.map((m) => ({ id: m._id, role: m.role, text: m.text, kind: m.kind, options: m.options, picks: m.picks, recipes: m.recipes, at: m.createdAt })),
+    messages: conv.messages.map((m) => ({ id: m._id, role: m.role, text: m.text, kind: m.kind, options: m.options, picks: m.picks, recipes: m.recipes, outings: m.outings, at: m.createdAt })),
     updatedAt: conv.updatedAt,
   };
 }
@@ -174,18 +222,35 @@ export async function sendMessage(req, res) {
   mergeSlots(conv.slots, intent);
   if (conv.title === 'New chat' && conv.slots.craving) conv.title = conv.slots.craving.slice(0, 40).replace(/^\p{Ll}/u, (c) => c.toUpperCase());
   if (conv.title === 'New chat' && conv.slots.branch === 'cook') conv.title = 'Cooking at home';
+  if (conv.title === 'New chat' && conv.slots.branch === 'out') conv.title = OUTINGS[conv.slots.outing] ? `Going out: ${OUTINGS[conv.slots.outing].label}` : 'Going out';
 
   const slots = conv.slots.toObject();
-  const hasWish = Boolean(slots.craving || slots.moods?.length || slots.cuisines?.length || slots.dishWords?.length || slots.branch || slots.ingredients?.length || slots.drink);
+  const hasWish = Boolean(slots.craving || slots.moods?.length || slots.cuisines?.length || slots.dishWords?.length || slots.branch || slots.ingredients?.length || slots.drink || slots.outing);
   const ctx = await contextFor(slots, location);
   let reply;
   let picks = [];
   let recipes = [];
+  let outings = [];
 
   if (!intent.aboutFood && !hasWish) {
     reply = { kind: 'info', text: intent.reply ?? backupText.offTopic };
   } else if (!slots.branch) {
     reply = { kind: 'question', text: intent.reply ?? backupText.ask(slipView(slots, req.user).craving), options: BRANCH_OPTIONS };
+  } else if (slots.branch === 'out') {
+    if (!slots.outing) {
+      reply = { kind: 'question', text: intent.reply ?? backupText.askOuting, options: OUTING_OPTIONS };
+    } else if (!location || !placesEnabled) {
+      reply = { kind: 'info', text: backupText.needLocation };
+    } else {
+      const result = await findOutings(slots, req.user, location, ctx);
+      if (!result.picks.length) {
+        reply = { kind: 'info', text: backupText.noOutings, options: OUTING_OPTIONS };
+      } else {
+        const words = await describeOutings(result, { text, intent, conv, user: req.user, ctx });
+        outings = result.picks.map((p) => (words.reasons[p.id] ? { ...p, reasons: [{ icon: 'spark', text: words.reasons[p.id] }, ...p.reasons].slice(0, 4) } : p));
+        reply = { kind: 'outings', text: words.message };
+      }
+    }
   } else if (slots.branch === 'cook') {
     if (!slots.ingredients?.length) {
       reply = { kind: 'question', text: intent.reply ?? backupText.askKitchen, options: [SCAN_OPTION] };
@@ -221,10 +286,11 @@ export async function sendMessage(req, res) {
     options: reply.options ?? [],
     picks: picks.map(({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match, people, groupPrice }) => ({ id, source, name, restaurant, price, eta, rating, distanceKm, priceLabel, match, people, groupPrice })),
     recipes: recipes.map(({ id, name, time, level, have, total }) => ({ id, name, time, level, have, total })),
+    outings: outings.map(({ id, placeId, outing, name, restaurant, area, rating, travelMin, distanceKm }) => ({ id, placeId, outing, name, restaurant, area, rating, travelMin, distanceKm })),
   });
   await conv.save();
 
-  res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots), understoodBy: intent.source });
+  res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, outings, kitchen: kitchenOf(slots), understoodBy: intent.source });
 }
 
 // Recent chats, newest first: title, what Chatora last said and what it led to.
@@ -273,7 +339,8 @@ export async function getConversation(req, res) {
   const location = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, city: String(req.query.city ?? '') } : null;
   const picks = slots.branch === 'order' ? (await findPicks(slots, req.user, location)).picks : [];
   const recipes = slots.branch === 'cook' && slots.ingredients?.length ? suggestRecipes(withHints(slots, await contextFor(slots, null)), await tasteOf(req.user)) : [];
-  res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, kitchen: kitchenOf(slots) });
+  const outings = slots.branch === 'out' && slots.outing ? (await findOutings(slots, req.user, location, await contextFor(slots, location))).picks : [];
+  res.json({ success: true, conversation: toPublic(conv, req.user), picks, recipes, outings, kitchen: kitchenOf(slots) });
 }
 
 // One-tap picks without a chat: Home's mood circles and "Chatora's pick".

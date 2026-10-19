@@ -54,12 +54,13 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - [x] Chatora suggests a swap for any missing ingredient, respecting the diet and avoid list
 
 ### Phase 5: Go Out ("Where should I go?")
-- [ ] Third choice beside Order and Cook, in chat, voice and on Home
-- [ ] Understands café, dinner, chill, live music, date, long drive
-- [ ] 3–4 real nearby places: rating, distance, travel time, vibe, open now, "Why it fits"
-- [ ] Travel time with traffic (Google Routes). **You:** turn on the Routes API
-- [ ] Long drive ideas (scenic spots, dhabas 20–80 km away)
-- [ ] Directions button (Google Maps / Apple Maps); save ♡ and history for places
+- [x] Third choice beside Order and Cook, in chat, voice and on Home
+- [x] Understands café, dinner, chill, live music, date, long drive
+- [x] 3–4 real nearby places: rating, distance, travel time, vibe, open now, "Why it fits"
+- [x] Travel time with traffic (Google Routes).
+- [x] Long drive ideas (scenic spots, dhabas 20–80 km away)
+- [x] Directions button (Google Maps / Apple Maps); save ♡ and history for places
+- Bars, pubs and nightclubs are left out of Go Out (alcohol and the age rating)
 
 ### Phase 6: Snap My Mood
 - [ ] Home's Snap offers: My kitchen / Where I am / My food

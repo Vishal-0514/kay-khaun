@@ -10,6 +10,8 @@ import Button from '../components/Button';
 import { SkeletonList } from '../components/Skeleton';
 import HeartButton from '../components/HeartButton';
 import DishMeta, { isPlace } from '../components/DishMeta';
+import PlaceFacts from '../components/PlaceFacts';
+import { isOuting } from '../lib/directions';
 import { PressScale, rise } from '../components/Motion';
 import { useMeStore } from '../store/useMeStore';
 import { errorMessage } from '../lib/api';
@@ -88,7 +90,7 @@ export default function Saved() {
             }
             renderItem={({ item, index }) => (
               <Animated.View entering={rise(Math.min(index, 6))} style={styles.card}>
-                <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: item.name })} onPress={() => router.push(`/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
+                <PressScale scaleTo={0.98} role="button" aria-label={t('Open {name}', { name: item.name })} onPress={() => router.push(isOuting(item) ? `/place/${encodeURIComponent(item.id)}` : `/dish/${item.id}`)} style={{ flex: 1, gap: 4 }}>
                   <View style={styles.nameRow}>
                     {isPlace(item) || !item.diet ? null : <DietMark type={item.diet === 'veg' ? 'veg' : 'nonveg'} />}
                     <Text style={styles.name} numberOfLines={2}>
@@ -98,7 +100,7 @@ export default function Saved() {
                   <Text style={type.small} numberOfLines={1}>
                     {[item.restaurant, item.cuisine !== item.restaurant && item.cuisine].filter(Boolean).join(' · ')}
                   </Text>
-                  {item.price != null || isPlace(item) ? <DishMeta pick={item} /> : null}
+                  {isOuting(item) ? <PlaceFacts place={item} /> : item.price != null || isPlace(item) ? <DishMeta pick={item} /> : null}
                 </PressScale>
                 <HeartButton pick={item} size={44} />
               </Animated.View>

@@ -205,13 +205,17 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={rise(0, 400)} style={styles.actions}>
-        <PressScale role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
+        <PressScale role="button" aria-label={t('Type instead')} style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
           <Icon name="type" size={18} />
-          <Text style={styles.actionText}>{t("Type instead")}</Text>
+          <Text style={styles.actionText} numberOfLines={1}>{t('Type')}</Text>
         </PressScale>
-        <PressScale role="button" style={styles.action} onPress={() => router.push('/kitchen')}>
+        <PressScale role="button" aria-label={t('Scan my fridge')} style={styles.action} onPress={() => router.push('/kitchen')}>
           <Icon name="camera" size={18} />
-          <Text style={styles.actionText}>{t("Scan my fridge")}</Text>
+          <Text style={styles.actionText} numberOfLines={1}>{t('Scan fridge')}</Text>
+        </PressScale>
+        <PressScale role="button" style={styles.action} onPress={() => router.push({ pathname: '/chat', params: { ask: t('I want to go out'), at: String(Date.now()) } })}>
+          <Icon name="pin" size={18} />
+          <Text style={styles.actionText} numberOfLines={1}>{t('Go out')}</Text>
         </PressScale>
       </Animated.View>
 
@@ -403,8 +407,8 @@ const styles = StyleSheet.create({
   mic: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', ...shadow.red },
   talkText: { fontFamily: fonts.bold, fontSize: 12, color: colors.goldText },
   actions: { flexDirection: 'row', gap: space.sm, marginHorizontal: space.base, marginTop: space.md },
-  action: { flex: 1, height: 44, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
-  actionText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
+  action: { flex: 1, minHeight: 44, paddingHorizontal: 6, borderRadius: radius.full, borderWidth: 1, borderColor: colors.hair, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  actionText: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
   moods: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginTop: space.lg },
   mood: { width: 62, alignItems: 'center', gap: 6 },
   moodCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },

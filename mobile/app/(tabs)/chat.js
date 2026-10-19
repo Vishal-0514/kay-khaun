@@ -23,7 +23,14 @@ import { t } from '../../lib/i18n';
 
 const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
 const DIET = { veg: 'Veg', nonveg: 'Non-veg', egg: 'Egg' };
-const BRANCHES = ['order', 'cook'];
+const BRANCHES = ['order', 'cook', 'out'];
+// The three ways Chatora can help, as cards: icon, tile colours and a line under the name.
+const BRANCH_LOOK = {
+  order: { icon: 'bag', tint: colors.redSoft, ink: colors.red, sub: 'Delivered in ~25 min' },
+  cook: { icon: 'pot', tint: colors.goldSoft, ink: colors.goldText, sub: 'From your fridge' },
+  out: { icon: 'pin', tint: '#E8EEF7', ink: '#3A5A8C', sub: 'Places near you' },
+};
+const optionIcon = (id) => (id === 'scan' ? 'camera' : id === 'order' ? 'bag' : id === 'out' || id.startsWith('out-') ? 'pin' : 'pot');
 
 function Avatar() {
   return (
@@ -49,6 +56,7 @@ function OrderSlip({ slip }) {
     ['Budget', slip.budget && slip.branch !== 'cook' ? budgetText(slip) : null],
     ['Time', slip.time ? t('{n} min', { n: slip.time }) : null],
     ['With', slip.drink ? slip.drink.replace(/^\w/, (c) => c.toUpperCase()) : null],
+    ['Plan', slip.outing],
     ['Kitchen', slip.ingredients?.length ? slip.ingredients.slice(0, 3).join(', ') + (slip.ingredients.length > 3 ? ` +${slip.ingredients.length - 3}` : '') : null],
   ].filter(([, v]) => v);
   return (
@@ -68,10 +76,10 @@ function OrderSlip({ slip }) {
         </View>
       ))}
       <View style={[styles.slipRow, { borderBottomWidth: 0 }]}>
-        <Text style={styles.slipKey}>{t("Order or cook?")}</Text>
+        <Text style={styles.slipKey}>{t('Order, cook or go out?')}</Text>
         <View style={styles.slipValueRow}>
           <Text style={[styles.slipValue, { color: slip.branch ? colors.ink : colors.red }]}>
-            {slip.branch === 'order' ? 'Order in' : slip.branch === 'cook' ? t('Cook at home') : t('Asking')}
+            {slip.branch === 'order' ? t('Order in') : slip.branch === 'cook' ? t('Cook at home') : slip.branch === 'out' ? t('Go out') : t('Asking')}
           </Text>
           {slip.branch ? (
             <View style={styles.tick}>
@@ -88,7 +96,7 @@ function OrderSlip({ slip }) {
 
 export default function Chat() {
   const router = useRouter();
-  const { focus, voice } = useLocalSearchParams();
+  const { focus, voice, ask, at } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const listRef = useRef(null);
   const inputRef = useRef(null);
@@ -160,6 +168,13 @@ export default function Chat() {
   useEffect(() => {
     if (focus) setTimeout(() => inputRef.current?.focus(), 300);
   }, [focus]);
+
+  // Home's "Go out" starts a new chat with that request.
+  useEffect(() => {
+    if (!ask) return;
+    newChat();
+    setTimeout(() => submit(String(ask)), 250);
+  }, [ask, at]);
 
   // Home's "Tap to talk" opens the chat already listening.
   useEffect(() => {
@@ -259,6 +274,25 @@ export default function Chat() {
               </View>
             </PressScale>
           ) : null}
+          {item.kind === 'outings' && item.outings?.length ? (
+            <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/outings')}>
+              <View style={[styles.pickBadge, { borderColor: '#3A5A8C' }]}>
+                <Icon name="pin" size={20} color="#3A5A8C" />
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.pickName} numberOfLines={1}>
+                  {item.outings[0].name}
+                </Text>
+                <Text style={type.small} numberOfLines={1}>
+                  {[item.outings[0].restaurant, item.outings[0].travelMin ? t('{n} min by car', { n: item.outings[0].travelMin }) : t('{n} km', { n: item.outings[0].distanceKm })].filter(Boolean).join(' · ')}
+                </Text>
+              </View>
+              <View style={styles.seeAll}>
+                <Text style={styles.seeAllText}>{t('See all {n}', { n: item.outings.length })}</Text>
+                <Icon name="chevron" size={16} color={colors.red} />
+              </View>
+            </PressScale>
+          ) : null}
           {item.kind === 'recipes' && item.recipes?.length ? (
             <PressScale scaleTo={0.97} role="button" style={styles.pickCard} onPress={() => router.push('/recipes')}>
               <PlateRing size={52} value={item.recipes[0].have / item.recipes[0].total}>
@@ -293,7 +327,7 @@ export default function Chat() {
                     onPress={() => (o.id === 'scan' ? router.push({ pathname: '/kitchen', params: { from: 'chat' } }) : submit(o.label))}
                     style={[styles.pill, o.id === 'scan' && styles.pillMain]}
                   >
-                    <Icon name={o.id === 'scan' ? 'camera' : o.id === 'order' ? 'bag' : 'pot'} size={18} color={o.id === 'scan' ? '#FFFFFF' : colors.ink} />
+                    <Icon name={optionIcon(o.id)} size={18} color={o.id === 'scan' ? '#FFFFFF' : colors.ink} />
                     <Text style={[styles.pillText, o.id === 'scan' && { color: '#FFFFFF' }]}>{o.id === 'scan' ? t('Scan or pick ingredients') : t(o.label)}</Text>
                   </PressScale>
                 ))}
@@ -303,11 +337,11 @@ export default function Chat() {
               {item.options.map((o, i) => (
                 <Animated.View key={o.id} entering={rise(i, 250)} style={{ flex: 1 }}>
                 <PressScale scaleTo={0.95} role="button" disabled={sending} onPress={() => submit(o.label)} style={styles.choice}>
-                  <View style={[styles.choiceIcon, { backgroundColor: o.id === 'order' ? colors.redSoft : colors.goldSoft }]}>
-                    <Icon name={o.id === 'order' ? 'bag' : 'pot'} size={24} color={o.id === 'order' ? colors.red : colors.goldText} />
+                  <View style={[styles.choiceIcon, { backgroundColor: (BRANCH_LOOK[o.id] ?? BRANCH_LOOK.cook).tint }]}>
+                    <Icon name={(BRANCH_LOOK[o.id] ?? BRANCH_LOOK.cook).icon} size={24} color={(BRANCH_LOOK[o.id] ?? BRANCH_LOOK.cook).ink} />
                   </View>
                   <Text style={styles.choiceTitle}>{t(o.label)}</Text>
-                  <Text style={styles.choiceSub}>{o.id === 'order' ? t('Delivered in ~25 min') : t('From your fridge')}</Text>
+                  <Text style={styles.choiceSub}>{t((BRANCH_LOOK[o.id] ?? BRANCH_LOOK.cook).sub)}</Text>
                 </PressScale>
                 </Animated.View>
               ))}
@@ -489,11 +523,11 @@ const styles = StyleSheet.create({
   slipValue: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink, flexShrink: 1, textAlign: 'right' },
   tick: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
   askingDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.red, margin: 5 },
-  choices: { flexDirection: 'row', gap: space.md },
-  choice: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.card, padding: space.base, gap: space.md, ...shadow.card },
+  choices: { flexDirection: 'row', gap: space.sm },
+  choice: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.card, padding: space.md, gap: space.sm, ...shadow.card },
   choiceIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  choiceTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
-  choiceSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, marginTop: -8 },
+  choiceTitle: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 19, color: colors.ink },
+  choiceSub: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.muted, marginTop: -4 },
   pickCard: { flexDirection: 'row', alignItems: 'center', gap: space.md, backgroundColor: colors.surface, borderRadius: radius.card, padding: space.md, ...shadow.card },
   pickBadge: { width: 48, height: 48, borderRadius: 24, borderWidth: 4, borderColor: colors.red, alignItems: 'center', justifyContent: 'center' },
   pickBadgeText: { fontFamily: fonts.bold, fontSize: 13, color: colors.ink },

@@ -27,7 +27,7 @@ const activitySchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     kind: { type: String, enum: ACTIVITY_KINDS, required: true },
     item: foodItemSchema, // every kind except 'plan'
-    app: { type: String, enum: ['zomato', 'swiggy', null], default: null }, // 'ordered': where they went
+    app: { type: String, enum: ['zomato', 'swiggy', 'maps', null], default: null }, // 'ordered': where they went (maps = directions to a place)
     plan: {
       budget: Number,
       total: Number,

@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 export const foodItemSchema = new mongoose.Schema(
   {
     id: { type: String, required: true },
-    source: String, // 'sample' | 'places'
+    source: String, // 'sample' | 'places' | 'outing' (a place to go out to)
     name: String,
     restaurant: String,
     area: String,
@@ -20,7 +20,14 @@ export const foodItemSchema = new mongoose.Schema(
     distanceKm: Number,
     priceLabel: String,
     ideas: [String],
-    links: { zomato: String, swiggy: String, maps: String },
+    // Go Out places
+    placeId: String,
+    outing: String,
+    lat: Number,
+    lng: Number,
+    travelMin: Number,
+    vibe: String,
+    links: { zomato: String, swiggy: String, maps: String, directions: String },
   },
   { _id: false }
 );

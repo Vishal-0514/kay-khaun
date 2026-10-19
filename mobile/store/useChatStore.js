@@ -5,12 +5,21 @@ import { useLocationStore } from './useLocationStore';
 
 const where = () => useLocationStore.getState().forApi();
 
+// Where they are, looked up first if no screen has asked yet (Chat opened
+// straight from a link or reminder). Gives up after a few seconds.
+async function located() {
+  const loc = useLocationStore.getState();
+  if (loc.status === 'idle') await Promise.race([loc.locate(), new Promise((r) => setTimeout(r, 4000))]);
+  return where();
+}
+
 // The current chat with Chatora plus the last set of picks, which the
 // Results and Dish screens read. Recipes go to the cook store.
 export const useChatStore = create((set, get) => ({
   conversation: null, // { id, title, slip, messages[] }
   picks: [],
   picksSource: null, // { kind: 'chat' | 'mood' | 'pick', label }
+  outings: [], // Go Out: places to go, from the last chat that asked
   sending: false,
 
   async send(text) {
@@ -23,12 +32,13 @@ export const useChatStore = create((set, get) => ({
         : { id: null, title: 'New chat', slip: null, messages: [optimistic] },
     }));
     try {
-      const { data } = await api.post('/chat/messages', { conversationId: conversation?.id ?? undefined, text, location: where() });
+      const { data } = await api.post('/chat/messages', { conversationId: conversation?.id ?? undefined, text, location: await located() });
       set({
         conversation: data.conversation,
         ...(data.picks.length ? { picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } } : null),
       });
       if (data.recipes?.length) useCookStore.getState().setFromChat(data);
+      if (data.outings?.length) set({ outings: data.outings });
       return data;
     } catch (err) {
       // Put the chat back as it was so the user can retry.
@@ -41,7 +51,7 @@ export const useChatStore = create((set, get) => ({
 
   async open(id) {
     const { data } = await api.get(`/chat/${id}`, { params: where() });
-    set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving } });
+    set({ conversation: data.conversation, picks: data.picks, picksSource: { kind: 'chat', label: data.conversation.slip?.craving }, ...(data.outings?.length ? { outings: data.outings } : null) });
     if (data.recipes?.length) useCookStore.getState().setFromChat(data);
   },
 
@@ -85,5 +95,5 @@ export const useChatStore = create((set, get) => ({
   },
 
   newChat: () => set({ conversation: null }),
-  clear: () => set({ conversation: null, picks: [], picksSource: null, recent: [], recentMore: false }),
+  clear: () => set({ conversation: null, picks: [], picksSource: null, outings: [], recent: [], recentMore: false }),
 }));

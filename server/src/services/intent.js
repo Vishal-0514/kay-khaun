@@ -28,6 +28,17 @@ const CUISINE_WORDS = {
 };
 const DISH_WORDS = ['biryani', 'roll', 'frankie', 'noodles', 'dosa', 'idli', 'pav bhaji', 'vada pav', 'momos', 'paneer', 'chicken', 'mutton', 'fish', 'prawn', 'dal', 'rajma', 'khichdi', 'misal', 'thali', 'keema', 'pulao', 'kebab'];
 
+// Kinds of outing; the labels match the app's buttons ("Café", "Long drive").
+const OUTING_WORDS = {
+  drive: ['long drive', 'drive', 'road trip'],
+  music: ['live music', 'music', 'gig', 'concert', 'jam'],
+  date: ['date night', 'date', 'romantic', 'anniversary'],
+  outdoors: ['outdoors', 'outdoor', 'sea face', 'beach', 'park', 'walk', 'promenade'],
+  chill: ['chill place', 'chill', 'relax', 'quiet', 'sukoon'],
+  cafe: ['café', 'cafe', 'coffee shop'],
+  dinner: ['dinner', 'restaurant', 'eat out', 'dine'],
+};
+
 const HAVE = /(^|[^a-z])(i have|i've got|we have|have got|got some|hai|hain|he|paas|pass|fridge|kitchen|left|bacha|bache|available)([^a-z]|$)/;
 
 const NUMBER_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ek: 1, do: 2, teen: 3, char: 4, chaar: 4, paanch: 5, panch: 5, chhe: 6, che: 6, saat: 7, aath: 8 };
@@ -45,7 +56,7 @@ function peopleIn(text) {
 
 export function parseWithKeywords(raw) {
   const text = ` ${raw.toLowerCase().replace(/₹/g, ' rs ')} `;
-  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, budgetPerPerson: null, people: null, timeMax: null, branch: null, avoid: [], ingredients: [], drink: null };
+  const out = { craving: null, moods: [], cuisines: [], dishWords: [], diet: null, budgetMax: null, budgetStrict: null, budgetPerPerson: null, people: null, timeMax: null, branch: null, avoid: [], ingredients: [], drink: null, outing: null };
 
   for (const [mood, words] of Object.entries(MOOD_WORDS)) if (has(text, words)) out.moods.push(mood);
   for (const [cuisine, words] of Object.entries(CUISINE_WORDS)) if (has(text, words)) out.cuisines.push(cuisine);
@@ -83,6 +94,10 @@ export function parseWithKeywords(raw) {
 
   // "Drinking wine tonight": food to go with it.
   out.drink = Object.entries(DRINK_WORDS).find(([, words]) => has(text, words))?.[0] ?? null;
+
+  // "Let's go out", "kahin chalte hain": somewhere to go, and what kind.
+  if (has(text, ['go out', 'going out', 'goout', 'bahar chalte', 'bahar chalo', 'kahin chalte', 'kahin chalo', 'kahan jaaye', 'kahan jayen', 'kahan jaun', 'where should i go', 'where to go', 'outing', 'ghoomne', 'hang out', 'hangout'])) out.branch = 'out';
+  out.outing = Object.entries(OUTING_WORDS).find(([, words]) => has(text, words))?.[0] ?? null;
 
   // "I have eggs and bread", "mere paas aloo hai": things in their kitchen.
   if (HAVE.test(text)) out.ingredients = findIngredientsInText(text);

@@ -10,7 +10,7 @@ import { tr } from '../i18n.js';
 // for the place, and dishes are labelled as typical suggestions.
 
 // Google's price levels, as a rough cost for one person in Indian cities.
-const PRICE = {
+export const PRICE = {
   PRICE_LEVEL_FREE: { max: 100, label: 'Under ₹100 for one' },
   PRICE_LEVEL_INEXPENSIVE: { max: 300, label: 'About ₹100–300 for one' },
   PRICE_LEVEL_MODERATE: { max: 700, label: 'About ₹300–700 for one' },
@@ -95,7 +95,7 @@ export function queryFor(c) {
   return `${veg}${what} restaurant`.replace(/restaurants? restaurant$/, 'restaurants');
 }
 
-function km(aLat, aLng, bLat, bLng) {
+export function km(aLat, aLng, bLat, bLng) {
   const r = (d) => (d * Math.PI) / 180;
   const h = Math.sin(r(bLat - aLat) / 2) ** 2 + Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(h));

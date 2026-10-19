@@ -283,6 +283,20 @@ export default function Talk() {
             <Text style={styles.cardLink}>{t('See all {n}', { n: reply.picks.length })}</Text>
           </PressScale>
         ) : null}
+        {reply?.kind === 'outings' && reply.outings?.length ? (
+          <PressScale scaleTo={0.97} role="button" onPress={() => open('/outings')} style={styles.card}>
+            <Icon name="pin" size={20} color={colors.red} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle} numberOfLines={1}>
+                {reply.outings[0].name}
+              </Text>
+              <Text style={styles.cardSub} numberOfLines={1}>
+                {reply.outings[0].travelMin ? t('{n} min by car', { n: reply.outings[0].travelMin }) : reply.outings[0].restaurant}
+              </Text>
+            </View>
+            <Text style={styles.cardLink}>{t('See all {n}', { n: reply.outings.length })}</Text>
+          </PressScale>
+        ) : null}
         {reply?.kind === 'recipes' && reply.recipes?.length ? (
           <PressScale scaleTo={0.97} role="button" onPress={() => open('/recipes')} style={styles.card}>
             <Icon name="pot" size={20} color={colors.red} />

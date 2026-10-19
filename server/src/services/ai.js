@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { CUISINES, MOODS } from '../data/mumbaiMenu.js';
 import { DRINKS } from '../data/pairings.js';
+import { OUTING_IDS } from './outing.js';
 
 // Chatora's brain. Every job is grounded:
 //  1. understand() reads the message (with the chat so far) into slots and writes
@@ -11,6 +12,7 @@ import { DRINKS } from '../data/pairings.js';
 //  3. explainRecipes() does the same for home recipes (cooking.js).
 //  4. scanKitchen() lists the ingredients in a fridge or kitchen photo.
 //  5. suggestSwap() suggests what to use for a missing recipe ingredient.
+//  6. explainOutings() explains places to go out to (Go Out).
 
 const client = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
@@ -63,7 +65,8 @@ const understandSchema = strictObject({
   budgetPerPerson: nullable('boolean'),
   people: nullable('integer'),
   timeMax: nullable('integer'),
-  branch: { anyOf: [{ type: 'string', enum: ['order', 'cook'] }, { type: 'null' }] },
+  branch: { anyOf: [{ type: 'string', enum: ['order', 'cook', 'out'] }, { type: 'null' }] },
+  outing: { anyOf: [{ type: 'string', enum: OUTING_IDS }, { type: 'null' }] },
   avoid: { type: 'array', items: { type: 'string', enum: AVOIDABLE } },
   ingredients: { type: 'array', items: { type: 'string' } },
   drink: { anyOf: [{ type: 'string', enum: DRINKS }, { type: 'null' }] },
@@ -83,7 +86,8 @@ const understandCheck = z.object({
   budgetPerPerson: z.boolean().nullable(),
   people: z.number().int().min(1).max(12).nullable(),
   timeMax: z.number().int().min(5).max(240).nullable(),
-  branch: z.enum(['order', 'cook']).nullable(),
+  branch: z.enum(['order', 'cook', 'out']).nullable(),
+  outing: z.enum(OUTING_IDS).nullable(),
   avoid: z.array(z.enum(AVOIDABLE)),
   ingredients: z.array(z.string().max(40)).max(30),
   drink: z.enum(DRINKS).nullable(),
@@ -105,7 +109,8 @@ Slots — report only what the latest message adds or changes; use null / [] for
 - people: how many are eating if they say ("hum 4 log", "for two", "family of 5" = 5), else null.
 - budgetPerPerson: true if the budget is per person ("300 each", "per head"), false if it is for the whole group, null when no group or no budget.
 - timeMax: minutes they can wait. "quick", "jaldi", "hungry now" = 30.
-- branch: "order" to get food delivered, "cook" to make it at home, else null.
+- branch: "order" to get food delivered, "cook" to make it at home, "out" to go out somewhere (a café, a restaurant, a drive), else null. "I want to go out", "kahin chalte hain", "where should I go?" = out. Picking a place to EAT AT = out; food brought home = order.
+- outing: when going out, what kind: "cafe", "dinner" (a restaurant meal), "chill" (somewhere relaxed), "music" (live music), "date", "outdoors" (sea face, park, a walk), "drive" (a long drive). null if not said.
 - avoid: things they don't want, from: ${AVOIDABLE.join(', ')}.
 - ingredients: food items they say they have at home right now, in simple lowercase English ("aloo" = "potato", "dahi" = "curd").
 - drink: what they say they are drinking or will drink with the meal (${DRINKS.join(', ')}; "daru" or "peg" = whisky), so the app can pick food that goes with it. null if they don't mention one, or if they want to ORDER that drink itself ("I want chai" is a craving, not a drink to pair).
@@ -114,8 +119,9 @@ Slots — report only what the latest message adds or changes; use null / [] for
 
 reply — one or two short, friendly sentences in the SAME language and style they used (Hinglish in Latin script if they wrote Hinglish):
 - If aboutFood is false: answer briefly and invite them to say what they feel like eating.
-- Else if the order-or-cook choice is still unknown (not in the slip and not in this message): acknowledge what they want in a few words and ask ONLY whether they want to order in or cook at home.
+- Else if the order-or-cook choice is still unknown (not in the slip and not in this message): acknowledge what they want in a few words and ask ONLY whether they want to order in, cook at home or go out.
 - Else if they want to cook and no ingredients are known yet (none in the slip or this message): ask what they have at home, and mention they can scan their fridge.
+- Else if they want to go out and the kind of outing is unknown: ask what they're in the mood for — a café, dinner, somewhere chill, live music, a date, outdoors or a long drive.
 - Else: a short acknowledgement such as "On it!" — the app will add the results.
 Never name restaurants, dishes, recipes, prices or delivery times in the reply.
 Drinks: you only pair food with a drink the user already mentioned. Never suggest, recommend or encourage alcohol or drinking more. If they mention driving after drinking, add a short, kind reminder not to drive.`;
@@ -283,4 +289,30 @@ Suggest ONE practical substitute that Indian homes usually have, preferring some
 export async function suggestSwap({ recipe, ingredient, quantity, theyHave, diet, avoid, language }) {
   const content = JSON.stringify({ recipe, missingIngredient: ingredient, quantity, theyHave, diet, avoid, language });
   return swapCheck.parse(await callJson({ system: SWAP_SYSTEM, content, schema: swapSchema, maxTokens: 600 }));
+}
+
+// ---------- 6. explain places to go out to ----------
+
+const OUTING_SYSTEM = `You are Chatora, the guide in the Kya Khaun? app. The user wants to go out. The app has already found and ranked real nearby places from Google and worked out the drive time right now; you only explain the choices.
+Use ONLY the facts given (name, kind of place, area, Google rating, drive minutes, extra minutes from traffic, distance, open now, price range). You do NOT know their menus, events, music line-up, views or decor: never claim any of these. Never suggest alcohol.
+- message: two short sentences max, in the user's language and style. Name the #1 place with its drive time and rating, and say they can tap Directions.
+- reasons: for EVERY place, "why it fits" in at most 12 words, personal to the plan they described (date, chill, long drive…). Use the place id exactly as given.
+- If "moment" has weather, you may mention it briefly in the message (rain → somewhere covered; heat → after sunset).`;
+
+export async function explainOutings({ text, language, slip, outing, picks, userName, moment = null }) {
+  const places = picks.map((p, i) => ({
+    rank: i + 1,
+    id: p.id,
+    name: p.name,
+    kind: p.restaurant,
+    area: p.area,
+    googleRating: p.rating,
+    ratingCount: p.ratingCount,
+    driveMinutesNow: p.travelMin,
+    extraTrafficMinutes: p.trafficMin,
+    distanceKm: p.distanceKm,
+    openNow: p.openNow,
+    priceRange: p.priceLabel,
+  }));
+  return explain(OUTING_SYSTEM, { userMessage: text, language, userName: userName || null, plan: outing, orderSlip: slip, moment, places }, picks.map((p) => p.id));
 }
