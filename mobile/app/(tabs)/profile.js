@@ -118,7 +118,7 @@ function VoiceSettings({ lang }) {
       <Text style={styles.voiceNote}>
         {failed
           ? t("Couldn't play Chatora's voice. Check your internet and try again.")
-          : t('Tap the headphones in Chat to talk hands-free. Replies are turned into speech by Google.')}
+          : t('Tap "Tap to talk" on Home, or the voice button in Chat, to talk with Chatora. Replies are turned into speech by Google.')}
       </Text>
     </>
   );

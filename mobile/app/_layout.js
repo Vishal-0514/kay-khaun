@@ -66,6 +66,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="taste" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="ai-consent" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="talk" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>

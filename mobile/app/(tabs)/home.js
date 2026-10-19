@@ -196,7 +196,7 @@ export default function Home() {
         <View style={styles.talk}>
           <View style={styles.micWrap}>
             <Glow size={84} color={colors.red} />
-            <PressScale scaleTo={0.9} role="button" aria-label={t("Talk to Chatora")} onPress={() => router.push({ pathname: '/chat', params: { voice: String(Date.now()) } })} style={styles.mic}>
+            <PressScale scaleTo={0.9} role="button" aria-label={t("Talk to Chatora")} onPress={() => router.push('/talk')} style={styles.mic}>
               <Icon name="mic" size={26} color="#FFFFFF" />
             </PressScale>
           </View>

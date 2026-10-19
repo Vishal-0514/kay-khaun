@@ -45,6 +45,7 @@ const shapes = {
   share: [['path', 'M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6'], ['path', 'M12 3v12'], ['path', 'M7.5 7.5L12 3l4.5 4.5']],
   speaker: [['path', 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z'], ['path', 'M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11']],
   headset: [['path', 'M4 15v-3a8 8 0 0 1 16 0v3'], ['rect', { x: 3, y: 13.5, width: 4.5, height: 7, rx: 1.8 }], ['rect', { x: 16.5, y: 13.5, width: 4.5, height: 7, rx: 1.8 }]],
+  wave: [['path', 'M4.5 10.5v3M8.25 7v10M12 4v16M15.75 7v10M19.5 10.5v3']],
   stop: [['rect', { x: 6.5, y: 6.5, width: 11, height: 11, rx: 2 }]],
 };
 

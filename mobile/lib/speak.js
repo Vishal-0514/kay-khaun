@@ -85,6 +85,31 @@ export function onSpeaking(fn) {
 
 export const speakingId = () => playing?.id ?? null;
 
+// How loud Chatora's voice is right now (0..1), for the avatar's mouth. Only
+// sent while a clip plays with { levels: true }, and only where the phone can
+// measure it. Returns an unsubscribe function.
+const levelListeners = new Set();
+export function onSpeechLevel(fn) {
+  levelListeners.add(fn);
+  return () => levelListeners.delete(fn);
+}
+
+let lastLevelAt = 0;
+function sampled({ channels }) {
+  const now = Date.now();
+  if (now - lastLevelAt < 60 || !levelListeners.size) return;
+  lastLevelAt = now;
+  const frames = channels?.[0]?.frames ?? [];
+  let sum = 0;
+  let n = 0;
+  for (let i = 0; i < frames.length; i += 8) {
+    sum += frames[i] * frames[i];
+    n += 1;
+  }
+  const level = Math.min(1, Math.sqrt(n ? sum / n : 0) * 4.5);
+  levelListeners.forEach((fn) => fn(level));
+}
+
 // The id of what's being spoken right now (or null), for a play/stop button.
 export function useSpeaking() {
   const [id, setId] = useState(speakingId);
@@ -113,7 +138,8 @@ export function stopSpeaking() {
 
 // Say `text` aloud. Resolves 'ended' when it finishes, 'stopped' if something
 // else cut it off, and rejects if it couldn't be spoken at all.
-export async function speak(text, id = text) {
+// { levels: true } also reports how loud the voice is (see onSpeechLevel).
+export async function speak(text, id = text, { levels = false } = {}) {
   stopSpeaking();
   const { voice } = useVoiceSettings.getState();
   return new Promise((resolve, reject) => {
@@ -132,6 +158,14 @@ export async function speak(text, id = text) {
         player.addListener('playbackStatusUpdate', (status) => {
           if (playing === me && status.didJustFinish) finish('ended');
         });
+        if (levels) {
+          try {
+            player.addListener('audioSampleUpdate', sampled);
+            player.setAudioSamplingEnabled(true);
+          } catch {
+            // Not every phone can measure it; the avatar then talks to a rhythm.
+          }
+        }
         player.play();
         // If the clip never reports its end (a dropped connection), don't leave a
         // hands-free conversation waiting: give up after a generous estimate.

@@ -103,20 +103,14 @@ export default function Chat() {
   // Speak a craving: the live words show in the bar, and it sends when you stop.
   const talk = useVoice({
     onFinal: (said) => submit(said),
-    onError: (message) => {
-      setHint(message);
-      endHandsFree();
-    },
+    onError: (message) => setHint(message),
   });
 
-  // Chatora's voice. Hands-free: listen, speak the reply aloud, listen again,
-  // until nothing is said or it's switched off. "Read replies aloud" in
-  // Profile speaks replies without the listening loop.
+  // Chatora's voice: Listen on any reply, and "Read replies aloud" (Profile)
+  // speaks new replies. The full voice conversation is its own screen (/talk).
   const voiceAvailable = useVoiceSettings((s) => s.available);
   const readAloud = useVoiceSettings((s) => s.readAloud);
   const speakingId = useSpeaking();
-  const [handsFree, setHandsFree] = useState(false);
-  const handsFreeRef = useRef(false);
   const awaiting = useRef(null); // while a reply is on its way: { before: id of the last reply }
   useEffect(() => {
     useVoiceSettings.getState().load();
@@ -125,34 +119,14 @@ export default function Chat() {
   const messages = conversation?.messages ?? [];
   const lastAi = [...messages].reverse().find((m) => m.role === 'ai');
 
-  function endHandsFree() {
-    if (!handsFreeRef.current) return;
-    handsFreeRef.current = false;
-    setHandsFree(false);
-    stopSpeaking();
-  }
-
-  function startHandsFree() {
-    const unavailable = voiceUnavailableReason();
-    if (unavailable) {
-      setHint(unavailable);
-      return;
-    }
+  function openVoiceChat() {
     tap();
-    handsFreeRef.current = true;
-    setHandsFree(true);
-    listen();
+    stopSpeaking();
+    router.push({ pathname: '/talk', params: conversation ? { chat: '1' } : {} });
   }
 
   function say(item) {
-    speak(t(item.text), String(item.id))
-      .then((how) => {
-        if (how === 'ended' && handsFreeRef.current) listen();
-      })
-      .catch(() => {
-        setHint(t("Couldn't play Chatora's voice. Check your internet and try again."));
-        endHandsFree();
-      });
+    speak(t(item.text), String(item.id)).catch(() => setHint(t("Couldn't play Chatora's voice. Check your internet and try again.")));
   }
 
   function toggleSay(item) {
@@ -165,20 +139,11 @@ export default function Chat() {
   useEffect(() => {
     if (!awaiting.current || !lastAi || lastAi.id === awaiting.current.before) return;
     awaiting.current = null;
-    if (voiceAvailable && (handsFreeRef.current || readAloud)) say(lastAi);
+    if (voiceAvailable && readAloud) say(lastAi);
   }, [lastAi?.id]);
 
-  // Leaving the chat ends the conversation and silences Chatora.
-  useFocusEffect(
-    useCallback(
-      () => () => {
-        handsFreeRef.current = false;
-        setHandsFree(false);
-        stopSpeaking();
-      },
-      []
-    )
-  );
+  // Leaving the chat silences Chatora.
+  useFocusEffect(useCallback(() => stopSpeaking, []));
 
   // An empty chat shows the last few chats to pick up again.
   const empty = !conversation;
@@ -234,7 +199,6 @@ export default function Chat() {
       await send(msg);
     } catch (err) {
       awaiting.current = null;
-      endHandsFree();
       setText(msg);
       notify(t("Couldn't send"), errorMessage(err));
     }
@@ -439,11 +403,8 @@ export default function Chat() {
           <PressScale
             scaleTo={0.88}
             role="button"
-            aria-label={handsFree ? t('End voice chat') : t("Cancel")}
-            onPress={() => {
-              talk.cancel();
-              endHandsFree();
-            }}
+            aria-label={t("Cancel")}
+            onPress={talk.cancel}
             style={styles.cancelBtn}
           >
             <Icon name="close" size={18} color={colors.muted} />
@@ -455,26 +416,11 @@ export default function Chat() {
             <VoiceBars level={talk.level} color="#FFFFFF" height={22} />
           </PressScale>
         </Animated.View>
-      ) : handsFree ? (
-        <Animated.View key="handsfree" entering={FadeIn.duration(220)} style={[styles.inputBar, styles.listenBar, { marginBottom: space.md }]}>
-          <PressScale scaleTo={0.88} role="button" aria-label={t('End voice chat')} onPress={endHandsFree} style={styles.cancelBtn}>
-            <Icon name="close" size={18} color={colors.muted} />
-          </PressScale>
-          <View style={styles.voiceState}>
-            {speakingId ? <VoiceBars level={0.6} color={colors.red} height={16} /> : <TypingDots color={colors.red} />}
-            <Text style={styles.heard} numberOfLines={1} aria-live="polite">
-              {speakingId ? t('Chatora is speaking…') : t('Chatora is thinking…')}
-            </Text>
-          </View>
-          <PressScale scaleTo={0.88} role="button" aria-label={t('Speak now')} onPress={listen} disabled={sending} style={[styles.sendBtn, sending && { opacity: 0.5 }]}>
-            <Icon name="mic" size={22} color="#FFFFFF" />
-          </PressScale>
-        </Animated.View>
       ) : (
       <View style={[styles.inputBar, voiceAvailable && styles.inputBarVoice, { marginBottom: space.md }]}>
         {voiceAvailable ? (
-          <PressScale scaleTo={0.88} role="button" aria-label={t('Talk with Chatora')} onPress={startHandsFree} disabled={sending} style={styles.handsFreeBtn}>
-            <Icon name="headset" size={20} color={colors.red} />
+          <PressScale scaleTo={0.88} role="button" aria-label={t('Talk with Chatora')} onPress={openVoiceChat} style={styles.handsFreeBtn}>
+            <Icon name="wave" size={20} color={colors.red} />
           </PressScale>
         ) : null}
         <TextInput
@@ -533,7 +479,6 @@ const styles = StyleSheet.create({
   listenText: { fontFamily: fonts.medium, fontSize: 12, color: colors.muted },
   inputBarVoice: { paddingLeft: 6 },
   handsFreeBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
-  voiceState: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.sm },
   slip: { backgroundColor: colors.goldSoft, borderRadius: 16, paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.sm },
   notch: { position: 'absolute', top: '50%', width: 20, height: 20, marginTop: -10, borderRadius: 10, backgroundColor: colors.canvas },
   slipTitle: { ...type.label, marginBottom: space.xs },
