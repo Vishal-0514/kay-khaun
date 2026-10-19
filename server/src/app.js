@@ -18,7 +18,7 @@ import moodRoutes from './routes/mood.js';
 import songRoutes from './routes/songs.js';
 
 const app = express();
-// Render sits in front of the server: trust its one proxy hop so req.ip is the visitor's address.
+// Render sits in front of the server (trust its proxy hop); limits use clientIp() in security.js.
 app.set('trust proxy', 1);
 
 app.disable('x-powered-by');

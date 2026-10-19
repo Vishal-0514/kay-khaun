@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
@@ -10,6 +10,7 @@ import Button from '../components/Button';
 import { PressScale, rise, riseUp } from '../components/Motion';
 import { SONG_LANGUAGES, useSongStore } from '../store/useSongStore';
 import { errorMessage } from '../lib/api';
+import { openLink } from '../lib/safeLink';
 import { notify } from '../lib/notify';
 import { tap } from '../lib/haptics';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
@@ -27,7 +28,7 @@ const APPS = [
 async function open(url, app) {
   tap();
   try {
-    await Linking.openURL(url);
+    await openLink(url);
   } catch {
     notify(t("Couldn't open {app}", { app }), t('Search for the song in {app}.', { app }));
   }

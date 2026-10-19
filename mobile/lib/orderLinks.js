@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { openLink } from './safeLink';
 import { notify } from './notify';
 import { useMeStore } from '../store/useMeStore';
 import { t } from './i18n';
@@ -23,7 +23,7 @@ export async function openOrderApp(pick, app) {
     return;
   }
   try {
-    await Linking.openURL(url);
+    await openLink(url);
   } catch {
     notify(t("Couldn't open {app}", { app: ORDER_APPS[app].label }), t('Search for "{name}" in {app}.', { name: pick.name, app: ORDER_APPS[app].label }));
   }

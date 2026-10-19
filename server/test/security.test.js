@@ -56,3 +56,10 @@ test('oversized bodies are refused', async () => {
   const res = await fetch(`${base}/api/chat/messages`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: big });
   assert.equal(res.status, 413);
 });
+
+test('limits count each visitor, not the shared Cloudflare proxy address', async () => {
+  const hit = (ip) => fetch(`${base}/api/health`, { headers: { 'cf-connecting-ip': ip } }).then((r) => r.headers.get('ratelimit-policy'));
+  const [a, a2, b] = [await hit('203.0.113.7'), await hit('203.0.113.7'), await hit('198.51.100.9')];
+  assert.equal(a, a2);
+  assert.notEqual(a, b);
+});

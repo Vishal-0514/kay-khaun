@@ -12,12 +12,21 @@ Last full review: 20 October 2026. Re-check before each store release.
 - Checked: no server secret has ever been committed (all of git history scanned).
 - The app only contains **public** settings: the server address and the Firebase web config (`EXPO_PUBLIC_*`). Google designs Firebase web keys to be public; they are protected by restricting the key (below), not by hiding it. Anything shipped inside an app can be read by someone who unpacks it, so real secrets never go in the app.
 
+## Google keys (checked 20 Oct 2026 with free test calls)
+
+- **Server key** (`GOOGLE_MAPS_API_KEY`, project kay-khaun): already limited to the APIs it uses. Places, Routes, Weather and Text-to-Speech work; other APIs (Vision, sign-in) are refused. Keep it that way when enabling new APIs: add each one to the key's list.
+- **Firebase web key** (project 611672966477): already limited (Places refused; paid APIs not enabled in that project).
+- **Don't** add an "Android apps" or "iOS apps" restriction to the Firebase key: the app signs in with Firebase's JavaScript library, which doesn't identify itself as the Android/iOS app, so sign-in would break. The key's API list is the right protection, plus "Email enumeration protection" in Firebase → Authentication → Settings.
+
 ## What the server does
 
 - **Sign-in:** Firebase ID tokens checked by Google's library; verified email required. Our own access tokens last 15 minutes (HS256 only, algorithm pinned); refresh tokens are random, stored only as SHA-256 hashes, and rotated on every use. Test "skip login" is off in production (checked live: 404).
 - **Every private route** requires sign-in and validates its input with zod (tested: 401 without a token; forged and unsigned tokens refused).
 - **Security headers** (helmet): HSTS, nosniff, frame-deny and more; no `X-Powered-By`.
 - **CORS:** browsers may call the API only from karisglobalretail.com (and localhost while developing). The phone apps aren't affected.
+- **Request limits** count each visitor's real address (`CF-Connecting-IP`, set by Cloudflare in front of Render). Before 20 Oct, limits counted Cloudflare's shared addresses, so busy times could have blocked real users.
+- **Links the app opens** (Zomato, Swiggy, Maps, music): only https links to those sites (`mobile/lib/safeLink.js`), even if a saved chat held something else.
+- **On the phone:** sign-in tokens are kept in the secure keychain (expo-secure-store), never in plain storage.
 - **Request limits:**
   - 600 requests / 15 min per address for everything (`RATE_LIMIT_API`).
   - 30 / 15 min per address for sign-in (`RATE_LIMIT_AUTH`).
@@ -45,20 +54,18 @@ The limit is the **free MongoDB tier (M0, ~100 operations/second)**. Signed-in u
 - Hindi: every app text has a Hindi version.
 - Website: all 26 pages and files load; all policy, Zomato, Swiggy, Maps, Spotify and YouTube Music links work.
 - Keyboard: on Android (edge-to-edge since SDK 54) the keyboard covered text boxes. Fixed with `react-native-keyboard-controller` on every screen with typing: chat, sign-in, forgot password, kitchen, Snap, taste, and the Report sheet.
-- Automatic tests: 26 server tests run on every push (GitHub Actions).
+- Automatic tests: 27 server tests run on every push (GitHub Actions).
 
 ## Still to do (owner)
 
 1. **Rotate** the Claude API key and the MongoDB password (both were shared in chat during development), then update `server/.env` and Render.
-2. **Restrict the Google keys** in Google Cloud → Credentials:
-   - Server key (Maps, Places, Routes, Weather, Text-to-Speech): restrict to those APIs. Render has no fixed IP on the free plan, so API restrictions are the main protection.
-   - Firebase web key: restrict to the Android app (`app.kyakhaun` + SHA-1), the iOS bundle id, and the Identity Toolkit / Firebase APIs.
-3. **Firebase App Check** (optional, recommended): lets only the real app use Firebase.
-4. **Budget alerts** in Google Cloud and a monthly spend limit in the Claude Console.
-5. Set `NODE_ENV=production` on Render, if it isn't already.
-6. **Upgrade MongoDB** from the free tier before a marketing push.
+2. **Budget alerts** in Google Cloud and a monthly spend limit in the Claude Console.
+3. **Upgrade MongoDB** from the free tier before a marketing push.
+4. Optional, later: **Firebase App Check**. It needs the native Firebase SDK (the app uses the JavaScript one today), so it's a bigger change; only worth it if sign-up abuse shows up.
+
+Done: `NODE_ENV=production` is set on Render (checked live: localhost origins are refused).
 
 ## Still to do (code)
 
-- Auto-delete chats older than 90 days, and say so in the privacy policy.
+- Chat auto-delete: not wanted for now (owner's decision, 20 Oct 2026). Chats stay until the person deletes them or their account.
 - Before release: re-run `npm audit`, the server tests, and the link check.

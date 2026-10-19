@@ -1,6 +1,6 @@
 # Kya Khaun? — To-do list
 
-Last updated: 19 October 2026
+Last updated: 20 October 2026
 
 Order agreed: 1 New features → 2 Experience polish → 3 Store rules → 4–7 Blueprint features → 8 Reliability → 9 Security → 10 Launch preparation.
 Phases 1–3 are done and pushed (latest commit `95bc586`).
@@ -27,7 +27,7 @@ Phases 1–3 are done and pushed (latest commit `95bc586`).
 - [ ] **Google Play developer account** ($25 one-time). A personal account needs a **closed test with 12 testers for 14 days** before publishing, so start this early.
 - [ ] **Apple Developer account** ($99 a year). No Mac needed; EAS builds the iPhone app in the cloud.
 - [ ] **Reviewer demo account**: create it in the app, following the steps in `docs/store-review.md`.
-- [ ] **Rotate the Claude key and the MongoDB password** (Phase 9). Both were shared in chat earlier.
+- [ ] **Rotate the Claude key and the MongoDB password**. Both were shared in chat earlier.
 - [ ] **Firebase:** decide whether it stays on the current Google account or moves to a company or client account before launch.
 - [ ] Optional: **`FIREBASE_SERVICE_ACCOUNT`** on Render, so "Delete my account" also removes the Firebase sign-in email.
 
@@ -78,16 +78,18 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - [x] Sentry crash reporting (app + server): built; switches on when **you** add the DSNs (app: `EXPO_PUBLIC_SENTRY_DSN` in eas.json; server: `SENTRY_DSN` on Render)
 - [x] Over-the-air updates (EAS Update): set up; works from the next build. Send a fix with `npm run update:preview -- "what changed"`
 - [x] App version in Profile + a "What's new" screen after updates (app version is now 1.1.0)
-- [x] Automatic server tests on every push (GitHub Actions, 21 tests)
+- [x] Automatic server tests on every push (GitHub Actions, 27 tests)
 - [x] Nightly encrypted database backup, kept 30 days: needs **you** to add `MONGODB_URI` and `BACKUP_PASSPHRASE` in GitHub (see docs/backups.md)
 - [x] Fix: a reopened saved day plan shows its note in English even in Hindi mode
 
 ### Phase 9: Security
 - [x] Request limits per user and IP + a **daily AI limit per user** (protects the Claude bill)
 - [x] Security headers (helmet), and CORS locked down
-- [ ] Restrict the Google and Firebase keys to the app only
+- [x] Google and Firebase keys: checked, both already limited to the APIs they need (see docs/security.md; no app restriction on the Firebase key, it would break sign-in)
+- [x] Request limits count each person's real address (they counted Cloudflare's shared ones)
+- [x] The app only opens https links to known sites (ordering, maps, music)
 - [x] Update dependencies and fix known vulnerabilities (server: 0 known issues)
-- [ ] Chat retention: for example, auto-delete chats older than 90 days, and update the privacy policy to match
+- Chat auto-delete: skipped (owner's decision). People can delete chats, or their account, any time
 - [x] Security + QA review (docs/security.md): secrets, routes, tokens, load test, links, keyboard. Re-run before release
 
 ### Phase 10: Launch preparation

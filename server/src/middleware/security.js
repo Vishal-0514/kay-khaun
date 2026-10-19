@@ -1,6 +1,6 @@
 import helmet from 'helmet';
 import cors from 'cors';
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 
 // Security for every request: safe response headers, which websites may call
 // the API from a browser, and request limits that stop floods and protect the
@@ -36,7 +36,19 @@ export const corsPolicy = cors({
 
 const tooMany = (error) => (req, res, next, options) => res.status(options.statusCode).json({ success: false, code: 'RATE_LIMITED', error });
 
-const base = { standardHeaders: 'draft-8', legacyHeaders: false };
+// The visitor's address. On Render, requests pass through Cloudflare and then
+// Render's proxy, so req.ip is a shared Cloudflare address; Cloudflare puts the
+// real one in CF-Connecting-IP (and overwrites any value a visitor sends).
+export function clientIp(req) {
+  const cf = req.get('cf-connecting-ip');
+  return cf && /^[\d.:a-f]+$/i.test(cf) ? cf : req.ip;
+}
+
+const base = {
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(clientIp(req)),
+};
 
 // Everything under /api, per address: plenty for a person, too little for a flood.
 export const apiLimiter = rateLimit({

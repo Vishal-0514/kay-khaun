@@ -1,4 +1,5 @@
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { openLink } from './safeLink';
 import { notify } from './notify';
 import { useMeStore } from '../store/useMeStore';
 import { t } from './i18n';
@@ -21,7 +22,7 @@ export async function openDirections(place) {
   // Heading there is the strongest sign they liked it: History and taste learning.
   useMeStore.getState().track('ordered', place, 'maps');
   try {
-    await Linking.openURL(directionsUrl(place));
+    await openLink(directionsUrl(place));
   } catch {
     notify(t("Couldn't open Maps"), t('Search for "{name}" in your maps app.', { name: place.name }));
   }
@@ -30,7 +31,7 @@ export async function openDirections(place) {
 export async function openInGoogleMaps(place) {
   const url = place.links?.maps ?? directionsUrl(place);
   try {
-    await Linking.openURL(url);
+    await openLink(url);
   } catch {
     notify(t("Couldn't open Maps"), t('Search for "{name}" in your maps app.', { name: place.name }));
   }
