@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import Icon from '../../components/Icon';
 import { glideTo } from '../../components/Motion';
 import { colors, fonts } from '../../lib/theme';
 import { t } from '../../lib/i18n';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const TABS = {
   home: { label: 'Home', icon: 'home' },
@@ -58,6 +59,10 @@ function TabBar({ state, navigation }) {
 }
 
 export default function TabsLayout() {
+  // Signed out while the app was open (session ended, or the account was deleted
+  // on another phone): back to the welcome screen instead of a broken Home.
+  const signedOut = useAuthStore((s) => !s.refreshToken);
+  if (signedOut) return <Redirect href="/welcome" />;
   return (
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false, animation: 'shift', sceneStyle: { backgroundColor: colors.canvas } }}>
       <Tabs.Screen name="home" />

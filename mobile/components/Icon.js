@@ -52,6 +52,10 @@ const shapes = {
   music: [['path', 'M9 18V5.5l10-2V16'], ['circle', { cx: 6.5, cy: 18, r: 2.5 }], ['circle', { cx: 16.5, cy: 16, r: 2.5 }]],
   lock: [['rect', { x: 5, y: 10.5, width: 14, height: 10, rx: 2 }], ['path', 'M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3']],
   stop: [['rect', { x: 6.5, y: 6.5, width: 11, height: 11, rx: 2 }]],
+  search: [['circle', { cx: 11, cy: 11, r: 6.5 }], ['path', 'M16 16l4.5 4.5']],
+  phoneCall: [['path', 'M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z']],
+  bell: [['path', 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z'], ['path', 'M10 21h4']],
+  calendar: [['rect', { x: 4, y: 5.5, width: 16, height: 15, rx: 2.5 }], ['path', 'M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2M14 14h2M8 17h2']],
 };
 
 // fill: colour the inside too (a filled ♡ for saved).

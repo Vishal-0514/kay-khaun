@@ -27,6 +27,9 @@ export const foodItemSchema = z.object({
   lng: z.number().min(-180).max(180).optional(),
   travelMin: z.number().min(0).max(1000).nullable().optional(),
   vibe: text(80).nullable().optional(),
+  city: text(60).nullable().optional(),
+  phone: text(30).nullable().optional(),
+  dial: z.string().regex(/^\+?\d{6,15}$/).nullable().optional(),
   links: z.object({ zomato: url.optional(), swiggy: url.optional(), maps: url.optional(), directions: url.optional() }).optional(),
 });
 

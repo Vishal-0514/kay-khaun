@@ -11,6 +11,7 @@ import { PressScale, rise, riseUp } from '../components/Motion';
 import { useChatStore } from '../store/useChatStore';
 import DishMeta, { isPlace, shortPrice, SampleTag } from '../components/DishMeta';
 import { ORDER_APPS, openOrderApp } from '../lib/orderLinks';
+import CallRestaurant from '../components/CallRestaurant';
 import HeartButton from '../components/HeartButton';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
@@ -129,6 +130,7 @@ export default function Results() {
               )}
               <HeartButton pick={top} />
             </View>
+            {isPlace(top) ? <CallRestaurant pick={top} style={{ marginTop: space.sm }} /> : null}
           </Animated.View>
 
           {rest.length ? (

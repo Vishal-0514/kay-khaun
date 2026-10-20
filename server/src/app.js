@@ -16,6 +16,7 @@ import contactRoutes from './routes/contact.js';
 import voiceRoutes from './routes/voice.js';
 import moodRoutes from './routes/mood.js';
 import songRoutes from './routes/songs.js';
+import orderRoutes from './routes/order.js';
 
 const app = express();
 // Render sits in front of the server (trust its proxy hop); limits use clientIp() in security.js.
@@ -46,6 +47,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/voice', voiceRoutes);
 app.use('/api/mood', moodRoutes);
 app.use('/api/songs', songRoutes);
+app.use('/api/order', orderRoutes);
 
 // The policy pages live on the company website now; old links (store listings,
 // earlier app builds) are sent there permanently.

@@ -26,3 +26,10 @@ export function openLink(url) {
   if (!isSafeLink(url)) return Promise.reject(new Error('Link not allowed'));
   return Linking.openURL(url);
 }
+
+// Calls a restaurant. Only a plain phone number ("+912224144422") is dialled.
+export function callNumber(dial) {
+  const number = String(dial ?? '').replace(/[\s-]/g, '');
+  if (!/^\+?\d{6,15}$/.test(number)) return Promise.reject(new Error('Not a phone number'));
+  return Linking.openURL(`tel:${number}`);
+}

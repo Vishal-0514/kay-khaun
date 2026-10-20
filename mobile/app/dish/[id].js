@@ -22,6 +22,7 @@ import { pickMessage, shareText } from '../../lib/share';
 import { notify } from '../../lib/notify';
 import { isPlace, shortPrice } from '../../components/DishMeta';
 import { NOT_AFFILIATED, ORDER_APPS, openOrderApp } from '../../lib/orderLinks';
+import CallRestaurant from '../../components/CallRestaurant';
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { currentLang, t } from '../../lib/i18n';
 
@@ -234,6 +235,7 @@ export default function Dish() {
             />
           ))}
         </View>
+        <CallRestaurant pick={dish} style={{ marginTop: space.sm }} />
         <Text style={styles.barNote}>{t(NOT_AFFILIATED)}</Text>
       </View>
     </View>

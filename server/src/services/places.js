@@ -24,6 +24,9 @@ const FIELDS = [
   'places.primaryTypeDisplayName',
   'places.businessStatus',
   'places.googleMapsUri',
+  // Same price tier as rating and opening hours (Text Search Enterprise), so no extra cost.
+  'places.nationalPhoneNumber',
+  'places.internationalPhoneNumber',
 ].join(',');
 
 const CACHE_MS = 6 * 60 * 60 * 1000;
@@ -82,6 +85,8 @@ export async function searchPlaces({ lat, lng, query, radius = 4000 }) {
       openNow: p.currentOpeningHours?.openNow ?? null,
       kind: p.primaryTypeDisplayName?.text ?? 'Restaurant',
       mapsUrl: p.googleMapsUri ?? null,
+      phone: p.nationalPhoneNumber ?? null, // as shown: "022 2414 4422"
+      dial: p.internationalPhoneNumber ? p.internationalPhoneNumber.replace(/[^\d+]/g, '') : null, // for tel: "+912224144422"
     }));
 
   if (cache.size >= MAX_CACHE) cache.delete(cache.keys().next().value);

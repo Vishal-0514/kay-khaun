@@ -411,3 +411,54 @@ export async function suggestSongs({ image, mediaType, dish, language, note }) {
   content.push({ type: 'text', text: JSON.stringify({ language, dish: dish ?? null, note: note || null }) });
   return songsCheck.parse(await callJson({ system: SONGS_SYSTEM, content, schema: songsSchema, maxTokens: 2000 }));
 }
+
+// ---------- 9. order pages ----------
+
+// Finds a restaurant's own page on Zomato or Swiggy with web search limited to
+// that site. Returns the pages the search found (candidates) and the one Claude
+// picked; services/orderPages.js only accepts a pick that is among the
+// candidates, so a made-up link can never get through.
+const ORDER_SITE = { zomato: 'zomato.com', swiggy: 'swiggy.com' };
+// What the restaurant's delivery page looks like on each site.
+const ORDER_PAGE_SHAPE = {
+  zomato: 'https://www.zomato.com/<city>/<restaurant-name-area>',
+  swiggy: 'https://www.swiggy.com/city/<city>/<restaurant-name-area>-rest<number> (the food delivery menu). Table booking pages (with /dineout in the address) are NOT the delivery page: never choose them',
+};
+
+const ORDER_PAGE_SYSTEM = `You find a restaurant's own page on one food delivery site, using web search.
+Search once or twice. Choose the food delivery page for THIS restaurant at THIS location: the same name (small spelling differences are fine) and the same area or city.
+Never choose a list page (search results, "best restaurants", collections, "delivery in ...").
+If none of the results is clearly this restaurant, answer NONE. Guessing is worse than NONE.
+Reply with only the page's full URL exactly as it appeared in the results, or NONE.`;
+
+export async function findOrderPage({ app, name, area, city }) {
+  if (!client) throw new Error('AI is off');
+  const site = ORDER_SITE[app];
+  const messages = [{ role: 'user', content: `Site: ${site}\nDelivery page looks like: ${ORDER_PAGE_SHAPE[app]}\nRestaurant: ${name}\nArea: ${area || 'unknown'}\nCity: ${city || 'unknown'}` }];
+  const candidates = [];
+  let response;
+  // A server-tool turn can pause; carry on once if it does.
+  for (let turn = 0; turn < 2; turn++) {
+    response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 4000,
+      system: ORDER_PAGE_SYSTEM,
+      output_config: { effort: 'low' },
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2, allowed_domains: [site], user_location: { type: 'approximate', country: 'IN', city: city || undefined } }],
+      messages,
+    });
+    for (const block of response.content) {
+      if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
+        for (const result of block.content) if (result.url) candidates.push(result.url);
+      }
+    }
+    if (response.stop_reason !== 'pause_turn') break;
+    messages.push({ role: 'assistant', content: response.content });
+  }
+  const text = response.content
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text)
+    .join(' ');
+  const chosen = /https:\/\/\S+/.exec(text)?.[0]?.replace(/[)\].,>"']+$/, '') ?? null;
+  return { candidates, chosen };
+}

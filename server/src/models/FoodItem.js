@@ -27,6 +27,9 @@ export const foodItemSchema = new mongoose.Schema(
     lng: Number,
     travelMin: Number,
     vibe: String,
+    city: String,
+    phone: String,
+    dial: String,
     links: { zomato: String, swiggy: String, maps: String, directions: String },
   },
   { _id: false }

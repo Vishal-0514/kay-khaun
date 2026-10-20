@@ -13,7 +13,8 @@ export const RELEASES = [
     version: '1.1.0',
     title: 'Talk, go out, snap and listen',
     items: [
-      { icon: 'headset', text: 'Talk to Chatora: a voice chat with a male or female chef who answers out loud.' },
+      { icon: 'home', text: 'A fresh new Home: cook, order, go out or let Chatora pick, all in one tap.' },
+      { icon: 'headset', text: 'Talk to Chatora: a voice chat with a male or female chef who answers out loud, and greets you differently every time.' },
       { icon: 'pin', text: 'Go out: cafés, dinner, live music, a date or a long drive, with drive time right now.' },
       { icon: 'camera', text: 'Snap where you are, and Chatora suggests food and places that fit.' },
       { icon: 'music', text: 'Snap your food, or tap "Song for this meal?", for 3–4 songs in Hindi, English or both.' },

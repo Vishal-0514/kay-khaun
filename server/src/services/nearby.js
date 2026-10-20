@@ -162,6 +162,7 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
       name: p.name,
       restaurant: p.kind,
       area: p.area,
+      city,
       distanceKm: Number(distanceKm.toFixed(1)),
       rating: p.rating,
       ratingCount: p.ratingCount,
@@ -171,6 +172,8 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
       ideas,
       match: Math.min(99, Math.round(52 + 47 * total)),
       reasons: reasons.slice(0, 4),
+      phone: p.phone,
+      dial: p.dial,
       links: { ...orderLinks(p.name, city), maps: p.mapsUrl },
     };
   });
