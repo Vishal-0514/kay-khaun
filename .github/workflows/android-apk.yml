@@ -1,0 +1,55 @@
+# Builds the Android test app (APK) on GitHub's machines instead of Expo's
+# servers, so it doesn't use the Expo plan's monthly builds. Same "preview"
+# settings and the same signing key as Expo builds (fetched from Expo with
+# EXPO_TOKEN), so it installs over the current app and Google sign-in works.
+#
+# Run it: GitHub → Actions → "Android APK" → Run workflow. When it finishes
+# (about 20–30 min), download "kya-khaun-apk" from the run's Artifacts.
+# Needs the repository secret EXPO_TOKEN (expo.dev → Account settings → Access tokens).
+name: Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Check the Expo token is set
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add the EXPO_TOKEN secret first (GitHub → Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - run: npm ci
+
+      - name: Build the APK
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx --yes eas-cli@latest build --platform android --profile preview --local --non-interactive --output "$GITHUB_WORKSPACE/kya-khaun.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kya-khaun-apk
+          path: kya-khaun.apk
+          retention-days: 14
