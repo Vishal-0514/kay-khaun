@@ -74,7 +74,7 @@ const LINES = {
 
 // Things to try, shown as buttons under the greeting (three, shuffled each visit).
 const SUGGESTIONS = {
-  any: ['Something spicy under ₹300', 'What can I cook with what I have?', 'Where should I go out tonight?', 'A really good biryani', 'Something sweet', 'Some chatpata street food', 'Something light and healthy'],
+  any: ['Something spicy under ₹300', 'What can I cook with what I have?', 'Where should I go out tonight?', 'A really good biryani', 'Something sweet', 'Some chatpata street food', 'Something healthy'],
   morning: ['Quick breakfast ideas', 'Something with chai'],
   afternoon: ['A filling lunch under ₹400', 'Quick lunch ideas'],
   evening: ['Evening snacks', 'Dinner ideas for tonight'],

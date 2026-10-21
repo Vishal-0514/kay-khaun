@@ -24,7 +24,7 @@ const BUDGETS = [500, 800, 1200, 2000, 3000, 5000];
 const PEOPLE = [1, 2, 3, 4, 5, 6];
 const MOODS = [
   ['balanced', 'Balanced'],
-  ['light', 'Light'],
+  ['light', 'Healthy'],
   ['comfort', 'Comfort'],
   ['spicy', 'Spicy'],
   ['street', 'Street'],

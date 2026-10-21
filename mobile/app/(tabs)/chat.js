@@ -22,7 +22,7 @@ import { speak, stopSpeaking, useSpeaking, useVoiceSettings } from '../../lib/sp
 import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 
-const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
+const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Healthy veg dinner', 'Biryani around ₹350', 'Something sweet'];
 const BRANCHES = ['order', 'cook', 'out'];
 // The three ways Chatora can help, as cards: icon, tile colours and a line under the name.
 const BRANCH_LOOK = {

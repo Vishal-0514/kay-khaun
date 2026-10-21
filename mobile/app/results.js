@@ -16,7 +16,7 @@ import HeartButton from '../components/HeartButton';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
 
-const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street: 'Street', sweet: 'Sweet' };
+const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Healthy', street: 'Street', sweet: 'Sweet' };
 
 function subtitleFor(source, slip) {
   if (source?.kind === 'mood') return t('{mood} picks near you', { mood: t(MOOD_TITLE[source.label]) });

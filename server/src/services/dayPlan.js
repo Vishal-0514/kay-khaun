@@ -19,7 +19,7 @@ export const MEALS = {
 
 export const DAY_MOODS = {
   balanced: { label: 'Balanced', moods: [] },
-  light: { label: 'Light day', moods: ['light'] },
+  light: { label: 'Healthy day', moods: ['light'] },
   comfort: { label: 'Comfort day', moods: ['comfort'] },
   spicy: { label: 'Spicy day', moods: ['spicy'] },
   street: { label: 'Street food day', moods: ['street'] },

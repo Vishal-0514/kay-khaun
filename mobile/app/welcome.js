@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -24,7 +24,7 @@ const SHEET_HEIGHT = 400;
 const DEMOS = [
   { ask: 'Something spicy under ₹400, in 30 minutes', reply: 'Found 5 picks near you', icon: 'bag' },
   { ask: 'Ghar pe kya banaun? Aloo, pyaaz, dahi hai', reply: '3 recipes from your kitchen', icon: 'pot' },
-  { ask: 'Light veg dinner, jaldi please', reply: 'Top 5, ready in 25 min', icon: 'clock' },
+  { ask: 'Healthy veg dinner, jaldi please', reply: 'Top 5, ready in 25 min', icon: 'clock' },
 ];
 const TYPE_MS = 32; // per character
 const THINK_MS = 900;
@@ -171,9 +171,7 @@ export default function Welcome() {
 
       <View style={[styles.top, { paddingTop: insets.top + space.lg }]}>
         <Animated.View entering={rise(0, 150)} style={styles.brandRow}>
-          <View style={styles.brandMark}>
-            <Text style={styles.brandMarkText}>K</Text>
-          </View>
+          <Image source={require('../assets/icon.png')} style={styles.brandMark} accessibilityIgnoresInvertColors />
           <Text style={styles.brandName}>Kya Khaun?</Text>
         </Animated.View>
         <Reveal delay={250} style={{ marginTop: space.lg }}>
@@ -218,8 +216,7 @@ const styles = StyleSheet.create({
   spark: { position: 'absolute' },
   top: { paddingHorizontal: space.lg },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  brandMark: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
-  brandMarkText: { fontFamily: fonts.displayBold, fontSize: 18, color: colors.maroon, lineHeight: 22 },
+  brandMark: { width: 40, height: 40, borderRadius: 11 },
   brandName: { fontFamily: fonts.display, fontSize: 20, color: colors.cream },
   kicker: { ...type.label, color: '#F4C766', letterSpacing: 1.5 },
   hero: { fontFamily: fonts.display, fontSize: 36, lineHeight: 40, color: colors.cream, marginTop: space.xs },

@@ -24,7 +24,7 @@ const SCAN_OPTION = { id: 'scan', label: 'Scan my fridge' };
 const CRAVING_OPTIONS = [
   { id: 'mood-spicy', label: 'Something spicy' },
   { id: 'mood-comfort', label: 'Comfort food' },
-  { id: 'mood-light', label: 'Something light' },
+  { id: 'mood-light', label: 'Something healthy' },
   { id: 'mood-street', label: 'Street food' },
   { id: 'mood-sweet', label: 'Something sweet' },
   { id: 'dish-biryani', label: 'Biryani' },

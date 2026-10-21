@@ -27,7 +27,7 @@ import { useTips } from '../../lib/tips';
 const MOODS = [
   { id: 'spicy', label: 'Spicy', icon: 'flame', tint: '#FDE3E1', ink: colors.red },
   { id: 'comfort', label: 'Comfort', icon: 'bowl', tint: '#FCEBD0', ink: '#A8670F' },
-  { id: 'light', label: 'Light', icon: 'leaf', tint: '#E3F2E7', ink: colors.green },
+  { id: 'light', label: 'Healthy', icon: 'leaf', tint: '#E3F2E7', ink: colors.green },
   { id: 'street', label: 'Street', icon: 'cart', tint: '#FDE8D6', ink: '#B8501A' },
   { id: 'sweet', label: 'Sweet', icon: 'sweet', tint: '#FBE4EC', ink: '#A92E5A' },
 ];

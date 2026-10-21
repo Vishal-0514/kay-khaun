@@ -105,7 +105,7 @@ export function reasonsFor(d, c, nameHit, hintHit = 0) {
   if (c.moods.includes('spicy') && d.spice >= 4) r.push({ icon: 'flame', text: tr(d.spice === 5 ? 'Fiery, just like you asked' : 'Properly spicy, just like you asked') });
   else {
     const mood = c.moods.find((m) => d.moods.includes(m));
-    if (mood) r.push({ icon: 'bowl', text: tr({ comfort: 'Warm, filling comfort food', light: 'Light and easy on the stomach', street: 'Proper Mumbai street style', sweet: 'Something sweet, as you wanted' }[mood]) });
+    if (mood) r.push({ icon: 'bowl', text: tr({ comfort: 'Warm, filling comfort food', light: 'Healthy and easy on the stomach', street: 'Proper Mumbai street style', sweet: 'Something sweet, as you wanted' }[mood]) });
   }
   if (c.people > 1) r.push({ icon: 'bowl', text: tr(SHAREABLE.has(d.id) && c.people >= 3 ? '₹{total} for {n} of you, good for sharing' : '₹{total} for {n} of you', { total: d.price * c.people, n: c.people }) });
   if (c.budgetMax && d.price <= c.budgetMax) {
