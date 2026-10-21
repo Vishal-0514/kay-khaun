@@ -2,17 +2,16 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import MaroonBand from '../../components/MaroonBand';
 import Icon, { DietMark } from '../../components/Icon';
-import FoodArt from '../../components/FoodArt';
 import PlateRing from '../../components/PlateRing';
 import DishMeta, { isPlace } from '../../components/DishMeta';
 import { useLocationStore } from '../../store/useLocationStore';
-import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SkeletonCard } from '../../components/Skeleton';
 import { WelcomeTips } from '../../components/Tip';
 import { tap } from '../../lib/haptics';
-import { Glow, PressScale, rise, riseUp } from '../../components/Motion';
+import { Glow, PressScale, Reveal, rise, riseUp } from '../../components/Motion';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useChatStore } from '../../store/useChatStore';
 import { orderAgain, useMeStore } from '../../store/useMeStore';
@@ -32,85 +31,30 @@ const MOODS = [
   { id: 'street', label: 'Street', icon: 'cart', tint: '#FDE8D6', ink: '#B8501A' },
   { id: 'sweet', label: 'Sweet', icon: 'sweet', tint: '#FBE4EC', ink: '#A92E5A' },
 ];
-const BUDGET = { low: 300, mid: 500, high: 900 };
-
-// The four big choices, the "more ways" row and the meal shortcuts. Each art
-// name is a drawing in components/FoodArt.js.
-const CHOICES = [
-  { id: 'cook', label: 'Cook at Home', icon: 'pot', art: 'kadai', tint: '#E5F2E3', edge: '#CFE6CB' },
-  { id: 'order', label: 'Order Online', icon: 'bag', art: 'burger', tint: '#FDE5DC', edge: '#F7CFC0' },
-  { id: 'out', label: 'Go Out', icon: 'pin', art: 'coffee', tint: '#ECE6FA', edge: '#D9CEF4' },
-  { id: 'pick', label: 'Just Pick for Me', icon: 'spark', art: 'biryani', tint: '#FFF0CC', edge: '#F8DE9C' },
+// The three ways Chatora helps (same look as the choice cards in Chat).
+const MAIN = [
+  { id: 'cook', label: 'Cook at Home', sub: 'With what you have', icon: 'pot', tint: colors.goldSoft, ink: colors.goldText },
+  { id: 'order', label: 'Order Online', sub: 'Delivered to you', icon: 'bag', tint: colors.redSoft, ink: colors.red },
+  { id: 'out', label: 'Go Out', sub: 'Places near you', icon: 'pin', tint: '#E8EEF7', ink: '#3A5A8C' },
 ];
 const IDEAS = [
-  { id: 'mood', title: 'Snap Your Mood', text: 'Photo your setting and get food ideas', icon: 'camera', art: 'scene', go: '/snap' },
-  { id: 'song', title: 'Snap Your Food, Get Your Song', text: 'Take a food photo and get 3–4 songs', icon: 'music', art: 'noodles', go: '/snap?mode=food' },
-  { id: 'plan', title: 'Plan My Day', text: 'Breakfast to dinner, within your budget', icon: 'calendar', art: 'breakfast', go: '/plan' },
-  { id: 'taste', title: 'Know My Taste', text: 'Picks that learn what you love', icon: 'heart', art: 'masala', go: '/taste' },
+  { id: 'snap', title: 'Snap Your Order', text: 'Snap where you are, get dishes that fit', icon: 'camera', tint: '#FDE8D6', ink: '#B8501A' },
+  { id: 'song', title: 'Snap Your Food, Get Your Song', text: 'A food photo, 3–4 songs for it', icon: 'music', tint: '#FBE4EC', ink: '#A92E5A' },
+  { id: 'plan', title: 'Plan My Day', text: 'Breakfast to dinner, within your budget', icon: 'calendar', tint: '#E3F2E7', ink: colors.green },
+  { id: 'group', title: 'Order for a Group', text: 'Friends, family or office, veg and non-veg', icon: 'people', tint: '#E8EEF7', ink: '#3A5A8C' },
 ];
 const MEALS = [
-  { id: 'breakfast', label: 'Breakfast', ask: 'Breakfast ideas', art: 'chai' },
-  { id: 'lunch', label: 'Lunch', ask: 'Lunch ideas', art: 'rajma' },
-  { id: 'snacks', label: 'Snacks', ask: 'Snack ideas', art: 'samosa' },
-  { id: 'dinner', label: 'Dinner', ask: 'Dinner ideas', art: 'butterChicken' },
+  { id: 'breakfast', label: 'Breakfast', ask: 'Breakfast ideas', icon: 'cup', tint: '#FCEBD0', ink: '#A8670F' },
+  { id: 'lunch', label: 'Lunch', ask: 'Lunch ideas', icon: 'bowl', tint: '#E3F2E7', ink: colors.green },
+  { id: 'snacks', label: 'Snacks', ask: 'Snack ideas', icon: 'snack', tint: '#FDE8D6', ink: '#B8501A' },
+  { id: 'dinner', label: 'Dinner', ask: 'Dinner ideas', icon: 'moon', tint: '#E8EEF7', ink: '#3A5A8C' },
 ];
 
 function timeOfDay() {
   const h = new Date().getHours();
-  if (h < 12) return t('Good morning');
-  if (h < 17) return t('Good afternoon');
-  return t('Good evening');
-}
-
-// Warm light behind the top of Home, with a few soft circles.
-function HeroBackdrop({ height }) {
-  return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height={height} preserveAspectRatio="none" aria-hidden>
-      <Defs>
-        <LinearGradient id="homeHero" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#FFE9C7" />
-          <Stop offset="0.65" stopColor="#FFF4E2" />
-          <Stop offset="1" stopColor={colors.canvas} />
-        </LinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="100%" height={height} fill="url(#homeHero)" />
-      <Circle cx="92%" cy={height * 0.42} r={120} fill="#FFFFFF" opacity={0.55} />
-      <Circle cx="8%" cy={height * 0.1} r={60} fill="#FFD9A0" opacity={0.25} />
-    </Svg>
-  );
-}
-
-// The wordmark: a little chef's hat over "Kya", then "Khaun?" with a swoosh.
-function Wordmark() {
-  return (
-    <View aria-label="Kya Khaun?" role="heading">
-      <Svg width={34} height={26} viewBox="0 0 34 26" style={styles.hat} aria-hidden>
-        <Path d="M9 24 L9 16 C3.5 15 2.5 7.5 8 5.5 C9.5 1.5 15 0.5 17.5 3.5 C20 0.5 25.5 1.5 27 5.5 C32.5 7.5 31.5 15 26 16 L26 24 Z" fill="#FFFFFF" stroke={colors.red} strokeWidth={2} strokeLinejoin="round" />
-        <Path d="M9 19.5 L26 19.5 M14 16 L14 12 M21 16 L21 12" stroke={colors.red} strokeWidth={1.6} strokeLinecap="round" />
-      </Svg>
-      <Text style={styles.brandTop}>Kya</Text>
-      <Text style={styles.brandBottom}>
-        Khaun<Text style={{ color: colors.gold }}>?</Text>
-      </Text>
-      <Svg width={92} height={10} viewBox="0 0 92 10" style={styles.swoosh} aria-hidden>
-        <Path d="M2 7 C30 1 62 1 90 5" stroke={colors.maroon} strokeWidth={3} fill="none" strokeLinecap="round" />
-      </Svg>
-    </View>
-  );
-}
-
-// The hero thali floats gently.
-function FloatingThali({ size }) {
-  const f = useSharedValue(0);
-  useEffect(() => {
-    f.value = withRepeat(withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }), -1, true);
-  }, [f]);
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -6 * f.value }, { rotate: `${-4 + 4 * f.value}deg` }] }));
-  return (
-    <Animated.View style={style}>
-      <FoodArt name="thali" size={size} />
-    </Animated.View>
-  );
+  if (h < 12) return { hello: t('Good morning'), when: t('this morning?') };
+  if (h < 17) return { hello: t('Good afternoon'), when: t('this afternoon?') };
+  return { hello: t('Good evening'), when: t('tonight?') };
 }
 
 export default function Home() {
@@ -121,19 +65,18 @@ export default function Home() {
   const quickPicks = useChatStore((s) => s.quickPicks);
   const occasionPicks = useChatStore((s) => s.occasionPicks);
   const [occasion, setOccasion] = useState(null);
-  const [loadingOccasion, setLoadingOccasion] = useState(false);
+  const [loadingOccasion, setLoadingOccasion] = useState(null); // 'all' or a dish id
   const [topPick, setTopPick] = useState(null);
   const [pickFailed, setPickFailed] = useState(false);
   const [why, setWhy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMood, setLoadingMood] = useState(null);
-  const [busyChoice, setBusyChoice] = useState(null);
-  const hello = timeOfDay();
+  const { hello, when } = timeOfDay();
   const firstName = user?.name?.trim().split(/\s+/)[0];
-  const heroHeight = 250 + insets.top;
+  const bandHeight = 300 + insets.top;
 
-  const prefBudget = BUDGET[user?.preferences?.budget];
-  const budget = slip?.budget ?? prefBudget;
+  const craving = slip?.craving ?? t('Tell me what you feel like');
+  const budget = slip?.budget;
 
   // After an update, "What's new" once. People who haven't seen any tip yet are new: they get the tips instead.
   const tipsSeen = useTips((s) => s.seen);
@@ -205,16 +148,36 @@ export default function Home() {
     setRefreshing(false);
   }
 
-  async function openOccasion() {
-    setLoadingOccasion(true);
+  async function openOccasion(dish) {
+    if (loadingOccasion) return;
+    tap();
+    setLoadingOccasion(dish?.id ?? 'all');
     try {
-      await occasionPicks(occasion);
+      await occasionPicks(occasion, dish);
       router.push('/results');
     } catch (err) {
       notify(t("Couldn't load picks"), errorMessage(err));
     } finally {
-      setLoadingOccasion(false);
+      setLoadingOccasion(null);
     }
+  }
+
+  const ask = (text) => router.push({ pathname: '/chat', params: { ask: text, at: String(Date.now()) } });
+
+  // Order Online starts the chat: Chatora asks what they'd like, veg or non-veg and the budget.
+  function choose(id) {
+    tap();
+    if (id === 'cook') return router.push('/kitchen');
+    if (id === 'out') return ask(t('I want to go out'));
+    return ask(t('I want to order food'));
+  }
+
+  function openIdea(id) {
+    tap();
+    if (id === 'snap') return router.push('/snap');
+    if (id === 'song') return router.push('/snap?mode=food');
+    if (id === 'plan') return router.push('/plan');
+    return router.push('/group');
   }
 
   async function openMood(mood) {
@@ -230,121 +193,141 @@ export default function Home() {
     }
   }
 
-  const ask = (text) => router.push({ pathname: '/chat', params: { ask: text, at: String(Date.now()) } });
-
-  async function choose(id) {
-    tap();
-    if (id === 'cook') return router.push('/kitchen');
-    if (id === 'out') return ask(t('I want to go out'));
-    // "Just pick for me": straight to the best pick. "Order online": all five.
-    if (id === 'pick' && topPick) return router.push(`/dish/${topPick.id}`);
-    setBusyChoice(id);
-    try {
-      await quickPicks();
-      router.push('/results');
-    } catch (err) {
-      notify(t("Couldn't load picks"), errorMessage(err));
-    } finally {
-      setBusyChoice(null);
-    }
-  }
-
   return (
     <ScrollView
       style={styles.root}
       contentContainerStyle={{ paddingBottom: space.xl }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.red} progressViewOffset={insets.top} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.red]} tintColor={colors.gold} progressViewOffset={insets.top} />}
     >
-      <View style={[styles.hero, { height: heroHeight, paddingTop: insets.top + space.sm }]}>
-        <HeroBackdrop height={heroHeight} />
-        <View style={[styles.thali, { top: insets.top + 22 }]} pointerEvents="none">
-          <FloatingThali size={226} />
-          <Svg width={40} height={36} viewBox="0 0 40 36" style={styles.sparks} aria-hidden>
-            <Path d="M6 22 L14 18 M12 8 L18 14 M24 4 L24 12" stroke={colors.red} strokeWidth={3} strokeLinecap="round" />
-          </Svg>
-        </View>
-        <View style={styles.topRow}>
-          <Pressable role="button" style={styles.location} onPress={locate} aria-label={t('Update my location')} hitSlop={8}>
-            <Icon name="pin" size={15} color={colors.red} />
+      <MaroonBand height={bandHeight}>
+        <View style={[styles.topRow, { marginTop: insets.top + space.base }]}>
+          <Pressable role="button" style={styles.location} onPress={locate} aria-label={t("Update my location")} hitSlop={8}>
+            <Icon name="pin" size={18} color={colors.gold} />
             <Text style={styles.locationText} numberOfLines={1}>
               {locationLabel}
             </Text>
           </Pressable>
-          <View style={styles.topButtons}>
-            <PressScale scaleTo={0.88} role="button" aria-label={t('Meal reminders')} onPress={() => router.push('/reminders')} style={styles.roundBtn}>
-              <Icon name="bell" size={20} color={colors.ink} />
-            </PressScale>
-            <PressScale scaleTo={0.88} role="button" aria-label={t('Profile')} onPress={() => router.push('/profile')} style={[styles.roundBtn, styles.avatarBtn]}>
-              {firstName ? <Text style={styles.avatarText}>{firstName[0].toUpperCase()}</Text> : <Icon name="user" size={20} color="#FFFFFF" />}
-            </PressScale>
-          </View>
-        </View>
-        <Animated.View entering={rise(0, 80)} style={styles.brand}>
-          <Text style={styles.hello} numberOfLines={1}>
-            {hello}
-            {firstName ? `, ${firstName}` : ''}
-          </Text>
-          <Wordmark />
-          <Text style={styles.tagline}>{t('Your food decision buddy')}</Text>
-        </Animated.View>
-      </View>
-
-      {/* Ask Chatora: tap the bar to type, the mic or the wave to talk. */}
-      <Animated.View entering={riseUp(0, 200)} style={styles.search}>
-        <View style={styles.micWrap}>
-          <Glow size={58} color={colors.red} />
-          <PressScale scaleTo={0.88} role="button" aria-label={t('Talk to Chatora')} onPress={() => router.push('/talk')} style={styles.mic}>
-            <Icon name="mic" size={22} color="#FFFFFF" />
+          <PressScale scaleTo={0.88} role="button" aria-label={t('Settings')} onPress={() => router.push('/settings')} style={styles.me}>
+            {firstName ? <Text style={styles.meText}>{firstName[0].toUpperCase()}</Text> : <Icon name="user" size={20} color={colors.maroon} />}
           </PressScale>
         </View>
-        <Pressable role="button" aria-label={t('What are you craving?')} style={styles.searchText} onPress={() => router.push({ pathname: '/chat', params: { focus: '1' } })}>
-          <Text style={[styles.searchPlaceholder, slip?.craving && styles.searchValue]} numberOfLines={1}>
-            {slip?.craving ?? t('What are you craving?')}
-          </Text>
-          {budget || slip?.time ? (
-            <Text style={styles.searchMeta} numberOfLines={1}>
-              {[budget ? t('Under ₹{n}', { n: budget }) : null, slip?.time ? t('{n} min', { n: slip.time }) : null].filter(Boolean).join(' · ')}
+        <View style={styles.greeting}>
+          <Animated.View entering={rise(0, 100)} style={styles.helloRow}>
+            <Icon name="moon" size={16} color={colors.gold} />
+            <Text style={styles.hello}>
+              {hello}
+              {firstName ? `, ${firstName}` : ''}
             </Text>
-          ) : null}
+          </Animated.View>
+          <Reveal delay={150}>
+            <Text style={styles.title} role="heading">
+              {t('What are you in the')}{'\n'}{t('mood for')} <Text style={{ color: colors.gold }}>{when}</Text>
+            </Text>
+          </Reveal>
+        </View>
+      </MaroonBand>
+
+      {/* The order slip: what Chatora needs, and the big talk button. */}
+      <Animated.View entering={riseUp(0, 260)} style={[styles.slip, { marginTop: bandHeight - 104 }]}>
+        <Pressable role="button" style={styles.slipFields} onPress={() => router.push('/chat')} aria-label={t("Tell Chatora what you want")}>
+          <View style={[styles.field, styles.fieldTop]}>
+            <Text style={styles.fieldLabel}>{t("Craving")}</Text>
+            <Text style={[styles.fieldValue, !slip?.craving && styles.placeholder]} numberOfLines={1}>
+              {craving}
+            </Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <View style={[styles.field, styles.fieldLeft]}>
+              <Text style={styles.fieldLabel}>{t("Budget")}</Text>
+              <Text style={styles.fieldValue}>{budget ? `₹${budget}` : t('Any')}</Text>
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>{t("Time")}</Text>
+              <Text style={styles.fieldValue}>{slip?.time ? t('{n} min', { n: slip.time }) : t('Any')}</Text>
+            </View>
+          </View>
         </Pressable>
-        <PressScale scaleTo={0.88} role="button" aria-label={t('Voice chat with Chatora')} onPress={() => router.push('/talk')} style={styles.wave} hitSlop={6}>
-          <Icon name="wave" size={22} color={colors.red} />
-        </PressScale>
+        <View style={styles.talk}>
+          <View style={styles.micWrap}>
+            <Glow size={84} color={colors.red} />
+            <PressScale scaleTo={0.9} role="button" aria-label={t("Talk to Chatora")} onPress={() => router.push('/talk')} style={styles.mic}>
+              <Icon name="mic" size={26} color="#FFFFFF" />
+            </PressScale>
+          </View>
+          <Text style={styles.talkText}>{t("Tap to talk")}</Text>
+        </View>
       </Animated.View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.moods}>
-        {MOODS.map((m, i) => (
-          <Animated.View key={m.id} entering={rise(i, 300)}>
-            <PressScale scaleTo={0.92} role="button" aria-label={t('{mood} picks', { mood: t(m.label) })} onPress={() => openMood(m.id)} style={[styles.mood, { backgroundColor: m.tint }]}>
-              {loadingMood === m.id ? <ActivityIndicator size="small" color={m.ink} /> : <Icon name={m.icon} size={16} color={m.ink} strokeWidth={2.2} />}
-              <Text style={[styles.moodLabel, { color: m.ink }]}>{t(m.label)}</Text>
-            </PressScale>
-          </Animated.View>
-        ))}
-      </ScrollView>
-
-      <View style={styles.choices}>
-        {CHOICES.map((c, i) => (
-          <Animated.View key={c.id} entering={rise(i, 380)} style={{ flex: 1 }}>
-            <PressScale scaleTo={0.95} role="button" aria-label={t(c.label)} onPress={() => choose(c.id)} style={[styles.choice, { backgroundColor: c.tint, borderColor: c.edge }]}>
-              <View style={styles.choiceArt}>
-                <FoodArt name={c.art} size={92} />
+      <View style={styles.main}>
+        {MAIN.map((m, i) => (
+          <Animated.View key={m.id} entering={rise(i, 380)} style={{ flex: 1 }}>
+            <PressScale scaleTo={0.95} role="button" aria-label={t(m.label)} onPress={() => choose(m.id)} style={styles.mainCard}>
+              <View style={[styles.mainIcon, { backgroundColor: m.tint }]}>
+                <Icon name={m.icon} size={26} color={m.ink} strokeWidth={1.9} />
               </View>
-              <View style={styles.badge}>
-                {busyChoice === c.id ? <ActivityIndicator size="small" color={colors.red} /> : <Icon name={c.icon} size={16} color={colors.ink} />}
-              </View>
-              <Text style={styles.choiceLabel} numberOfLines={3}>
-                {t(c.label)}
+              <Text style={styles.mainLabel} numberOfLines={2}>
+                {t(m.label)}
               </Text>
-              <View style={styles.choiceGo}>
-                <Icon name="chevron" size={12} color={colors.ink} strokeWidth={2.6} />
-              </View>
+              <Text style={styles.mainSub} numberOfLines={2}>
+                {t(m.sub)}
+              </Text>
             </PressScale>
           </Animated.View>
         ))}
       </View>
 
+      {occasion ? (
+        <Animated.View entering={rise(0, 450)} style={styles.fest}>
+          <PressScale scaleTo={0.99} role="button" aria-label={`${occasion.title}: ${occasion.subtitle}`} onPress={() => openOccasion()} style={styles.festHead}>
+            <View style={styles.festIcon}>
+              {loadingOccasion === 'all' ? <ActivityIndicator color={colors.maroon} /> : <Icon name={occasion.icon} size={24} color={colors.maroon} strokeWidth={2} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.festTag}>{occasion.kind === 'festival' ? t('Festival special') : t('This season')}</Text>
+              <Text style={styles.festTitle}>{occasion.title}</Text>
+              <Text style={styles.festSub} numberOfLines={2}>
+                {occasion.subtitle}
+              </Text>
+            </View>
+            <Icon name="chevron" color={colors.gold} />
+          </PressScale>
+          {occasion.note || occasion.veg ? (
+            <View style={styles.festNote}>
+              <Icon name="leaf" size={14} color={colors.gold} />
+              <Text style={styles.festNoteText}>{occasion.note ?? t('Pure veg picks')}</Text>
+            </View>
+          ) : null}
+          <Text style={styles.festHint}>{t('Tap a dish to see restaurants near you')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.festDishes}>
+            {occasion.dishes.map((dish, i) => (
+              <Animated.View key={dish.id} entering={rise(i, 500)}>
+                <PressScale scaleTo={0.94} role="button" aria-label={t('{dish} near you', { dish: dish.name })} onPress={() => openOccasion(dish)} style={styles.festDish}>
+                  <View style={styles.festDishIcon}>
+                    {loadingOccasion === dish.id ? <ActivityIndicator size="small" color={colors.red} /> : <Icon name={dish.icon} size={18} color={colors.red} strokeWidth={2} />}
+                  </View>
+                  <Text style={styles.festDishText}>{dish.name}</Text>
+                </PressScale>
+              </Animated.View>
+            ))}
+          </ScrollView>
+        </Animated.View>
+      ) : null}
+
       <WelcomeTips style={styles.welcome} />
+
+      <View style={styles.moods}>
+        {MOODS.map((m, i) => (
+          <Animated.View key={m.id} entering={rise(i, 450)}>
+            <PressScale scaleTo={0.88} role="button" aria-label={t('{mood} picks', { mood: t(m.label) })} onPress={() => openMood(m.id)} style={styles.mood}>
+              <View style={[styles.moodCircle, { backgroundColor: m.tint }]}>
+                {loadingMood === m.id ? <ActivityIndicator color={m.ink} /> : <Icon name={m.icon} size={26} color={m.ink} strokeWidth={1.9} />}
+              </View>
+              <Text style={styles.moodLabel}>{t(m.label)}</Text>
+            </PressScale>
+          </Animated.View>
+        ))}
+      </View>
+
 
       <View style={styles.sectionHead}>
         <Text style={type.head} role="heading">
@@ -353,13 +336,10 @@ export default function Home() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ideas}>
         {IDEAS.map((idea, i) => (
-          <Animated.View key={idea.id} entering={rise(i, 480)}>
-            <PressScale scaleTo={0.96} role="button" aria-label={t(idea.title)} onPress={() => router.push(idea.go)} style={styles.idea}>
-              <View style={styles.ideaArt}>
-                <FoodArt name={idea.art} size={112} />
-              </View>
-              <View style={styles.ideaBadge}>
-                <Icon name={idea.icon} size={17} color={colors.red} />
+          <Animated.View key={idea.id} entering={rise(i, 600)}>
+            <PressScale scaleTo={0.96} role="button" aria-label={t(idea.title)} onPress={() => openIdea(idea.id)} style={styles.idea}>
+              <View style={[styles.ideaIcon, { backgroundColor: idea.tint }]}>
+                <Icon name={idea.icon} size={24} color={idea.ink} strokeWidth={1.9} />
               </View>
               <Text style={styles.ideaTitle} numberOfLines={2}>
                 {t(idea.title)}
@@ -379,46 +359,21 @@ export default function Home() {
       </View>
       <View style={styles.meals}>
         {MEALS.map((m, i) => (
-          <Animated.View key={m.id} entering={rise(i, 560)} style={{ flex: 1 }}>
-            <PressScale scaleTo={0.95} role="button" aria-label={t(m.ask)} onPress={() => ask(t(m.ask))} style={styles.meal}>
-              <View style={styles.mealArt}>
-                <FoodArt name={m.art} size={96} />
+          <Animated.View key={m.id} entering={rise(i, 640)} style={{ flex: 1 }}>
+            <PressScale scaleTo={0.94} role="button" aria-label={t(m.ask)} onPress={() => ask(t(m.ask))} style={styles.meal}>
+              <View style={[styles.mealIcon, { backgroundColor: m.tint }]}>
+                <Icon name={m.icon} size={22} color={m.ink} strokeWidth={1.9} />
               </View>
-              <View style={styles.mealFoot}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.mealLabel} numberOfLines={1}>
-                    {t(m.label)}
-                  </Text>
-                  <Text style={styles.mealSub}>{t('Ideas')}</Text>
-                </View>
-              </View>
+              <Text style={styles.mealLabel} numberOfLines={1}>
+                {t(m.label)}
+              </Text>
             </PressScale>
           </Animated.View>
         ))}
       </View>
 
-      {occasion ? (
-        <Animated.View entering={rise(0, 650)}>
-          <PressScale scaleTo={0.98} role="button" aria-label={`${occasion.title}: ${occasion.subtitle}`} onPress={openOccasion} style={styles.special}>
-            <View style={styles.specialIcon}>
-              {loadingOccasion ? <ActivityIndicator color={colors.red} /> : <Icon name={occasion.icon} size={22} color={colors.red} />}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.specialTag}>{t('Season special')}</Text>
-              <Text style={styles.specialTitle}>{t(occasion.title)}</Text>
-              <Text style={type.small} numberOfLines={1}>
-                {t(occasion.subtitle)}
-              </Text>
-            </View>
-            <Icon name="chevron" color={colors.muted} />
-          </PressScale>
-        </Animated.View>
-      ) : null}
-
-      <View style={styles.sectionHead}>
-        <Text style={type.head} role="heading">
-          {t("Chatora's pick for you")}
-        </Text>
+      <Animated.View entering={rise(0, 700)} style={styles.sectionHead}>
+        <Text style={type.head} role="heading">{t("Chatora's pick for you")}</Text>
         <Pressable
           role="button"
           aria-label={t('See all 5 picks')}
@@ -427,67 +382,65 @@ export default function Home() {
             router.push('/results');
           }}
           hitSlop={8}
-          style={styles.seeAll}
         >
-          <Text style={styles.link}>{t('See all 5')}</Text>
-          <Icon name="chevron" size={14} color={colors.ink} strokeWidth={2.4} />
+          <Text style={styles.link}>{t("See all 5")}</Text>
         </Pressable>
-      </View>
+      </Animated.View>
       {topPick ? (
-        <Animated.View entering={rise(0, 700)}>
-          <PressScale scaleTo={0.98} role="button" aria-label={t('{name}, {match}% match. Open details', { name: topPick.name, match: topPick.match })} style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
-            <PlateRing size={72} value={topPick.match / 100}>
-              <Text style={styles.matchValue}>{topPick.match}</Text>
-              <Text style={styles.matchLabel}>{t('% match')}</Text>
-            </PlateRing>
-            <View style={{ flex: 1, gap: 2 }}>
-              <View style={styles.nameRow}>
-                {isPlace(topPick) ? null : <DietMark type={topPick.diet === 'veg' ? 'veg' : 'nonveg'} />}
-                <Text style={styles.pickName} numberOfLines={1}>
-                  {topPick.name}
-                </Text>
-              </View>
-              <Text style={type.small} numberOfLines={1}>
-                {isPlace(topPick) ? topPick.restaurant : `${topPick.restaurant} · ${topPick.distanceKm} km`}
+        <Animated.View entering={rise(0, 760)}>
+        <PressScale scaleTo={0.98} role="button" aria-label={t('{name}, {match}% match. Open details', { name: topPick.name, match: topPick.match })} style={styles.pick} onPress={() => router.push(`/dish/${topPick.id}`)}>
+          <PlateRing size={72} value={topPick.match / 100}>
+            <Text style={styles.matchValue}>{topPick.match}</Text>
+            <Text style={styles.matchLabel}>{t("% match")}</Text>
+          </PlateRing>
+          <View style={{ flex: 1, gap: 2 }}>
+            <View style={styles.nameRow}>
+              {isPlace(topPick) ? null : <DietMark type={topPick.diet === 'veg' ? 'veg' : 'nonveg'} />}
+              <Text style={styles.pickName} numberOfLines={1}>
+                {topPick.name}
               </Text>
-              <DishMeta pick={topPick} />
             </View>
-            <Icon name="chevron" color={colors.muted} />
-          </PressScale>
-          {topPick.reasons?.length ? (
-            <View style={styles.whyWrap}>
-              <Pressable
-                onPress={() => {
-                  tap();
-                  setWhy(!why);
-                }}
-                hitSlop={8}
-                role="button"
-                aria-expanded={why}
-                style={styles.whyButton}
-              >
-                <Icon name="spark" size={14} color={colors.goldText} />
-                <Text style={styles.whyLabel}>{why ? t('Hide why') : t('Why this?')}</Text>
-              </Pressable>
-              {why ? (
-                <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.whyList}>
-                  {topPick.reasons.map((r, i) => (
-                    <View key={i} style={styles.whyRow}>
-                      <View style={styles.whyIcon}>
-                        <Icon name={r.icon} size={14} color={colors.red} />
-                      </View>
-                      <Text style={styles.whyText}>{r.text}</Text>
+            <Text style={type.small} numberOfLines={1}>
+              {isPlace(topPick) ? topPick.restaurant : `${topPick.restaurant} · ${topPick.distanceKm} km`}
+            </Text>
+            <DishMeta pick={topPick} />
+          </View>
+          <Icon name="chevron" color={colors.muted} />
+        </PressScale>
+        {topPick.reasons?.length ? (
+          <View style={styles.whyWrap}>
+            <Pressable
+              onPress={() => {
+                tap();
+                setWhy(!why);
+              }}
+              hitSlop={8}
+              role="button"
+              aria-expanded={why}
+              style={styles.whyButton}
+            >
+              <Icon name="spark" size={14} color={colors.goldText} />
+              <Text style={styles.whyLabel}>{why ? t('Hide why') : t('Why this?')}</Text>
+            </Pressable>
+            {why ? (
+              <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={styles.whyList}>
+                {topPick.reasons.map((r, i) => (
+                  <View key={i} style={styles.whyRow}>
+                    <View style={styles.whyIcon}>
+                      <Icon name={r.icon} size={14} color={colors.red} />
                     </View>
-                  ))}
-                </Animated.View>
-              ) : null}
-            </View>
-          ) : null}
+                    <Text style={styles.whyText}>{r.text}</Text>
+                  </View>
+                ))}
+              </Animated.View>
+            ) : null}
+          </View>
+        ) : null}
         </Animated.View>
       ) : pickFailed ? (
         <View style={[styles.pick, styles.pickError]}>
           <Text style={[type.small, { flex: 1 }]}>{t("Couldn't load your pick.")}</Text>
-          <Pressable role="button" onPress={() => loadTopPick()} hitSlop={8}>
+          <Pressable role="button" onPress={() => loadTopPick()} hitSlop={8} role="button">
             <Text style={styles.link}>{t('Try again')}</Text>
           </Pressable>
         </View>
@@ -496,14 +449,11 @@ export default function Home() {
       )}
 
       {again.length ? (
-        <Animated.View entering={rise(0, 760)}>
+        <Animated.View entering={rise(0, 800)}>
           <View style={styles.sectionHead}>
-            <Text style={type.head} role="heading">
-              {t('Order again')}
-            </Text>
-            <Pressable role="button" onPress={() => router.push('/history')} hitSlop={8} style={styles.seeAll}>
-              <Text style={styles.link}>{t('History')}</Text>
-              <Icon name="chevron" size={14} color={colors.ink} strokeWidth={2.4} />
+            <Text style={type.head} role="heading">{t("Order again")}</Text>
+            <Pressable role="button" onPress={() => router.push('/history')} hitSlop={8}>
+              <Text style={styles.link}>{t("History")}</Text>
             </Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.againRow}>
@@ -538,62 +488,55 @@ export default function Home() {
           </ScrollView>
         </Animated.View>
       ) : null}
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
-  hero: { overflow: 'hidden' },
-  thali: { position: 'absolute', right: -46 },
-  sparks: { position: 'absolute', left: 14, top: 52 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.base },
-  location: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, marginRight: space.md, height: 34, paddingHorizontal: 12, borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.75)', borderWidth: 1, borderColor: '#F5E2C4' },
-  locationText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink, flexShrink: 1 },
-  topButtons: { flexDirection: 'row', gap: space.sm },
-  roundBtn: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: '#F5E2C4' },
-  avatarBtn: { backgroundColor: colors.red, borderColor: colors.red, ...shadow.red },
-  avatarText: { fontFamily: fonts.displayBold, fontSize: 18, color: '#FFFFFF', marginTop: 2 },
-  brand: { paddingHorizontal: space.lg, marginTop: space.md, maxWidth: '62%' },
-  hello: { fontFamily: fonts.bold, fontSize: 12, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.goldText, marginBottom: 2 },
-  hat: { marginLeft: 2, marginBottom: -8 },
-  brandTop: { fontFamily: fonts.displayBold, fontSize: 40, lineHeight: 42, color: colors.maroon },
-  brandBottom: { fontFamily: fonts.displayBold, fontSize: 40, lineHeight: 42, color: colors.red, marginTop: -6 },
-  swoosh: { marginTop: -4, marginLeft: 4 },
-  tagline: { fontFamily: fonts.semibold, fontSize: 14, color: colors.body, marginTop: 6 },
-  search: { marginHorizontal: space.base, marginTop: -18, height: 64, paddingLeft: 8, paddingRight: 10, borderRadius: radius.full, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: space.md, borderWidth: 1, borderColor: '#F3E6D2', ...shadow.lifted, shadowOpacity: 0.14 },
-  micWrap: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  mic: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', ...shadow.red },
-  searchText: { flex: 1, justifyContent: 'center', minHeight: 48 },
-  searchPlaceholder: { fontFamily: fonts.medium, fontSize: 16, color: colors.muted },
-  searchValue: { fontFamily: fonts.semibold, color: colors.ink },
-  searchMeta: { fontFamily: fonts.medium, fontSize: 12, color: colors.goldText, marginTop: 1 },
-  wave: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.redSoft },
-  moods: { paddingHorizontal: space.base, paddingTop: space.md, gap: space.sm },
-  mood: { height: 36, paddingHorizontal: 14, borderRadius: radius.full, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  moodLabel: { fontFamily: fonts.bold, fontSize: 13 },
-  choices: { flexDirection: 'row', gap: 8, marginHorizontal: space.base, marginTop: space.base },
-  choice: { height: 158, borderRadius: 22, borderWidth: 1, overflow: 'hidden', paddingHorizontal: 9, paddingBottom: 10, justifyContent: 'flex-end' },
-  choiceArt: { position: 'absolute', top: -14, left: 0, right: 0, alignItems: 'center' },
-  badge: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 6, ...shadow.card },
-  choiceLabel: { fontFamily: fonts.bold, fontSize: 13, lineHeight: 16, color: colors.ink, paddingRight: 8 },
-  choiceGo: { position: 'absolute', right: 7, bottom: 11 },
-  welcome: { marginHorizontal: space.base, marginTop: space.lg },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: space.base, marginTop: space.lg },
-  seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  link: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg },
+  location: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, marginRight: space.md },
+  locationText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cream },
+  greeting: { paddingHorizontal: space.lg, marginTop: space.lg },
+  helloRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  hello: { fontFamily: fonts.regular, fontSize: 14, color: colors.creamMuted },
+  title: { fontFamily: fonts.display, fontSize: 30, lineHeight: 35, color: colors.cream, marginTop: 6 },
+  slip: { marginHorizontal: space.base, minHeight: 144, flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.cardLg, overflow: 'hidden', ...shadow.lifted },
+  slipFields: { flex: 1 },
+  field: { flex: 1, paddingHorizontal: 20, paddingVertical: 12, justifyContent: 'center' },
+  fieldTop: { borderBottomWidth: 1, borderStyle: 'dashed', borderBottomColor: colors.hair },
+  fieldRow: { flex: 1, flexDirection: 'row' },
+  fieldLeft: { borderRightWidth: 1, borderStyle: 'dashed', borderRightColor: colors.hair },
+  fieldLabel: { ...type.label, fontSize: 11 },
+  fieldValue: { fontFamily: fonts.semibold, fontSize: 17, color: colors.ink, marginTop: 2 },
+  placeholder: { color: colors.muted, fontFamily: fonts.medium, fontSize: 16 },
+  talk: { width: 96, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center', gap: space.sm },
+  micWrap: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
+  mic: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.red, alignItems: 'center', justifyContent: 'center', ...shadow.red },
+  talkText: { fontFamily: fonts.bold, fontSize: 12, color: colors.goldText },
+  me: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
+  meText: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, color: colors.maroon },
+  main: { flexDirection: 'row', gap: space.sm, marginHorizontal: space.base, marginTop: space.md },
+  mainCard: { flex: 1, minHeight: 132, padding: space.md, borderRadius: radius.card, backgroundColor: colors.surface, alignItems: 'center', ...shadow.card },
+  mainIcon: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  mainLabel: { fontFamily: fonts.bold, fontSize: 14, lineHeight: 18, color: colors.ink, textAlign: 'center', marginTop: space.sm },
+  mainSub: { fontFamily: fonts.regular, fontSize: 11, lineHeight: 14, color: colors.muted, textAlign: 'center', marginTop: 2 },
   ideas: { paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.sm, gap: space.md },
-  idea: { width: 150, height: 214, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair, overflow: 'hidden', ...shadow.card },
-  ideaArt: { height: 112, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  ideaBadge: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginTop: -19, marginLeft: 12, borderWidth: 1, borderColor: colors.hair, ...shadow.card },
-  ideaTitle: { fontFamily: fonts.bold, fontSize: 14, lineHeight: 18, color: colors.ink, marginTop: 6, marginHorizontal: 12 },
-  ideaText: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.muted, marginTop: 3, marginHorizontal: 12 },
-  meals: { flexDirection: 'row', gap: 8, marginHorizontal: space.base, marginTop: space.md },
-  meal: { borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair, overflow: 'hidden', ...shadow.card },
-  mealArt: { height: 78, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'flex-end', overflow: 'hidden' },
-  mealFoot: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 9, paddingVertical: 8 },
-  mealLabel: { fontFamily: fonts.bold, fontSize: 12, color: colors.ink },
-  mealSub: { fontFamily: fonts.regular, fontSize: 11, color: colors.muted },
+  idea: { width: 158, minHeight: 172, padding: space.base, borderRadius: radius.card, backgroundColor: colors.surface, ...shadow.card },
+  ideaIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  ideaTitle: { fontFamily: fonts.bold, fontSize: 14, lineHeight: 18, color: colors.ink, marginTop: space.md },
+  ideaText: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16, color: colors.muted, marginTop: 3 },
+  meals: { flexDirection: 'row', gap: space.sm, marginHorizontal: space.base, marginTop: space.md },
+  meal: { paddingVertical: space.md, borderRadius: 18, backgroundColor: colors.surface, alignItems: 'center', gap: 6, ...shadow.card },
+  mealIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  mealLabel: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink },
+  moods: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginTop: space.lg },
+  mood: { width: 62, alignItems: 'center', gap: 6 },
+  moodCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
+  moodLabel: { fontFamily: fonts.medium, fontSize: 13, color: colors.ink },
+  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginHorizontal: space.lg, marginTop: space.lg },
+  link: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   pick: { marginHorizontal: space.base, marginTop: space.md, minHeight: 100, padding: space.base, flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderRadius: radius.card, ...shadow.card },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pickError: { minHeight: 64, justifyContent: 'space-between' },
@@ -605,13 +548,23 @@ const styles = StyleSheet.create({
   whyRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   whyIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
   whyText: { flex: 1, fontFamily: fonts.medium, fontSize: 14, lineHeight: 20, color: colors.ink },
+  welcome: { marginHorizontal: space.base, marginTop: space.lg },
   pickName: { flex: 1, fontFamily: fonts.semibold, fontSize: 17, color: colors.ink },
   matchValue: { fontFamily: fonts.display, fontSize: 22, lineHeight: 24, color: colors.ink },
   matchLabel: { fontFamily: fonts.semibold, fontSize: 10, color: colors.muted },
-  special: { marginHorizontal: space.base, marginTop: space.lg, padding: space.base, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: radius.card, backgroundColor: colors.redSoft },
-  specialIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  specialTag: { ...type.label, fontSize: 11, color: colors.red },
-  specialTitle: { fontFamily: fonts.display, fontSize: 18, lineHeight: 22, color: colors.ink },
+  fest: { marginHorizontal: space.base, marginTop: space.base, paddingVertical: space.base, borderRadius: radius.cardLg, backgroundColor: colors.maroon, overflow: 'hidden', ...shadow.lifted },
+  festHead: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: space.base },
+  festIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
+  festTag: { ...type.label, fontSize: 11, color: colors.gold },
+  festTitle: { fontFamily: fonts.displayBold, fontSize: 21, lineHeight: 25, color: colors.cream },
+  festSub: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.creamMuted },
+  festNote: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginLeft: space.base, marginTop: space.md, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, backgroundColor: 'rgba(232,169,58,0.16)' },
+  festNoteText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.gold },
+  festHint: { fontFamily: fonts.medium, fontSize: 12, color: colors.creamMuted, marginHorizontal: space.base, marginTop: space.md },
+  festDishes: { paddingHorizontal: space.base, paddingTop: space.sm, gap: space.sm },
+  festDish: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, paddingLeft: 5, paddingRight: 14, borderRadius: radius.full, backgroundColor: colors.surface },
+  festDishIcon: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
+  festDishText: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
   againRow: { paddingHorizontal: space.base, paddingTop: space.md, paddingBottom: space.xs, gap: space.md },
   againCard: { width: 200, padding: 14, gap: 2, borderRadius: radius.card, backgroundColor: colors.surface, ...shadow.card },
   againName: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink },

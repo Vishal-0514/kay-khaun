@@ -22,6 +22,26 @@ export function tr(text, vars) {
 }
 
 const HI = {
+  'Group of {n}': '{n} लोगों का ग्रुप',
+  'Vrat-friendly: no grains, onion or garlic': 'व्रत के लिए: बिना अनाज, प्याज़ या लहसुन',
+  // Chatora asks what it needs
+  "What are you in the mood for?": "आज क्या खाने का मन है?",
+  "Veg or non-veg?": "वेज या नॉन-वेज?",
+  "What's your budget?": "आपका बजट कितना है?",
+  "Something spicy": "कुछ तीखा",
+  "Comfort food": "आरामदायक खाना",
+  "Something light": "कुछ हल्का",
+  "Street food": "स्ट्रीट फ़ूड",
+  "Something sweet": "कुछ मीठा",
+  "Biryani": "बिरयानी",
+  "Veg": "वेज",
+  "Non-veg": "नॉन-वेज",
+  "Anything is fine": "कुछ भी चलेगा",
+  "Under ₹200": "₹200 से कम",
+  "Under ₹300": "₹300 से कम",
+  "Under ₹500": "₹500 से कम",
+  "Under ₹1000": "₹1000 से कम",
+  "Any budget": "कोई भी बजट",
   // Songs for your meal
   "I couldn't spot any food in that photo. Try a photo of your plate.": "इस फ़ोटो में खाना नहीं दिखा। अपनी प्लेट की फ़ोटो लें।",
   "I couldn't find songs I'm sure about this time. Try again.": "इस बार पक्के गाने नहीं मिले। फिर से कोशिश करें।",

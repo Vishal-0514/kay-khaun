@@ -31,7 +31,7 @@ app.use('/api/auth', authLimiter);
 app.use(languageMiddleware);
 // Fridge photos are bigger than everything else, so only that route gets a bigger limit.
 app.use('/api/cook/scan', express.json({ limit: '6mb' }));
-app.use('/api/mood/snap', express.json({ limit: '6mb' }));
+app.use('/api/mood', express.json({ limit: '6mb' }));
 app.use('/api/songs', express.json({ limit: '6mb' }));
 app.use(express.json({ limit: '100kb' }));
 

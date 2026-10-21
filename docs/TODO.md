@@ -1,6 +1,6 @@
 # Kya Khaun? — To-do list
 
-Last updated: 20 October 2026
+Last updated: 21 October 2026
 
 Order agreed: 1 New features → 2 Experience polish → 3 Store rules → 4–7 Blueprint features → 8 Reliability → 9 Security → 10 Launch preparation.
 Phases 1–3 are done and pushed (latest commit `95bc586`).
@@ -91,6 +91,17 @@ Plan page: https://claude.ai/artifact/7UpJaXKGgZHUCmF53X3hvs
 - [x] Update dependencies and fix known vulnerabilities (server: 0 known issues)
 - Chat auto-delete: skipped (owner's decision). People can delete chats, or their account, any time
 - [x] Security + QA review (docs/security.md): secrets, routes, tokens, load test, links, keyboard. Re-run before release
+
+### Redesign (owner's feedback, October 2026): done in app 1.2.0
+- [x] Home back to the earlier maroon design, with icons instead of food pictures; three main ways: Cook at Home, Order Online (opens the chat), Go Out
+- [x] No taste profile: the taste screen, "Remember my taste" and Know My Taste are gone; Profile is now a small Settings screen (account, name, language, voice, Saved, History, reminders, privacy, delete account)
+- [x] Chatora asks what it needs: craving, then veg or non-veg, then budget. Sweets and drinks never ask veg/non-veg and are never non-veg
+- [x] Festival first: 22 festivals to Diwali 2027 + 4 seasons, 4–7 dishes each (English + Hindi); tap a dish for restaurants
+- [x] Cooking mode: ingredient checklist, steps read aloud (voice on/off), voice commands, applause, dish photo, achievements, My Kitchen (photos stay on the phone)
+- [x] Order for a Group; Plan My Day up to ₹5,000
+- [x] Snap Your Order: snap the place, say veg or non-veg, get dishes, tap for restaurants
+- [x] Zomato/Swiggy open the restaurant's own page; Call restaurant button; bars never suggested
+- [ ] **Every year:** extend the festival calendar in `server/src/data/occasions.js` (it runs to Diwali 2027)
 
 ### Phase 10: Launch preparation
 - [ ] Sign in with Apple (required by Apple because the app offers Google sign-in)

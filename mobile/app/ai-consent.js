@@ -14,7 +14,7 @@ import { PAGES, openPage } from '../lib/pages';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
 
-// "Chatora uses AI": asked once after "Your taste", and again from Profile.
+// "Chatora uses AI": asked once after signing up, and again from Settings.
 // App Store and Play want people told plainly what goes to an AI company, and
 // asked first. Saying no keeps the app working in basic mode.
 
@@ -69,7 +69,7 @@ export default function AiConsent() {
           <View style={styles.facts}>
             <Text style={styles.fact}>• {t('Anthropic uses it only to write the reply, and does not train its AI on it.')}</Text>
             <Text style={styles.fact}>• {t('AI can be wrong. Always check allergens with the restaurant, and tap Report on any reply that looks wrong.')}</Text>
-            <Text style={styles.fact}>• {t('You can change this any time in Profile → Use AI.')}</Text>
+            <Text style={styles.fact}>• {t('You can change this any time in Settings → Use AI.')}</Text>
           </View>
           <Pressable role="link" onPress={() => openPage(PAGES.privacy)} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
             <Text style={styles.link}>{t('Read our privacy policy')}</Text>

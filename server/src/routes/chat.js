@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { aiQuota, perUser } from '../middleware/security.js';
 import { validateBody } from '../utils/validate.js';
-import { sendMessageSchema, quickPicksSchema } from '../validators/chatValidators.js';
-import { sendMessage, listConversations, deleteConversation, clearConversations, getConversation, quickPicks, status, occasionNow } from '../controllers/chatController.js';
+import { sendMessageSchema, quickPicksSchema, groupPicksSchema } from '../validators/chatValidators.js';
+import { sendMessage, listConversations, deleteConversation, clearConversations, getConversation, quickPicks, groupPicks, status, occasionNow } from '../controllers/chatController.js';
 
 const router = Router();
 
@@ -15,5 +15,6 @@ router.delete('/', requireAuth, clearConversations);
 router.get('/:id', requireAuth, getConversation);
 router.delete('/:id', requireAuth, deleteConversation);
 router.post('/quick-picks', requireAuth, perUser(150), validateBody(quickPicksSchema), quickPicks);
+router.post('/group-picks', requireAuth, perUser(60), validateBody(groupPicksSchema), groupPicks);
 
 export default router;

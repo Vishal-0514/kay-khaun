@@ -11,7 +11,7 @@ import { RELEASES, versionLabel } from '../lib/version';
 import { colors, fonts, radius, shadow, space, type } from '../lib/theme';
 import { t } from '../lib/i18n';
 
-// "What's new": shown once after an update, and any time from Profile.
+// "What's new": shown once after an update, and any time from Settings.
 export default function WhatsNew() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

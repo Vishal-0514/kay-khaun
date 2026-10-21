@@ -19,7 +19,7 @@ export default function HeartButton({ pick, onDark = false, size = onDark ? 44 :
       const now = await toggleSave(pick);
       if (now) success();
       else tap();
-      toast(now ? t('Saved — find it in Profile → Saved') : t('Removed from Saved'), now ? 'heart' : 'check');
+      toast(now ? t('Saved — find it in Settings → Saved') : t('Removed from Saved'), now ? 'heart' : 'check');
     } catch (err) {
       notify(t("Couldn't save"), errorMessage(err));
     }

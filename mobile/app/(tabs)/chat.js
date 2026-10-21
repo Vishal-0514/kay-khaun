@@ -23,7 +23,6 @@ import { colors, fonts, radius, shadow, space, type } from '../../lib/theme';
 import { t } from '../../lib/i18n';
 
 const SUGGESTIONS = ['Something spicy under ₹400, quick', 'Light veg dinner', 'Biryani around ₹350', 'Something sweet'];
-const DIET = { veg: 'Veg', nonveg: 'Non-veg', egg: 'Egg' };
 const BRANCHES = ['order', 'cook', 'out'];
 // The three ways Chatora can help, as cards: icon, tile colours and a line under the name.
 const BRANCH_LOOK = {
@@ -31,7 +30,9 @@ const BRANCH_LOOK = {
   cook: { icon: 'pot', tint: colors.goldSoft, ink: colors.goldText, sub: 'From your fridge' },
   out: { icon: 'pin', tint: '#E8EEF7', ink: '#3A5A8C', sub: 'Places near you' },
 };
-const optionIcon = (id) => (id === 'scan' ? 'camera' : id === 'order' ? 'bag' : id === 'out' || id.startsWith('out-') ? 'pin' : 'pot');
+// Icons for Chatora's answer buttons (its questions about cravings, veg or non-veg, and budget).
+const OPTION_ICON = { scan: 'camera', order: 'bag', 'diet-veg': 'leaf', 'diet-nonveg': 'flame', 'diet-any': 'check', 'mood-spicy': 'flame', 'mood-comfort': 'bowl', 'mood-light': 'leaf', 'mood-street': 'cart', 'mood-sweet': 'sweet', 'dish-biryani': 'pot' };
+const optionIcon = (id) => OPTION_ICON[id] ?? (id.startsWith('budget-') ? 'rupee' : id === 'out' || id.startsWith('out-') ? 'pin' : 'pot');
 
 function Avatar() {
   return (
@@ -43,7 +44,7 @@ function Avatar() {
 
 // "Under ₹1200 for 4", "Under ₹300 each", "About ₹500".
 function budgetText(slip) {
-  const base = t(slip.budgetFromProfile ? 'About ₹{n}' : 'Under ₹{n}', { n: slip.budget });
+  const base = t('Under ₹{n}', { n: slip.budget });
   if (!slip.people) return base;
   return slip.budgetPerPerson ? t('{budget} each', { budget: base }) : t('{budget} for {n}', { budget: base, n: slip.people });
 }
@@ -52,7 +53,6 @@ function budgetText(slip) {
 function OrderSlip({ slip }) {
   const rows = [
     ['Craving', slip.craving],
-    ['Diet', t(DIET[slip.diet])],
     ['People', slip.people ? t('{n} of you', { n: slip.people }) : null],
     ['Budget', slip.budget && slip.branch !== 'cook' ? budgetText(slip) : null],
     ['Time', slip.time ? t('{n} min', { n: slip.time }) : null],
@@ -116,7 +116,7 @@ export default function Chat() {
     onError: (message) => setHint(message),
   });
 
-  // Chatora's voice: Listen on any reply, and "Read replies aloud" (Profile)
+  // Chatora's voice: Listen on any reply, and "Read replies aloud" (Settings)
   // speaks new replies. The full voice conversation is its own screen (/talk).
   const voiceAvailable = useVoiceSettings((s) => s.available);
   const readAloud = useVoiceSettings((s) => s.readAloud);

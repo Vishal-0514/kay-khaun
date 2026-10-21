@@ -62,7 +62,7 @@ export const useVoiceSettings = create((set, get) => ({
   },
 }));
 
-// The language Chatora listens for and speaks: the choice in Profile, or the app's language.
+// The language Chatora listens for and speaks: the choice in Settings, or the app's language.
 export const voiceLanguage = () => useVoiceSettings.getState().language ?? currentLang();
 
 // ---------- playback ----------

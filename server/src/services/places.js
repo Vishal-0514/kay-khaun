@@ -10,6 +10,17 @@
 const KEY = process.env.GOOGLE_MAPS_API_KEY;
 export const placesEnabled = Boolean(KEY);
 
+// Bars, pubs and clubs are never suggested (Kya Khaun is about food, and the
+// app's age rating stays low). Google often lists a bar as a plain "Restaurant",
+// so the name is checked too ("... Restobar", "Restaurant & Bar").
+const ALCOHOL = /\b(bars?|pubs?|gastropub|brewpub|night ?club|brewery|taproom|liquor|wine|cocktails?|restobar|resto ?bar|lounge|tavern|beer)\b/i;
+// Bars that only serve food, or drinks without alcohol.
+const SOBER_BAR = /\b(juice|salad|snack|chocolate|dessert|ice ?cream|sandwich|chaat|coffee|protein|smoothie|shake|milk|sizzler|tea|chai)\s+bars?\b|\bbar-?b-?q\b|\bbarbe(que|cue)\b/gi;
+export function isAlcoholPlace(p) {
+  const text = `${p.kind ?? ''} | ${p.name ?? ''}`.replace(SOBER_BAR, '');
+  return ALCOHOL.test(text);
+}
+
 const ENDPOINT = 'https://places.googleapis.com/v1/places:searchText';
 const FIELDS = [
   'places.id',

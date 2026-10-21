@@ -54,6 +54,9 @@ const shapes = {
   stop: [['rect', { x: 6.5, y: 6.5, width: 11, height: 11, rx: 2 }]],
   search: [['circle', { cx: 11, cy: 11, r: 6.5 }], ['path', 'M16 16l4.5 4.5']],
   phoneCall: [['path', 'M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z']],
+  snack: [['path', 'M12 4.5l8 14H4z'], ['path', 'M8.5 14.5h7M10.3 11h3.4']],
+  mute: [['path', 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z'], ['path', 'M16 9.5l5 5M21 9.5l-5 5']],
+  trophy: [['path', 'M7 4h10v5a5 5 0 0 1-10 0z'], ['path', 'M7 6H4.5a2.5 2.5 0 0 0 3 3.5M17 6h2.5a2.5 2.5 0 0 1-3 3.5M12 14v3M8.5 20h7M10 17h4']],
   bell: [['path', 'M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z'], ['path', 'M10 21h4']],
   calendar: [['rect', { x: 4, y: 5.5, width: 16, height: 15, rx: 2.5 }], ['path', 'M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2M14 14h2M8 17h2']],
 };

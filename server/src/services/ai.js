@@ -108,7 +108,7 @@ Slots — report only what the latest message adds or changes; use null / [] for
 - moods: any of ${MOODS.join(', ')} the message implies.
 - cuisines: any of ${CUISINES.join(', ')} the message names or clearly implies.
 - dishWords: specific dishes or ingredients they mention, lowercase English ("biryani", "paneer").
-- diet: "veg", "nonveg" or "egg" only if stated or implied by a dish (chicken = nonveg).
+- diet: "veg", "nonveg" or "egg" only if stated or implied by a dish (chicken = nonveg). Fasting food (vrat, upvas, Navratri, Ekadashi) = "veg". Sweets, desserts and drinks are never "nonveg": leave diet null for them.
 - budgetMax: their limit in rupees for this meal. budgetStrict: true for "under / max / se kam / ke andar", false for "around / about / tak".
 - people: how many are eating if they say ("hum 4 log", "for two", "family of 5" = 5), else null.
 - budgetPerPerson: true if the budget is per person ("300 each", "per head"), false if it is for the whole group, null when no group or no budget.
@@ -461,4 +461,50 @@ export async function findOrderPage({ app, name, area, city }) {
     .join(' ');
   const chosen = /https:\/\/\S+/.exec(text)?.[0]?.replace(/[)\].,>"']+$/, '') ?? null;
   return { candidates, chosen };
+}
+
+// ---------- 10. Snap Your Order ----------
+
+// A photo of where someone is → dishes that fit the place, half veg and half
+// non-veg, so the app can show the right half the moment they say which they eat.
+const DISH_ICONS = ['bowl', 'pot', 'snack', 'sweet', 'cup', 'flame', 'leaf'];
+const orderDishSchema = strictObject({
+  name: { type: 'string' },
+  hindi: { type: 'string' },
+  diet: { type: 'string', enum: ['veg', 'nonveg', 'egg'] },
+  icon: { type: 'string', enum: DISH_ICONS },
+  why: { type: 'string' },
+});
+const snapOrderSchema = strictObject({
+  usable: { type: 'boolean' },
+  summary: { type: 'string' },
+  language: { type: 'string', enum: LANGUAGES },
+  dishes: { type: 'array', items: orderDishSchema },
+});
+const snapOrderCheck = z.object({
+  usable: z.boolean(),
+  summary: z.string().max(160),
+  language: z.enum(LANGUAGES),
+  dishes: z
+    .array(z.object({ name: z.string().min(1).max(50), hindi: z.string().min(1).max(50), diet: z.enum(['veg', 'nonveg', 'egg']), icon: z.enum(DISH_ICONS), why: z.string().min(1).max(110) }))
+    .max(10),
+});
+
+const SNAP_ORDER_SYSTEM = `Someone using the Kya Khaun? food app in India took a photo of where they are and wants to ORDER food that fits the moment. Look at the SETTING only.
+- usable: false if the photo shows no real-world setting (a screenshot, a document, a blank frame) or anything inappropriate; then summary "" and dishes [].
+- summary: one short, neutral line about the setting, starting "Looks like…" ("Looks like a rainy evening at home"), in the language of their note (English if none). Never describe people or claim to know how they feel.
+- dishes: exactly 8 dishes people commonly order in India that suit this setting, time of day and weather: 4 with diet "veg" and 4 with diet "nonveg" (an egg dish may be "egg" and counts on the non-veg side). Sweets, desserts and drinks are always "veg". Popular, easy to find on Zomato or Swiggy. No alcohol, ever.
+  - name: the usual English/Hinglish menu name ("Paneer tikka roll"), hindi: the same name in Devanagari.
+  - icon: bowl (curries, rice, noodles), pot (biryani, thali, gravy), snack (rolls, samosa, fries, sandwiches), sweet (desserts), cup (drinks, chai, coffee, shakes), flame (tandoori, grills, spicy), leaf (salads, light food).
+  - why: at most 12 words tying the dish to the setting, in the summary's language.`;
+
+export async function snapOrder({ image, mediaType, note }) {
+  const content = [
+    { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+    { type: 'text', text: note ? `Their note: ${note}` : 'No note.' },
+  ];
+  const out = snapOrderCheck.parse(await callJson({ system: SNAP_ORDER_SYSTEM, content, schema: snapOrderSchema, maxTokens: 2000 }));
+  // Sweets and drinks are veg, whatever the model said.
+  const SWEET = /dessert|cake|ice ?cream|kulfi|halwa|kheer|jamun|rasmalai|shake|lassi|chai|coffee|juice|falooda|brownie|pastry/i;
+  return { ...out, dishes: out.dishes.map((d) => (d.icon === 'sweet' || d.icon === 'cup' || SWEET.test(d.name) ? { ...d, diet: 'veg' } : d)) };
 }

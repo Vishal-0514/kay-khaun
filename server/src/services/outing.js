@@ -1,4 +1,4 @@
-import { searchPlaces } from './places.js';
+import { searchPlaces, isAlcoholPlace } from './places.js';
 import { driveTimes } from './routes.js';
 import { effectiveCriteria } from './ranking.js';
 import { PRICE, km } from './nearby.js';
@@ -20,7 +20,6 @@ export const OUTINGS = {
   drive: { label: 'Long drive', query: ['scenic viewpoint', 'highway dhaba'], radius: 50000, minKm: 15, maxKm: 90, outdoor: true },
 };
 export const OUTING_IDS = Object.keys(OUTINGS);
-const ALCOHOL = /\b(bar|pub|night ?club|brewery|brewpub|liquor|wine|cocktail)\b/i;
 export const OUTING_OPTIONS = OUTING_IDS.map((id) => ({ id: `out-${id}`, label: OUTINGS[id].label }));
 
 // What to type into Google: their cuisine and diet shape dinner and date searches.
@@ -53,7 +52,7 @@ export async function outingPicks(slots, prefs, { lat, lng }, { weather = null, 
   const nameOf = (p) => p.name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const found = lists
     .flat()
-    .filter((p) => p.lat != null && !ALCOHOL.test(p.kind) && !seen.has(p.id) && !seen.has(nameOf(p)) && seen.add(p.id) && seen.add(nameOf(p)))
+    .filter((p) => p.lat != null && !isAlcoholPlace(p) && !seen.has(p.id) && !seen.has(nameOf(p)) && seen.add(p.id) && seen.add(nameOf(p)))
     .map((p, i) => ({ p, i, straightKm: km(lat, lng, p.lat, p.lng) }))
     .filter(({ straightKm }) => straightKm <= o.maxKm && straightKm >= (o.minKm ?? 0));
 

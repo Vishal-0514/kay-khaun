@@ -12,7 +12,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 const TABS = {
   home: { label: 'Home', icon: 'home' },
   chat: { label: 'Chat', icon: 'chat' },
-  profile: { label: 'Profile', icon: 'user' },
 };
 
 // Short red line over the active tab: it draws itself out from the centre when
@@ -67,7 +66,6 @@ export default function TabsLayout() {
     <Tabs tabBar={(props) => <TabBar {...props} />} screenOptions={{ headerShown: false, animation: 'shift', sceneStyle: { backgroundColor: colors.canvas } }}>
       <Tabs.Screen name="home" />
       <Tabs.Screen name="chat" />
-      <Tabs.Screen name="profile" />
     </Tabs>
   );
 }

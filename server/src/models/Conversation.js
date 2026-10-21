@@ -43,9 +43,11 @@ const conversationSchema = new mongoose.Schema(
       moods: [String],
       cuisines: [String],
       dishWords: [String],
+      // veg | nonveg | egg | any ('any' = they said either is fine)
       diet: { type: String, default: null },
       budgetMax: { type: Number, default: null },
       budgetStrict: { type: Boolean, default: null },
+      budgetAny: { type: Boolean, default: null }, // they said any budget is fine
       // Group orders: how many are eating, and whether budgetMax is per person.
       people: { type: Number, default: null },
       budgetPerPerson: { type: Boolean, default: null },
@@ -58,6 +60,9 @@ const conversationSchema = new mongoose.Schema(
       drink: { type: String, default: null },
       // Go Out: what kind of outing (services/outing.js).
       outing: { type: String, default: null },
+      // The question Chatora just asked (craving | diet | budget), so a short
+      // answer like "anything" is understood.
+      asking: { type: String, default: null },
     },
     messages: [messageSchema],
   },

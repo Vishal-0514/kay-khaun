@@ -48,7 +48,7 @@ export default function Saved() {
   const header = (
     <MaroonBand height={bandHeight}>
       <View style={[styles.header, { marginTop: insets.top + space.base }]}>
-        <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))} />
+        <IconButton name="back" label={t("Back")} onDark onPress={() => (router.canGoBack() ? router.back() : router.replace('/settings'))} />
         <View style={{ flex: 1 }}>
           <Text style={styles.title} role="heading">
             {t("Saved")}

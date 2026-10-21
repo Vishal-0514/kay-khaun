@@ -20,7 +20,12 @@ const MOOD_TITLE = { spicy: 'Spicy', comfort: 'Comfort', light: 'Light', street:
 
 function subtitleFor(source, slip) {
   if (source?.kind === 'mood') return t('{mood} picks near you', { mood: t(MOOD_TITLE[source.label]) });
-  if (source?.kind === 'pick') return t('Based on your taste profile');
+  if (source?.kind === 'pick') return t("Chatora's top picks near you");
+  if (source?.kind === 'group') {
+    const g = source.group;
+    const mix = g.veg >= g.people ? t('all veg') : g.veg ? t('{veg} veg, {nonveg} non-veg', { veg: g.veg, nonveg: g.nonveg }) : t('non-veg');
+    return [t('For {n} people', { n: g.people }), mix, g.total ? t('about ₹{n} in all', { n: g.total.toLocaleString('en-IN') }) : null].filter(Boolean).join(' · ');
+  }
   if (source?.kind === 'occasion') return t('{name} near you', { name: source.label });
   if (!slip) return t('Order in');
   return [slip.craving, slip.budget && t('under ₹{n}', { n: slip.budget }), slip.time && t('{n} min', { n: slip.time })].filter(Boolean).join(' · ');
@@ -53,7 +58,7 @@ export default function Results() {
             <Text style={styles.title} role="heading">
               {t('Top {n} for you', { n: picks.length || 5 })}
             </Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
+            <Text style={styles.subtitle} numberOfLines={2}>
               {subtitleFor(source, slip)}
             </Text>
           </View>

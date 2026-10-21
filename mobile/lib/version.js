@@ -10,11 +10,23 @@ import * as SecureStore from 'expo-secure-store';
 
 export const RELEASES = [
   {
+    version: '1.2.0',
+    title: 'Festivals, cooking and groups',
+    items: [
+      { icon: 'home', text: 'A cleaner Home: cook at home, order online or go out, in one tap.' },
+      { icon: 'chat', text: 'No set-up: Chatora just asks veg or non-veg and your budget when it needs to.' },
+      { icon: 'spark', text: 'Festival specials: what people eat for each festival. Tap a dish to see restaurants near you.' },
+      { icon: 'pot', text: 'Cooking mode: Chatora reads each step aloud (switch it off any time), then snap your dish for My Kitchen and earn achievements.' },
+      { icon: 'people', text: 'Order for a Group: friends, family or office, veg and non-veg, within a budget each.' },
+      { icon: 'camera', text: 'Snap Your Order: snap where you are, say veg or non-veg, and get dishes that fit.' },
+      { icon: 'phoneCall', text: 'Zomato and Swiggy open the restaurant itself, and you can call the restaurant in one tap.' },
+    ],
+  },
+  {
     version: '1.1.0',
     title: 'Talk, go out, snap and listen',
     items: [
-      { icon: 'home', text: 'A fresh new Home: cook, order, go out or let Chatora pick, all in one tap.' },
-      { icon: 'headset', text: 'Talk to Chatora: a voice chat with a male or female chef who answers out loud, and greets you differently every time.' },
+      { icon: 'headset', text: 'Talk to Chatora: a voice chat with a male or female chef who answers out loud.' },
       { icon: 'pin', text: 'Go out: cafés, dinner, live music, a date or a long drive, with drive time right now.' },
       { icon: 'camera', text: 'Snap where you are, and Chatora suggests food and places that fit.' },
       { icon: 'music', text: 'Snap your food, or tap "Song for this meal?", for 3–4 songs in Hindi, English or both.' },

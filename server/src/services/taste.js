@@ -2,24 +2,25 @@ import Activity from '../models/Activity.js';
 import Saved from '../models/Saved.js';
 import { tr } from '../i18n.js';
 
-// Taste learning. What someone opens, orders, saves or marks "Not for me"
-// becomes a gentle nudge in the ranking: liked dishes and cuisines rise,
-// "Not for me" sinks. Recent actions count more (they fade over ~a month).
-// Nothing is learned or used while "Remember my taste" is off.
+// Taste. Kya Khaun no longer keeps a taste profile or learns from what people
+// do (owner's decision, Oct 2026): Chatora asks veg / non-veg and budget in the
+// chat when it needs them. prefsOf and tasteOf stay so callers don't change;
+// the learning code below is kept, switched off, in case it's wanted again.
+const LEARNING = false;
 
 const WEIGHT = { opened: 0.3, ordered: 1, not_for_me: -2.5 };
 const SAVE_WEIGHT = 1.2;
 const HALF_LIFE_DAYS = 30;
 const LOOKBACK = 300;
 
-// The saved taste profile, or nothing when memory is off.
-export const prefsOf = (user) => (user.memoryEnabled ? user.preferences?.toObject?.() ?? user.preferences ?? {} : {});
+// No saved taste profile any more: always empty.
+export const prefsOf = () => ({});
 
 // Squash a running score into -1..1 so one tap nudges and a habit counts.
 const squash = (map) => Object.fromEntries(Object.entries(map).map(([k, v]) => [k, Math.tanh(v / 2.5)]));
 
 export async function learnedFor(user) {
-  if (!user.memoryEnabled) return null;
+  if (!LEARNING || !user.memoryEnabled) return null;
   const [acts, saved] = await Promise.all([
     Activity.find({ user: user._id, kind: { $in: Object.keys(WEIGHT) } })
       .sort({ createdAt: -1 })

@@ -51,6 +51,19 @@ export const useChatStore = create((set, get) => ({
 
   // Snap My Mood: a photo of where they are → a new chat with dishes and places.
   // Returns { unusable, message } when the photo isn't of a place.
+  // Snap Your Order: a photo of where they are → { summary, dishes } (half veg, half non-veg).
+  async snapOrder(shot) {
+    const { data } = await api.post('/mood/order', { image: shot.base64, mediaType: shot.mediaType });
+    return data;
+  },
+
+  // Restaurants near you for one dish (from Snap Your Order).
+  async dishPicks(name, diet) {
+    const { data } = await api.post('/chat/quick-picks', { dishName: name, diet: diet ?? 'any', location: await located() });
+    set({ picks: data.picks, picksSource: { kind: 'occasion', label: name } });
+    return data.picks;
+  },
+
   async snapMood(shot, note) {
     const { data } = await api.post('/mood/snap', { image: shot.base64, mediaType: shot.mediaType, ...(note ? { note } : {}), location: await located() });
     if (data.unusable) return data;
@@ -76,9 +89,17 @@ export const useChatStore = create((set, get) => ({
   },
 
   // The festival / season special on Home.
-  async occasionPicks(occasion) {
-    const { data } = await api.post('/chat/quick-picks', { occasion: occasion.id, location: where() });
-    set({ picks: data.picks, picksSource: { kind: 'occasion', label: occasion.title } });
+  // With a dish: restaurants near you that serve it ("Sabudana khichdi near you").
+  async occasionPicks(occasion, dish) {
+    const { data } = await api.post('/chat/quick-picks', { occasion: occasion.id, dish: dish?.id, location: where() });
+    set({ picks: data.picks, picksSource: { kind: 'occasion', label: dish?.name ?? occasion.title } });
+    return data.picks;
+  },
+
+  // Order for a Group: places for everyone ({ people, veg, budgetPerHead, kind, cuisine }).
+  async groupPicks(group) {
+    const { data } = await api.post('/chat/group-picks', { ...group, location: where() });
+    set({ picks: data.picks, picksSource: { kind: 'group', label: 'group', group: data.group } });
     return data.picks;
   },
 

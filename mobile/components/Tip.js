@@ -27,7 +27,7 @@ const STEPS = [
   { icon: 'mic', title: 'Tell Chatora a craving', text: 'Speak or type in any language, like "kuch teekha, 400 ke andar".' },
   { icon: 'flame', title: 'Or just tap a mood', text: 'Spicy, Comfort, Light, Street or Sweet: five picks in one tap.' },
   { icon: 'bag', title: 'Order where you already do', text: 'Kya Khaun helps you decide. You order on Zomato or Swiggy as usual.' },
-  { icon: 'heart', title: 'It learns your taste', text: 'Save what you love and say "Not for me" to the rest. Your picks get better.' },
+  { icon: 'phoneCall', title: 'Order or call in one tap', text: 'Open the restaurant on Zomato or Swiggy, or call them straight from Kya Khaun.' },
 ];
 
 // Home's welcome guide for someone new: four short steps, shown once.

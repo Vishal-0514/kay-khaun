@@ -5,8 +5,8 @@ import { recommend } from '../services/ranking.js';
 import { nearbyPicks } from '../services/nearby.js';
 import { placesEnabled } from '../services/places.js';
 import { prefsOf, tasteOf } from '../services/taste.js';
-import { currentOccasion, findOccasion } from '../data/occasions.js';
-import { tr } from '../i18n.js';
+import { currentOccasion, findOccasion, occasionSlots } from '../data/occasions.js';
+import { currentLang, tr } from '../i18n.js';
 import { suggestRecipes } from '../services/cooking.js';
 import { findIngredientsInText, labelOf, normalizeAll } from '../data/pantry.js';
 import { contextFacts, contextFor, drinkLabel, withHints } from '../services/context.js';
@@ -18,11 +18,60 @@ const BRANCH_OPTIONS = [
   { id: 'out', label: 'Go out' },
 ];
 const SCAN_OPTION = { id: 'scan', label: 'Scan my fridge' };
+
+// Ordering: Chatora asks only what it doesn't know yet, one thing at a time:
+// what they feel like, then veg or non-veg, then the budget.
+const CRAVING_OPTIONS = [
+  { id: 'mood-spicy', label: 'Something spicy' },
+  { id: 'mood-comfort', label: 'Comfort food' },
+  { id: 'mood-light', label: 'Something light' },
+  { id: 'mood-street', label: 'Street food' },
+  { id: 'mood-sweet', label: 'Something sweet' },
+  { id: 'dish-biryani', label: 'Biryani' },
+];
+const DIET_OPTIONS = [
+  { id: 'diet-veg', label: 'Veg' },
+  { id: 'diet-nonveg', label: 'Non-veg' },
+  { id: 'diet-any', label: 'Anything is fine' },
+];
+const BUDGET_OPTIONS = [
+  { id: 'budget-200', label: 'Under ₹200' },
+  { id: 'budget-300', label: 'Under ₹300' },
+  { id: 'budget-500', label: 'Under ₹500' },
+  { id: 'budget-1000', label: 'Under ₹1000' },
+  { id: 'budget-any', label: 'Any budget' },
+];
+// A short answer to the question just asked: "anything", "koi bhi", "doesn't matter".
+const ANY_ANSWER = /(^|[^a-z])(any|anything|either|both|dono|koi bhi|kuch bhi|chalega|doesn'?t matter|no preference|no budget|any budget|whatever)([^a-z]|$)/i;
+
+// Sweets, desserts and drinks: never ask veg or non-veg, and never show meat.
+const SWEET = /sweet|dessert|mithai|meetha|halwa|kheer|jamun|rasmalai|rasgulla|kulfi|ice ?cream|cake|pastry|jalebi|ladoo|laddu|barfi|peda|shrikhand|payasam|falooda|brownie|waffle|donut|chocolate|shake|lassi|chai|coffee|juice|smoothie/i;
+export function isSweetish(slots) {
+  if (slots.moods?.includes('sweet') || slots.cuisines?.includes('Desserts')) return true;
+  const words = [slots.craving, ...(slots.dishWords ?? [])].filter(Boolean).join(' ');
+  return Boolean(words) && SWEET.test(words) && !/chicken|mutton|fish|prawn|egg|keema|meat/i.test(words);
+}
+
+// The diet to search with: sweets are always veg; "anything" means no filter.
+export function searchDiet(slots) {
+  if (isSweetish(slots)) return 'veg';
+  return slots.diet && slots.diet !== 'any' ? slots.diet : null;
+}
+
+const hasFoodWish = (slots) => Boolean(slots.craving || slots.moods?.length || slots.cuisines?.length || slots.dishWords?.length || slots.drink);
+
+// What to ask next before showing picks, or null when there's enough to search.
+export function nextOrderQuestion(slots) {
+  if (!hasFoodWish(slots)) return { asking: 'craving', text: tr('What are you in the mood for?'), options: CRAVING_OPTIONS };
+  if (!slots.diet && !isSweetish(slots)) return { asking: 'diet', text: tr('Veg or non-veg?'), options: DIET_OPTIONS };
+  if (!slots.budgetMax && !slots.budgetAny) return { asking: 'budget', text: tr("What's your budget?"), options: BUDGET_OPTIONS };
+  return null;
+}
 const HISTORY_TURNS = 8;
 
 // New values from this message override the slip; "avoid" and the kitchen only ever grow.
 function mergeSlots(slots, intent) {
-  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetPerPerson', 'people', 'timeMax', 'branch', 'drink', 'outing']) {
+  for (const key of ['craving', 'diet', 'budgetMax', 'budgetStrict', 'budgetAny', 'budgetPerPerson', 'people', 'timeMax', 'branch', 'drink', 'outing']) {
     if (intent[key] !== null && intent[key] !== undefined) slots[key] = intent[key];
   }
   for (const key of ['moods', 'cuisines', 'dishWords']) {
@@ -33,14 +82,13 @@ function mergeSlots(slots, intent) {
   }
 }
 
-function slipView(slots, user) {
-  const p = prefsOf(user);
-  const budget = slots.budgetMax ?? { low: 300, mid: 500, high: 900 }[p.budget] ?? null;
+function slipView(slots) {
+  const budget = slots.budgetMax ?? null;
   return {
     craving: slots.craving || [...(slots.moods ?? []), ...(slots.cuisines ?? [])].slice(0, 2).join(', ') || null,
-    diet: slots.diet ?? p.diet ?? null,
+    diet: searchDiet(slots) ?? slots.diet ?? null,
     budget,
-    budgetFromProfile: !slots.budgetMax && Boolean(budget),
+    budgetFromProfile: false,
     people: slots.people > 1 ? slots.people : null,
     budgetPerPerson: slots.people > 1 && slots.budgetMax ? Boolean(slots.budgetPerPerson) : null,
     time: slots.timeMax ?? null,
@@ -100,7 +148,7 @@ async function readMessage(text, conv, user) {
   if (aiAllowedFor(user)) {
     try {
       const history = conv.messages.slice(-HISTORY_TURNS).map((m) => ({ role: m.role, text: m.text }));
-      const intent = await understand({ text, history, slip: slipView(conv.slots.toObject(), user) });
+      const intent = await understand({ text, history, slip: slipView(conv.slots.toObject()) });
       return { ...intent, ingredients: normalizeAll(intent.ingredients).map((i) => i.id), source: 'ai' };
     } catch (err) {
       console.error('Claude could not read the message, using keywords:', err.message);
@@ -122,7 +170,7 @@ async function describePicks(result, { text, intent, conv, user, ctx }) {
     return await explainPicks({
       text,
       language: intent.language,
-      slip: slipView(conv.slots.toObject(), user),
+      slip: slipView(conv.slots.toObject()),
       picks: result.picks,
       relaxed: result.relaxed,
       userName: user.name,
@@ -142,7 +190,7 @@ async function describeRecipes(recipes, { text, intent, conv, user, ctx }) {
     return await explainRecipes({
       text,
       language: intent.language,
-      haveLabels: slipView(conv.slots.toObject(), user).ingredients,
+      haveLabels: slipView(conv.slots.toObject()).ingredients,
       recipes,
       userName: user.name,
       taste: prefsOf(user),
@@ -172,7 +220,7 @@ async function describeOutings(result, { text, intent, conv, user, ctx }) {
     return await explainOutings({
       text,
       language: intent.language,
-      slip: slipView(conv.slots.toObject(), user),
+      slip: slipView(conv.slots.toObject()),
       outing: result.outing,
       picks: result.picks,
       userName: user.name,
@@ -189,7 +237,7 @@ async function describeOutings(result, { text, intent, conv, user, ctx }) {
 // ctx: the drink and weather (services/context.js); looked up here when not given.
 export async function findPicks(slots, user, location, ctx) {
   const taste = await tasteOf(user);
-  slots = withHints(slots, ctx ?? (await contextFor(slots, location)));
+  slots = withHints({ ...slots, diet: searchDiet(slots) }, ctx ?? (await contextFor(slots, location)));
   if (placesEnabled && location) {
     try {
       const result = await nearbyPicks(slots, taste, location);
@@ -205,7 +253,7 @@ export function toPublic(conv, user) {
   return {
     id: conv._id,
     title: conv.title,
-    slip: slipView(conv.slots, user),
+    slip: slipView(conv.slots),
     messages: conv.messages.map((m) => ({ id: m._id, role: m.role, text: m.text, kind: m.kind, options: m.options, picks: m.picks, recipes: m.recipes, outings: m.outings, at: m.createdAt })),
     updatedAt: conv.updatedAt,
   };
@@ -219,7 +267,14 @@ export async function sendMessage(req, res) {
 
   const intent = await readMessage(text, conv, req.user);
   conv.messages.push({ role: 'user', text });
+  const asked = conv.slots.asking;
+  if (asked === 'diet' && !intent.diet && ANY_ANSWER.test(text)) intent.diet = 'any';
+  if (asked === 'budget' && !intent.budgetMax && ANY_ANSWER.test(text)) intent.budgetAny = true;
+  if (intent.budgetMax) intent.budgetAny = false;
+  // Picking a craving from the buttons ("Something sweet") counts as a wish even without Claude.
+  if (asked === 'craving' && !intent.craving && !intent.moods?.length && intent.aboutFood !== false) intent.craving = text.slice(0, 60);
   mergeSlots(conv.slots, intent);
+  conv.slots.asking = null;
   if (conv.title === 'New chat' && conv.slots.craving) conv.title = conv.slots.craving.slice(0, 40).replace(/^\p{Ll}/u, (c) => c.toUpperCase());
   if (conv.title === 'New chat' && conv.slots.branch === 'cook') conv.title = 'Cooking at home';
   if (conv.title === 'New chat' && conv.slots.branch === 'out') conv.title = OUTINGS[conv.slots.outing] ? `Going out: ${OUTINGS[conv.slots.outing].label}` : 'Going out';
@@ -235,7 +290,7 @@ export async function sendMessage(req, res) {
   if (!intent.aboutFood && !hasWish) {
     reply = { kind: 'info', text: intent.reply ?? backupText.offTopic };
   } else if (!slots.branch) {
-    reply = { kind: 'question', text: intent.reply ?? backupText.ask(slipView(slots, req.user).craving), options: BRANCH_OPTIONS };
+    reply = { kind: 'question', text: intent.reply ?? backupText.ask(slipView(slots).craving), options: BRANCH_OPTIONS };
   } else if (slots.branch === 'out') {
     if (!slots.outing) {
       reply = { kind: 'question', text: intent.reply ?? backupText.askOuting, options: OUTING_OPTIONS };
@@ -268,6 +323,10 @@ export async function sendMessage(req, res) {
         reply = { kind: 'recipes', text: words.message };
       }
     }
+  } else if (nextOrderQuestion(slots)) {
+    const q = nextOrderQuestion(slots);
+    conv.slots.asking = q.asking;
+    reply = { kind: 'question', text: q.text, options: q.options };
   } else {
     const result = await findPicks(slots, req.user, location, ctx);
     if (!result.picks.length) {
@@ -346,17 +405,68 @@ export async function getConversation(req, res) {
 // One-tap picks without a chat: Home's mood circles and "Chatora's pick".
 // Home's mood circles, Chatora's pick, and the festival / season special.
 export async function quickPicks(req, res) {
-  const { mood, occasion, location } = req.body;
+  const { mood, occasion, dish, dishName, diet, location } = req.body;
   const special = occasion ? findOccasion(occasion) : null;
-  const slots = special ? { ...special.slots, branch: 'order' } : { moods: mood ? [mood] : [], branch: 'order' };
+  // A festival dish ("Sabudana khichdi") or any dish by name finds restaurants that serve it.
+  const slots = special
+    ? { ...occasionSlots(special, dish), branch: 'order' }
+    : dishName
+      ? { craving: dishName, dishWords: [dishName.toLowerCase()], diet: diet && diet !== 'any' ? diet : null, moods: [], cuisines: [], branch: 'order' }
+      : { moods: mood ? [mood] : [], branch: 'order' };
   const result = await findPicks(slots, req.user, location);
   res.json({ success: true, picks: result.picks, relaxed: result.relaxed });
 }
 
-// Today's festival or season special for Home, or null.
+// Order for a Group: places that suit everyone. All veg → pure veg places; a
+// mixed group → places with both (no filter). The budget is per person.
+const GROUP_QUERY = { friends: 'restaurant for groups of friends', family: 'family restaurant', office: 'restaurant for office group lunch', party: 'party restaurant for groups' };
+export function groupSlots({ people, veg, budgetPerHead, kind = 'friends', cuisine }) {
+  return {
+    branch: 'order',
+    people,
+    budgetMax: budgetPerHead ?? null,
+    budgetPerPerson: true,
+    budgetStrict: false,
+    diet: veg >= people ? 'veg' : null,
+    cuisines: cuisine ? [cuisine] : [],
+    moods: [],
+    dishWords: [],
+    hintQuery: cuisine ? null : GROUP_QUERY[kind],
+    hintWords: [],
+    hintMoods: [],
+    hintCuisines: [],
+    craving: tr('Group of {n}', { n: people }),
+  };
+}
+
+export async function groupPicks(req, res) {
+  const { people, veg, budgetPerHead, location } = req.body;
+  // No weather or drink hints here: the group search says what to look for.
+  const result = await findPicks(groupSlots(req.body), req.user, location, {});
+  res.json({
+    success: true,
+    picks: result.picks,
+    group: { people, veg, nonveg: people - veg, budgetPerHead: budgetPerHead ?? null, total: budgetPerHead ? budgetPerHead * people : null },
+  });
+}
+
+// Today's festival (or the season) for Home, with the dishes people eat for it, or null.
 export function occasionNow(req, res) {
   const o = currentOccasion();
-  res.json({ success: true, occasion: o && { id: o.id, title: tr(o.title), subtitle: tr(o.subtitle), icon: o.icon } });
+  const hi = currentLang() === 'hi';
+  res.json({
+    success: true,
+    occasion: o && {
+      id: o.id,
+      kind: o.kind,
+      title: hi ? o.hiTitle ?? o.title : o.title,
+      subtitle: hi ? o.hiSubtitle ?? o.subtitle : o.subtitle,
+      icon: o.icon,
+      note: o.note ? tr(o.note) : null,
+      veg: o.diet === 'veg',
+      dishes: (o.dishes ?? []).map((x) => ({ id: x.id, name: hi ? x.hi : x.name, icon: x.icon })),
+    },
+  });
 }
 
 // Lets the app show whether Chatora is running on Claude.

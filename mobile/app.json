@@ -3,7 +3,7 @@
     "name": "Kya Khaun?",
     "slug": "kya-khaun",
     "scheme": "kyakhaun",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -41,8 +41,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Kya Khaun uses your photos to spot the ingredients in your kitchen.",
-          "cameraPermission": "Kya Khaun uses the camera to spot the ingredients in your fridge."
+          "photosPermission": "Kya Khaun uses a photo you choose to spot ingredients, suggest food for where you are, or keep a picture of a dish you cooked in My Kitchen on your phone.",
+          "cameraPermission": "Kya Khaun uses the camera to spot ingredients in your fridge, suggest food for where you are, or take a photo of a dish you cooked for My Kitchen."
         }
       ],
       [
@@ -54,7 +54,7 @@
       [
         "expo-speech-recognition",
         {
-          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating.",
+          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating, or say \"next\" while you cook.",
           "speechRecognitionPermission": "Kya Khaun turns what you say into text so Chatora can understand your craving.",
           "androidSpeechServicePackages": [
             "com.google.android.googlequicksearchbox"
@@ -71,7 +71,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating.",
+          "microphonePermission": "Kya Khaun uses the microphone so you can tell Chatora what you feel like eating, or say \"next\" while you cook.",
           "enableBackgroundPlayback": false
         }
       ],

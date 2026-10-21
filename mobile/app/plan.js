@@ -20,7 +20,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { ReportLink } from '../components/ReportSheet';
 import { press, success, tap } from '../lib/haptics';
 
-const BUDGETS = [500, 800, 1200, 2000];
+const BUDGETS = [500, 800, 1200, 2000, 3000, 5000];
 const PEOPLE = [1, 2, 3, 4, 5, 6];
 const MOODS = [
   ['balanced', 'Balanced'],
@@ -205,7 +205,7 @@ export default function Plan() {
           </View>
           <Text style={[type.label, { marginTop: space.base }]}>{settings.people > 1 ? t('Day budget per person') : t('Day budget')}</Text>
           <View style={styles.chips}>
-            {/* The budget from their taste profile joins the list in order. */}
+            {/* A budget the server chose (or a saved day's) joins the list in order. */}
             {[...new Set([...BUDGETS, ...(budget ? [budget] : [])])].sort((a, b) => a - b).map((b) => (
               <Chip key={b} label={rupees(b)} on={budget === b} disabled={loading} onPress={() => remake({ budget: b })} />
             ))}

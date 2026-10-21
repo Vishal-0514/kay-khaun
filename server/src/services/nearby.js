@@ -1,4 +1,4 @@
-import { searchPlaces } from './places.js';
+import { searchPlaces, isAlcoholPlace } from './places.js';
 import { effectiveCriteria } from './ranking.js';
 import { learnedNudge } from './taste.js';
 import { tr } from '../i18n.js';
@@ -121,7 +121,7 @@ export async function nearbyPicks(slots, prefs, { lat, lng, city }, { limit = 5 
   const places = await searchPlaces({ lat, lng, query, radius });
 
   const scored = places
-    .filter((p) => p.lat != null)
+    .filter((p) => p.lat != null && !isAlcoholPlace(p))
     .map((p, i) => {
       const distanceKm = km(lat, lng, p.lat, p.lng);
       const price = PRICE[p.priceLevel] ?? null;

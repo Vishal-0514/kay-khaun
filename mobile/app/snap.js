@@ -35,13 +35,11 @@ const MODES = [
 
 const COPY = {
   mood: {
-    prompt: "Can't decide? Show me where you are",
-    promptText: 'Snap the table, the room or the view. Chatora suggests food and places that fit.',
-    title: 'Snap my mood',
-    sub: 'Add a line if you like: who you’re with, what you’re drinking, what you feel like.',
-    placeholder: 'e.g. "drinking chai, want something fun"',
-    button: 'Find ideas',
-    working: 'Reading the setting…',
+    prompt: 'Snap where you are',
+    promptText: 'A café, your desk, the beach or home. Chatora suggests dishes that fit the moment.',
+    title: 'Snap your order',
+    sub: 'Snap a photo, then tell me: veg or non-veg?',
+    working: 'Reading your photo…',
   },
   food: {
     prompt: 'Snap your food, get your song',
@@ -63,11 +61,19 @@ function ScanLine() {
   return <Animated.View pointerEvents="none" style={[styles.scanLine, animated]} />;
 }
 
+const DIETS = [
+  { id: 'veg', label: 'Veg', mark: colors.vegMark },
+  { id: 'nonveg', label: 'Non-veg', mark: colors.nonvegMark },
+  { id: 'any', label: 'Both', mark: colors.goldText },
+];
+const fitsDiet = (dish, diet) => diet === 'any' || (diet === 'veg' ? dish.diet === 'veg' : dish.diet !== 'veg');
+
 export default function Snap() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const aiOff = useAuthStore((s) => s.user?.aiConsent === false);
-  const snapMood = useChatStore((s) => s.snapMood);
+  const snapOrder = useChatStore((s) => s.snapOrder);
+  const dishPicks = useChatStore((s) => s.dishPicks);
   const findSongs = useSongStore((s) => s.find);
   const params = useLocalSearchParams();
   const [mode, setMode] = useState(params.mode === 'food' ? 'food' : 'mood');
@@ -77,6 +83,10 @@ export default function Snap() {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState(null);
+  const [order, setOrder] = useState(null); // { summary, dishes } from the photo
+  const [diet, setDiet] = useState(null); // veg | nonveg | any
+  const [opening, setOpening] = useState(null); // dish being looked up
+  const hindi = currentLang() === 'hi';
   const talk = useVoice({ onFinal: (said) => setNote(said), onError: (message) => setHint(message) });
 
   function chooseMode(id) {
@@ -90,16 +100,59 @@ export default function Snap() {
 
   async function takePhoto(source) {
     if (aiOff) {
-      notify(t('Snap My Mood uses AI'), t('Turn on "Use AI" in Profile to use it, or tell Chatora in words.'));
+      notify(t('Snap uses AI'), t('Turn on "Use AI" in Settings to use it, or tell Chatora in words.'));
       return;
     }
     setHint(null);
     try {
       const picked = await pickKitchenPhoto(source);
-      if (picked) setShot(picked);
+      if (!picked) return;
+      setShot(picked);
+      // Snap Your Order starts reading straight away, while they answer veg or non-veg.
+      if (mode === 'mood') readOrder(picked);
     } catch (err) {
       notify(err.code === 'PERMISSION' ? t('Allow access') : t("Couldn't open the camera"), err.code === 'PERMISSION' ? t('{reason} Turn it on in your phone settings.', { reason: err.message }) : err.message);
     }
+  }
+
+  async function readOrder(picked) {
+    setOrder(null);
+    setBusy(true);
+    try {
+      const data = await snapOrder(picked);
+      if (data.unusable) setHint(data.message);
+      else setOrder(data);
+    } catch (err) {
+      setHint(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function chooseDiet(id) {
+    tap();
+    setDiet(id);
+  }
+
+  async function openDish(dish) {
+    if (opening) return;
+    tap();
+    setOpening(dish.name);
+    try {
+      await dishPicks(dish.name, diet === 'any' ? dish.diet : diet);
+      router.push('/results');
+    } catch (err) {
+      notify(t("Couldn't load picks"), errorMessage(err));
+    } finally {
+      setOpening(null);
+    }
+  }
+
+  function snapAgain() {
+    tap();
+    setShot(null);
+    setOrder(null);
+    setHint(null);
   }
 
   async function findIdeas() {
@@ -113,10 +166,6 @@ export default function Snap() {
         const data = await findSongs({ image: shot.base64, mediaType: shot.mediaType, language, ...(note.trim() ? { note: note.trim() } : {}) });
         if (data.unusable) setHint(data.message);
         else router.replace('/songs');
-      } else {
-        const data = await snapMood(shot, note.trim());
-        if (data.unusable) setHint(data.message);
-        else router.replace('/chat');
       }
     } catch (err) {
       setHint(errorMessage(err));
@@ -152,6 +201,7 @@ export default function Snap() {
                   <View style={styles.overlay}>
                     <ActivityIndicator color={colors.gold} size="large" />
                     <Text style={styles.overlayText}>{t(copy.working)}</Text>
+                    {mode === 'mood' ? <Text style={styles.overlaySub}>{t('Meanwhile, veg or non-veg?')}</Text> : null}
                   </View>
                 ) : null}
               </>
@@ -193,25 +243,81 @@ export default function Snap() {
             </View>
           ) : null}
 
+          {mode === 'mood' ? (
+            <>
+              <Text style={styles.ask}>{t('Veg or non-veg?')}</Text>
+              <View style={styles.diets} role="radiogroup" aria-label={t('Veg or non-veg?')}>
+                {DIETS.map((d) => (
+                  <PressScale key={d.id} scaleTo={0.94} role="radio" aria-checked={diet === d.id} onPress={() => chooseDiet(d.id)} style={[styles.diet, diet === d.id && styles.dietOn]}>
+                    <View style={[styles.dietMark, { borderColor: d.mark }]}>
+                      <View style={[styles.dietDot, { backgroundColor: d.mark }]} />
+                    </View>
+                    <Text style={[styles.dietText, diet === d.id && styles.dietTextOn]}>{t(d.label)}</Text>
+                  </PressScale>
+                ))}
+              </View>
+
+              {order ? (
+                <Animated.View entering={rise(0, 0)}>
+                  <Text style={styles.summary}>{order.summary}</Text>
+                  {diet ? (
+                    order.dishes
+                      .filter((dish) => fitsDiet(dish, diet))
+                      .map((dish, i) => (
+                        <Animated.View key={dish.name} entering={rise(i, 80)}>
+                          <PressScale scaleTo={0.98} role="button" aria-label={t('{dish} near you', { dish: hindi ? dish.hindi : dish.name })} onPress={() => openDish(dish)} style={styles.dish}>
+                            <View style={styles.dishIcon}>
+                              {opening === dish.name ? <ActivityIndicator color={colors.red} /> : <Icon name={dish.icon} size={20} color={colors.red} />}
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.dishName}>{hindi ? dish.hindi : dish.name}</Text>
+                              <Text style={styles.dishWhy} numberOfLines={2}>
+                                {dish.why}
+                              </Text>
+                            </View>
+                            <View style={[styles.dietMark, { borderColor: dish.diet === 'veg' ? colors.vegMark : colors.nonvegMark }]}>
+                              <View style={[styles.dietDot, { backgroundColor: dish.diet === 'veg' ? colors.vegMark : colors.nonvegMark }]} />
+                            </View>
+                            <Icon name="chevron" size={16} color={colors.muted} />
+                          </PressScale>
+                        </Animated.View>
+                      ))
+                  ) : (
+                    <Text style={styles.waiting}>{t('Ready! Pick veg or non-veg to see your dishes.')}</Text>
+                  )}
+                  <PressScale role="button" onPress={snapAgain} style={styles.again}>
+                    <Icon name="camera" size={16} color={colors.red} />
+                    <Text style={styles.againText}>{t('Snap again')}</Text>
+                  </PressScale>
+                </Animated.View>
+              ) : !shot ? (
+                <Text style={styles.waiting}>{t('Take or choose a photo above to start.')}</Text>
+              ) : null}
+              {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+            </>
+          ) : (
+            <>
           <View style={styles.noteBar}>
-            <TextInput
-              value={talk.listening ? talk.heard : note}
-              onChangeText={setNote}
-              placeholder={t(copy.placeholder)}
-              placeholderTextColor="#B3A196"
-              style={styles.noteInput}
-              aria-label={t('Add a line for Chatora')}
-              maxLength={200}
-              editable={!talk.listening}
-            />
-            <PressScale scaleTo={0.88} role="button" aria-label={talk.listening ? t('Done speaking') : t('Speak')} onPress={talk.listening ? talk.stop : talk.start} style={styles.noteMic}>
-              {talk.listening ? <VoiceBars level={talk.level} color="#FFFFFF" height={18} /> : <Icon name="mic" size={18} color="#FFFFFF" />}
-            </PressScale>
-          </View>
-
-          {hint ? <Text style={styles.hint}>{hint}</Text> : null}
-
-          <Button title={busy ? t(copy.working) : t(copy.button)} loading={busy} disabled={!shot || busy} onPress={findIdeas} style={{ marginTop: space.lg }} />
+              <TextInput
+                value={talk.listening ? talk.heard : note}
+                onChangeText={setNote}
+                placeholder={t(copy.placeholder)}
+                placeholderTextColor="#B3A196"
+                style={styles.noteInput}
+                aria-label={t('Add a line for Chatora')}
+                maxLength={200}
+                editable={!talk.listening}
+              />
+              <PressScale scaleTo={0.88} role="button" aria-label={talk.listening ? t('Done speaking') : t('Speak')} onPress={talk.listening ? talk.stop : talk.start} style={styles.noteMic}>
+                {talk.listening ? <VoiceBars level={talk.level} color="#FFFFFF" height={18} /> : <Icon name="mic" size={18} color="#FFFFFF" />}
+              </PressScale>
+            </View>
+  
+            {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+  
+            <Button title={busy ? t(copy.working) : t(copy.button)} loading={busy} disabled={!shot || busy} onPress={findIdeas} style={{ marginTop: space.lg }} />
+            </>
+          )}
           <View style={styles.privacy}>
             <Icon name="lock" size={14} color={colors.muted} />
             <Text style={styles.privacyText}>
@@ -242,6 +348,23 @@ const styles = StyleSheet.create({
   promptText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.creamMuted, textAlign: 'center' },
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(58,5,8,0.45)', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   overlayText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.cream },
+  overlaySub: { fontFamily: fonts.medium, fontSize: 13, color: colors.gold },
+  ask: { fontFamily: fonts.display, fontSize: 18, color: colors.ink, marginTop: space.base },
+  diets: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
+  diet: { flex: 1, height: 56, borderRadius: 16, borderWidth: 1.5, borderColor: colors.hair, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  dietOn: { borderColor: colors.maroon, backgroundColor: colors.maroon },
+  dietText: { fontFamily: fonts.bold, fontSize: 16, color: colors.ink },
+  dietTextOn: { color: colors.gold },
+  dietMark: { width: 16, height: 16, borderRadius: 3, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  dietDot: { width: 7, height: 7, borderRadius: 4 },
+  summary: { fontFamily: fonts.semibold, fontSize: 14, color: colors.goldText, marginTop: space.lg, marginBottom: space.xs },
+  dish: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, marginTop: space.sm, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.hair },
+  dishIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.redSoft, alignItems: 'center', justifyContent: 'center' },
+  dishName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
+  dishWhy: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, color: colors.muted, marginTop: 1 },
+  waiting: { ...type.small, marginTop: space.md },
+  again: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minHeight: 44, marginTop: space.sm },
+  againText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.red },
   scanLine: { position: 'absolute', left: 0, right: 0, height: 3, backgroundColor: colors.gold, shadowColor: colors.gold, shadowOpacity: 0.8, shadowRadius: 8 },
   shutterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, marginTop: space.lg },
   gallery: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,244,230,0.12)', alignItems: 'center', justifyContent: 'center' },

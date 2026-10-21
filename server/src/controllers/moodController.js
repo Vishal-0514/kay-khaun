@@ -1,5 +1,5 @@
 import Conversation from '../models/Conversation.js';
-import { aiEnabled, aiAllowedFor, explainMood, readScene } from '../services/ai.js';
+import { aiEnabled, aiAllowedFor, explainMood, readScene, snapOrder } from '../services/ai.js';
 import { contextFor } from '../services/context.js';
 import { OUTINGS } from '../services/outing.js';
 import { findOutings, findPicks, toPublic } from './chatController.js';
@@ -121,4 +121,28 @@ export async function snap(req, res) {
     picks: finalPicks,
     outings: finalOutings,
   });
+}
+
+// Snap Your Order: the photo → 8 dishes that suit the place (4 veg, 4 non-veg).
+// The app asks "Veg or non-veg?" while this runs and shows the matching half;
+// tapping a dish finds restaurants for it. The photo is read once, never stored.
+export async function order(req, res) {
+  if (aiEnabled && !aiAllowedFor(req.user)) {
+    return res.status(403).json({ success: false, code: 'AI_CONSENT', error: 'Snap Your Order uses AI. Turn on "Use AI" in Settings to use it.' });
+  }
+  if (!aiEnabled) return res.status(503).json({ success: false, code: 'AI_OFF', error: "Snap Your Order isn't switched on yet." });
+  if (tooMany(String(req.user._id))) return res.status(429).json({ success: false, error: "That's a lot of snaps for one day. Tell Chatora in words instead, or try again tomorrow." });
+
+  const { image, mediaType, note } = req.body;
+  let result;
+  try {
+    result = await snapOrder({ image, mediaType, note });
+  } catch (err) {
+    console.error('Snap Your Order could not read the photo:', err.message);
+    return res.status(502).json({ success: false, error: "I couldn't read that photo. Try again, or tell me in words what you feel like." });
+  }
+  if (!result.usable || !result.dishes.length) {
+    return res.json({ success: true, unusable: true, message: tr("I couldn't make out a place in that photo. Try a photo of where you're sitting, or tell me in words.") });
+  }
+  res.json({ success: true, summary: result.summary, dishes: result.dishes });
 }

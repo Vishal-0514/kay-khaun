@@ -67,13 +67,15 @@ function RootLayout() {
         <Stack.Screen name="index" options={{ animation: 'none' }} />
         <Stack.Screen name="welcome" options={{ animation: 'fade' }} />
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-        <Stack.Screen name="taste" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="ai-consent" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="talk" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="kitchen" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="snap" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="songs" options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="whats-new" options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="settings" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="my-kitchen" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="group" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="cook/[id]" options={{ animation: 'fade_from_bottom' }} />
       </Stack>
       <ReportHost />
