@@ -19,7 +19,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-monochrome.png",
-        "backgroundColor": "#5C0A0F"
+        "backgroundColor": "#8E0B11"
       },
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -28,7 +28,8 @@
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.READ_MEDIA_AUDIO",
         "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "ios": {
@@ -45,7 +46,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 180,
+          "imageWidth": 220,
           "resizeMode": "contain",
           "backgroundColor": "#5C0A0F"
         }

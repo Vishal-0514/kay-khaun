@@ -52,7 +52,9 @@ Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in 
 | App activity → App interactions | Yes (saved picks, history) | No | Optional | App functionality (Saved, History, "Order again") |
 | App activity → In-app search history | Yes (chats) | No | Required to use chat | App functionality |
 | App activity → Other user-generated content | Yes (chats, reports) | No | Required to use chat | App functionality |
-| App info and performance → Crash logs, Diagnostics | Yes, once Sentry DSNs are set | No | Required | App functionality (fixing bugs) |
+| App info and performance → Crash logs, Diagnostics | **No for now.** Change to Yes (Required, App functionality) only after Sentry DSNs are set | No | — | — |
+
+Other Play Console declarations: **Ads: No.** **Advertising ID: No** (the app blocks the AD_ID permission). **Target audience: 18+.** **Government app: No.** **Financial features: none.** **Health: No.** **AI-generated content: Yes** (Chatora; users can report replies in the app).
 
 Photos of dishes people cook (My Kitchen) stay on the phone and are never sent to us, so they are **not** "collected" in Play's sense.
 
