@@ -11,10 +11,13 @@ name: Android APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write # to publish the APK as a release (share link)
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 150
     defaults:
       run:
         working-directory: mobile
@@ -46,6 +49,9 @@ jobs:
       - name: Build the APK
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Phones only need 64-bit ARM; building one CPU type instead of four
+          # cuts the native compile time to about a quarter.
+          ORG_GRADLE_PROJECT_reactNativeArchitectures: arm64-v8a
         run: npx --yes eas-cli@latest build --platform android --profile preview --local --non-interactive --output "$GITHUB_WORKSPACE/kya-khaun.apk"
 
       - uses: actions/upload-artifact@v4
@@ -53,3 +59,18 @@ jobs:
           name: kya-khaun-apk
           path: kya-khaun.apk
           retention-days: 14
+
+      # A plain download link to send friends (like the Expo build link):
+      # each run becomes a GitHub release with the APK attached.
+      - name: Make a share link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="test-${{ github.run_number }}"
+          gh release create "$tag" "$GITHUB_WORKSPACE/kya-khaun.apk" \
+            --prerelease --title "Kya Khaun test build ${{ github.run_number }}" \
+            --notes "Android test app. Open this page on the phone, tap kya-khaun.apk, then install."
+          link="https://github.com/${{ github.repository }}/releases/download/$tag/kya-khaun.apk"
+          echo "### Share link" >> "$GITHUB_STEP_SUMMARY"
+          echo "$link" >> "$GITHUB_STEP_SUMMARY"
+          echo "Latest build, always: https://github.com/${{ github.repository }}/releases" >> "$GITHUB_STEP_SUMMARY"
