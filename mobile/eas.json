@@ -21,7 +21,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kya-khaun-server.onrender.com/api",
+        "EXPO_PUBLIC_API_URL": "https://kay-khaun-371649248031.asia-south1.run.app/api",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyClaNe5imQ6YdpG-YQM-zIqllH3K3em6k4",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "kay-khaun.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "kay-khaun",
@@ -35,7 +35,7 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kya-khaun-server.onrender.com/api",
+        "EXPO_PUBLIC_API_URL": "https://kay-khaun-371649248031.asia-south1.run.app/api",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyClaNe5imQ6YdpG-YQM-zIqllH3K3em6k4",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "kay-khaun.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "kay-khaun",

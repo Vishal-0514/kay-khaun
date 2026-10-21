@@ -5,7 +5,7 @@ Last checked: 21 October 2026 (app 1.2.0).
 
 ## Before you submit
 
-- [ ] Optional: set **FIREBASE_SERVICE_ACCOUNT** on Render (Firebase console → Project settings → Service accounts → Generate new private key; paste the JSON on one line). With it, "Delete my account" also removes the Firebase sign-in record. Without it, all Kya Khaun data is still deleted; only the email stays in Firebase.
+- [ ] Optional: set **FIREBASE_SERVICE_ACCOUNT** on Cloud Run (and Render while it runs) (Firebase console → Project settings → Service accounts → Generate new private key; paste the JSON on one line). With it, "Delete my account" also removes the Firebase sign-in record. Without it, all Kya Khaun data is still deleted; only the email stays in Firebase.
 - [ ] Create a **reviewer account** in the app: Continue with email → create an account with an email you control → verify it → choose **Allow AI**. Keep the password for the notes below.
 - [ ] Decide on hosting so the first open doesn't take up to a minute (see the hosting reminder).
 
@@ -41,7 +41,7 @@ Permissions (all optional, asked only when used):
 
 ## Google Play: Data safety
 
-Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in app + the delete-account page). No data is sold or used for ads. Service providers (Anthropic, Google, Sentry, MongoDB, Render) process data on our behalf, which Play does not count as "sharing".
+Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in app + the delete-account page). No data is sold or used for ads. Service providers (Anthropic, Google incl. Cloud Run, Sentry, MongoDB, Render) process data on our behalf, which Play does not count as "sharing".
 
 | Data type | Collected | Shared | Optional? | Purpose |
 | --- | --- | --- | --- | --- |
