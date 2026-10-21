@@ -39,8 +39,10 @@ const tooMany = (error) => (req, res, next, options) => res.status(options.statu
 // The visitor's address. On Render, requests pass through Cloudflare and then
 // Render's proxy, so req.ip is a shared Cloudflare address; Cloudflare puts the
 // real one in CF-Connecting-IP (and overwrites any value a visitor sends).
+// Elsewhere (Cloud Run) there is no Cloudflare, so that header could be faked:
+// use req.ip, which Google's front end sets from the real connection.
 export function clientIp(req) {
-  const cf = req.get('cf-connecting-ip');
+  const cf = process.env.RENDER ? req.get('cf-connecting-ip') : null;
   return cf && /^[\d.:a-f]+$/i.test(cf) ? cf : req.ip;
 }
 

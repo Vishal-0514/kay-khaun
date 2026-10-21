@@ -58,8 +58,15 @@ test('oversized bodies are refused', async () => {
 });
 
 test('limits count each visitor, not the shared Cloudflare proxy address', async () => {
+  process.env.RENDER = 'true';
   const hit = (ip) => fetch(`${base}/api/health`, { headers: { 'cf-connecting-ip': ip } }).then((r) => r.headers.get('ratelimit-policy'));
   const [a, a2, b] = [await hit('203.0.113.7'), await hit('203.0.113.7'), await hit('198.51.100.9')];
   assert.equal(a, a2);
   assert.notEqual(a, b);
+  delete process.env.RENDER;
+});
+
+test('off Render (Cloud Run), a faked Cloudflare header is ignored', async () => {
+  const hit = (ip) => fetch(`${base}/api/health`, { headers: { 'cf-connecting-ip': ip } }).then((r) => r.headers.get('ratelimit-policy'));
+  assert.equal(await hit('203.0.113.7'), await hit('198.51.100.9'));
 });

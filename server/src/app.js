@@ -19,7 +19,7 @@ import songRoutes from './routes/songs.js';
 import orderRoutes from './routes/order.js';
 
 const app = express();
-// Render sits in front of the server (trust its proxy hop); limits use clientIp() in security.js.
+// Render's or Cloud Run's proxy sits in front of the server (trust that one hop); limits use clientIp() in security.js.
 app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
