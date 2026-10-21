@@ -47,7 +47,7 @@ Data is encrypted in transit: **Yes**. People can request deletion: **Yes** (in 
 | --- | --- | --- | --- | --- |
 | Personal info → Name | Yes | No | Required | Account management, app functionality |
 | Personal info → Email address | Yes | No | Required | Account management |
-| Location → Approximate location | Yes, processed ephemerally | No | Optional | App functionality |
+| Location → Approximate location **and** Precise location | Yes, processed ephemerally | No | Optional | App functionality (food near you, drive times) |
 | Photos and videos → Photos | Yes, processed ephemerally | No | Optional | App functionality (fridge scan, Snap Your Order, songs for your meal) |
 | App activity → App interactions | Yes (saved picks, history) | No | Optional | App functionality (Saved, History, "Order again") |
 | App activity → In-app search history | Yes (chats) | No | Required to use chat | App functionality |
@@ -65,7 +65,7 @@ Tracking: **No**. For each item: **Linked to the user: Yes**, **Used for trackin
 | Data type | Purposes |
 | --- | --- |
 | Contact info → Name, Email address | App functionality |
-| Location → Coarse location | App functionality |
+| Location → Precise location | App functionality |
 | User content → Photos | App functionality |
 | User content → Other user content (chats, reports) | App functionality |
 | Search history (what you ask Chatora) | App functionality |

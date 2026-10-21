@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
@@ -7,9 +8,16 @@ import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 // Throws { code: 'PERMISSION' } if camera/photos access was refused.
 const MAX_SIDE = 1024;
 
+// Android's system photo picker needs no permission, and the app doesn't ask
+// for "read all photos" (Google Play only allows that for gallery-type apps).
+async function askPermission(source) {
+  if (source === 'camera') return ImagePicker.requestCameraPermissionsAsync();
+  if (Platform.OS === 'android') return { granted: true };
+  return ImagePicker.requestMediaLibraryPermissionsAsync();
+}
+
 export async function pickKitchenPhoto(source) {
-  const permission =
-    source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const permission = await askPermission(source);
   if (!permission.granted) {
     const err = new Error(source === 'camera' ? 'Camera access is off for Kya Khaun.' : 'Photo access is off for Kya Khaun.');
     err.code = 'PERMISSION';
